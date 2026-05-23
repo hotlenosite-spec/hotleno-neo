@@ -1,0 +1,85 @@
+{
+  "startedAt": "2026-05-21T11:28:23.238Z",
+  "endedAt": "2026-05-21T11:30:28.043Z",
+  "environment": "staging",
+  "logRoot": "C:\\development\\hotleno-main\\logs\\tbo-certification",
+  "totals": {
+    "cases": 7,
+    "searchSucceeded": 7,
+    "preBookSucceeded": 7,
+    "bookSucceeded": 7,
+    "bookingDetailSucceeded": 7
+  },
+  "cases": [
+    {
+      "caseNumber": 1,
+      "name": "Room 1 - Adult 1",
+      "search": true,
+      "preBook": true,
+      "book": true,
+      "bookingDetail": true,
+      "bookingIdentifier": "LWURI9",
+      "error": null
+    },
+    {
+      "caseNumber": 2,
+      "name": "Room 1 - Adult 1, Child 1",
+      "search": true,
+      "preBook": true,
+      "book": true,
+      "bookingDetail": true,
+      "bookingIdentifier": "P7AZ3M",
+      "error": null
+    },
+    {
+      "caseNumber": 3,
+      "name": "Room 1 - Adult 2, Child 2",
+      "search": true,
+      "preBook": true,
+      "book": true,
+      "bookingDetail": true,
+      "bookingIdentifier": "SHR6OZ",
+      "error": null
+    },
+    {
+      "caseNumber": 4,
+      "name": "Room 1 - Adult 1 + Room 2 - Adult 1",
+      "search": true,
+      "preBook": true,
+      "book": true,
+      "bookingDetail": true,
+      "bookingIdentifier": "VS7EAC",
+      "error": null
+    },
+    {
+      "caseNumber": 5,
+      "name": "Room 1 - Adult 1, Child 1 + Room 2 - Adult 1",
+      "search": true,
+      "preBook": true,
+      "book": true,
+      "bookingDetail": true,
+      "bookingIdentifier": "Z2NLVP",
+      "error": null
+    },
+    {
+      "caseNumber": 6,
+      "name": "Room 1 - Adult 1, Child 2 + Room 2 - Adult 2",
+      "search": true,
+      "preBook": true,
+      "book": true,
+      "bookingDetail": true,
+      "bookingIdentifier": "2D3TH2",
+      "error": null
+    },
+    {
+      "caseNumber": 7,
+      "name": "Booking room with supplements",
+      "search": true,
+      "preBook": true,
+      "book": true,
+      "bookingDetail": true,
+      "bookingIdentifier": "5NK12F",
+      "error": null
+    }
+  ]
+}

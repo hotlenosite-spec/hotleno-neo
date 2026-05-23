@@ -1,0 +1,301 @@
+"use client";
+
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  CheckmarkCircle02Icon,
+  InformationCircleIcon,
+  TriangleIcon,
+  UserIcon,
+  BedIcon
+} from "@hugeicons/core-free-icons";
+import type { HotelOption, HotelPoliciesResponse } from "@/types/travellanda";
+import { formatCurrency } from "@/hooks/use-hotels-enhanced";
+
+interface RoomSelectorProps {
+  options: HotelOption[];
+  currency: string;
+  onSelect: (option: HotelOption, policies: HotelPoliciesResponse) => void;
+  nights: number;
+  selectedOptionId?: number;
+  isLoadingPolicies?: boolean;
+}
+
+interface RoomOptionCardProps {
+  option: HotelOption;
+  currency: string;
+  nights: number;
+  isSelected: boolean;
+  onSelect: () => void;
+  isLoadingPolicies: boolean;
+}
+
+function RoomOptionCard({
+  option,
+  currency,
+  nights,
+  isSelected,
+  onSelect,
+  isLoadingPolicies
+}: RoomOptionCardProps) {
+  const t = useTranslations();
+  
+  // Sanitize price values
+  const price = typeof option.Price === 'number' && !isNaN(option.Price) 
+    ? option.Price 
+    : parseFloat(option.Price as unknown as string) || 0;
+  const taxes = typeof option.Taxes === 'number' && !isNaN(option.Taxes) 
+    ? option.Taxes 
+    : parseFloat(option.Taxes as unknown as string) || 0;
+  const safeCurrency = currency || 'USD';
+  
+  const totalPrice = (price + taxes) * nights;
+  const pricePerNight = price + taxes;
+  
+  return (
+    <Card 
+      className={`transition-all duration-200 cursor-pointer hover:shadow-md ${
+        isSelected ? 'ring-2 ring-primary border-primary bg-primary/5' : ''
+      }`}
+      onClick={onSelect}
+    >
+      <CardContent className="p-4">
+        <div className="flex flex-col md:flex-row md:items-start gap-4">
+          {/* Selection Indicator */}
+          <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 mt-1 shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-gray-300'}">
+            {isSelected && (
+              <div className="w-3 h-3 rounded-full bg-white" />
+            )}
+          </div>
+
+          {/* Room Details */}
+          <div className="flex-1">
+            <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+              <div>
+                <h4 className="font-semibold text-lg">{option.RoomType || option.RoomName}</h4>
+                <p className="text-sm text-muted-foreground">{option.BoardType}</p>
+              </div>
+              
+              <div className="text-right">
+                <div className="text-2xl font-bold text-primary">
+                  {formatCurrency(totalPrice, safeCurrency)}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {formatCurrency(pricePerNight, safeCurrency)} {t('hotels.perNight')}
+                </p>
+              </div>
+            </div>
+
+            {/* Room Configuration */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {option.Rooms.map((room, idx) => (
+                <Badge key={idx} variant="secondary" className="flex items-center gap-1">
+                  <HugeiconsIcon icon={BedIcon} className="h-3 w-3" />
+                  {room.RoomName}
+                  <span className="text-xs">
+                    ({room.NumAdults} <HugeiconsIcon icon={UserIcon} className="h-3 w-3 inline" />
+                    {room.NumChildren > 0 && ` + ${room.NumChildren} child`})
+                  </span>
+                </Badge>
+              ))}
+            </div>
+
+            {/* Badges */}
+            <div className="flex flex-wrap gap-2">
+              {option.OnRequest === 1 ? (
+                <Badge variant="outline" className="text-amber-600 border-amber-600">
+                  <HugeiconsIcon icon={InformationCircleIcon} className="h-3 w-3 mr-1" />
+                  {t('hotels.onRequest')}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-green-600 border-green-600">
+                  <HugeiconsIcon icon={CheckmarkCircle02Icon} className="h-3 w-3 mr-1" />
+                  {t('hotels.available')}
+                </Badge>
+              )}
+
+              {option.IsNonRefundable ? (
+                <Badge variant="destructive">
+                  <HugeiconsIcon icon={TriangleIcon} className="h-3 w-3 mr-1" />
+                  {t('hotels.nonRefundable')}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-green-600 border-green-600">
+                  {t('hotels.freeCancellation')}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Loading State */}
+        {isSelected && isLoadingPolicies && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+              {t('hotelDetails.loadingPolicies')}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function RoomSelector({
+  options,
+  currency,
+  onSelect,
+  nights,
+  selectedOptionId,
+  isLoadingPolicies = false
+}: RoomSelectorProps) {
+  const t = useTranslations();
+  const [selectedId, setSelectedId] = useState<string>(selectedOptionId?.toString() || "");
+  const [_showPolicies, _setShowPolicies] = useState(false);
+  const [_selectedOption, _setSelectedOption] = useState<HotelOption | null>(null);
+
+  const handleSelect = (option: HotelOption) => {
+    setSelectedId(option.OptionId.toString());
+    _setSelectedOption(option);
+    // Fetch policies before confirming selection
+    onSelect(option, {} as HotelPoliciesResponse);
+  };
+
+  // Group options by room type
+  const groupedOptions = options.reduce((acc, option) => {
+    const key = option.RoomType || option.RoomName || 'Standard';
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(option);
+    return acc;
+  }, {} as Record<string, HotelOption[]>);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-xl font-bold mb-2">{t('hotelDetails.selectYourRoom')}</h3>
+        <p className="text-muted-foreground">
+          {t('hotelDetails.roomOptions', { count: options.length, nights })}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {Object.entries(groupedOptions).map(([roomType, roomOptions]) => (
+          <div key={roomType} className="space-y-3">
+            <h4 className="font-semibold text-lg text-muted-foreground">{roomType}</h4>
+            {roomOptions.map((option) => {
+              const isOptionSelected = selectedId === option.OptionId.toString();
+              return (
+                <RoomOptionCard
+                  key={option.OptionId}
+                  option={option}
+                  currency={currency}
+                  nights={nights}
+                  isSelected={isOptionSelected}
+                  onSelect={() => handleSelect(option)}
+                  isLoadingPolicies={isOptionSelected && isLoadingPolicies}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {options.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground">{t('hotelDetails.noRoomsAvailable')}</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// Compact room selector for hotel cards
+interface CompactRoomSelectorProps {
+  options: HotelOption[];
+  currency: string;
+  onSelect: (option: HotelOption) => void;
+  nights: number;
+}
+
+export function CompactRoomSelector({ options, currency, onSelect, nights }: CompactRoomSelectorProps) {
+  const t = useTranslations();
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Get the best option (lowest price, refundable if possible)
+  const bestOption = options.reduce((best, current) => {
+    const currentPrice = current.Price + (current.Taxes || 0);
+    const bestPrice = best.Price + (best.Taxes || 0);
+    
+    if (currentPrice < bestPrice) return current;
+    if (currentPrice === bestPrice && !current.IsNonRefundable && best.IsNonRefundable) {
+      return current;
+    }
+    return best;
+  }, options[0]);
+
+  const totalPrice = (bestOption.Price + (bestOption.Taxes || 0)) * nights;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold">
+            {formatCurrency(totalPrice, currency)}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {t('hotels.for')} {nights} {nights !== 1 ? t('hotels.nights') : t('hotels.night')}
+          </p>
+        </div>
+        
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">{t('hotels.viewOptions', { count: options.length })}</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{t('hotelDetails.selectRoomTitle')}</DialogTitle>
+            </DialogHeader>
+            <RoomSelector
+              options={options}
+              currency={currency}
+              onSelect={(option) => {
+                onSelect(option);
+                setIsOpen(false);
+              }}
+              nights={nights}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {!bestOption.IsNonRefundable && (
+          <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+            {t('hotels.freeCancellation')}
+          </Badge>
+        )}
+        {bestOption.OnRequest === 1 && (
+          <Badge variant="outline" className="text-amber-600 border-amber-600 text-xs">
+            {t('hotels.onRequest')}
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
+}

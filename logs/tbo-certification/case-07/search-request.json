@@ -1,0 +1,20 @@
+{
+  "CheckIn": "2026-06-20",
+  "CheckOut": "2026-06-22",
+  "HotelCodes": "1120548,1247101",
+  "GuestNationality": "AE",
+  "PaxRooms": [
+    {
+      "Adults": 2,
+      "Children": 0,
+      "ChildrenAges": []
+    }
+  ],
+  "ResponseTime": 23,
+  "IsDetailedResponse": true,
+  "Filters": {
+    "Refundable": false,
+    "NoOfRooms": 0,
+    "MealType": "All"
+  }
+}
