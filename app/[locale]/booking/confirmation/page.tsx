@@ -19,6 +19,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { formatCurrency } from "@/hooks/use-hotels-enhanced";
 import type { HotelBookingResponse } from "@/types/travellanda";
+import { formatBookingStatus } from "@/lib/booking-status";
 
 export default function BookingConfirmationPage() {
   const router = useRouter();
@@ -50,25 +51,31 @@ export default function BookingConfirmationPage() {
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'confirmed':
+      case 'supplier_booking_confirmed':
         return (
           <Badge className="bg-green-500 hover:bg-green-600">
             <HugeiconsIcon icon={CheckmarkBadge01Icon} className="mr-1 h-3 w-3" />
-            Confirmed
+            {formatBookingStatus(status)}
           </Badge>
         );
       case 'pending':
       case 'onrequest':
+      case 'pending_payment':
+      case 'payment_succeeded':
+      case 'supplier_booking_pending':
         return (
           <Badge variant="outline" className="text-amber-600 border-amber-600">
             <HugeiconsIcon icon={ClockIcon} className="mr-1 h-3 w-3" />
-            Pending Confirmation
+            {formatBookingStatus(status)}
           </Badge>
         );
       case 'rejected':
+      case 'supplier_booking_failed':
+      case 'refund_required':
         return (
           <Badge variant="destructive">
             <HugeiconsIcon icon={AlertCircleIcon} className="mr-1 h-3 w-3" />
-            Rejected
+            {formatBookingStatus(status)}
           </Badge>
         );
       default:
@@ -106,8 +113,15 @@ export default function BookingConfirmationPage() {
     );
   }
 
-  const isConfirmed = booking.BookingStatus?.toLowerCase() === 'confirmed';
-  const isPending = ['pending', 'onrequest'].includes(booking.BookingStatus?.toLowerCase() || '');
+  const bookingStatus = booking.BookingStatus?.toLowerCase() || '';
+  const isConfirmed = ['confirmed', 'supplier_booking_confirmed'].includes(bookingStatus);
+  const isPending = [
+    'pending',
+    'onrequest',
+    'pending_payment',
+    'payment_succeeded',
+    'supplier_booking_pending',
+  ].includes(bookingStatus);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

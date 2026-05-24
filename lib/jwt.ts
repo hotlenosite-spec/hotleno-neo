@@ -1,17 +1,25 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
 export interface TokenPayload {
   userId: string;
   email: string;
   role: string;
 }
 
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret || secret === 'your-secret-key') {
+    throw new Error('JWT_SECRET is required and must be set to a strong server-side secret');
+  }
+
+  return secret;
+}
+
 export const generateToken = (payload: TokenPayload): string => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 };
 
 export const verifyToken = (token: string): TokenPayload => {
-  return jwt.verify(token, JWT_SECRET) as TokenPayload;
+  return jwt.verify(token, getJwtSecret()) as TokenPayload;
 };

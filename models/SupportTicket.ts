@@ -93,7 +93,6 @@ const SupportTicketSchema: Schema<ISupportTicket> = new Schema(
 // Index for faster queries
 SupportTicketSchema.index({ userId: 1, createdAt: -1 });
 SupportTicketSchema.index({ status: 1, priority: -1 });
-SupportTicketSchema.index({ ticketNumber: 1 });
 
 // Generate ticket number before saving
 SupportTicketSchema.pre('save', function (next) {

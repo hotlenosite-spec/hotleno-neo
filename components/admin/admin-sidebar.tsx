@@ -2,80 +2,174 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  DashboardSquare01Icon,
-  Calendar01Icon,
-  UserMultipleIcon,
-  Settings01Icon,
-  Menu01Icon,
-  ArrowLeft01Icon,
-  CustomerServiceIcon,
-} from "@hugeicons/core-free-icons";
 
 interface SidebarItem {
   title: string;
   href: string;
-  icon: typeof DashboardSquare01Icon | typeof CustomerServiceIcon;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+function MenuIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M4 7h16" />
+      <path d="M4 12h16" />
+      <path d="M4 17h16" />
+    </svg>
+  );
+}
+
+function HomeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M3.5 11.2 12 4l8.5 7.2" />
+      <path d="M5.8 10.2v8.3a1.5 1.5 0 0 0 1.5 1.5h9.4a1.5 1.5 0 0 0 1.5-1.5v-8.3" />
+      <path d="M10 20v-5.2h4V20" />
+    </svg>
+  );
+}
+
+function CalendarIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M7.5 3.8v3" />
+      <path d="M16.5 3.8v3" />
+      <path d="M4.5 8.5h15" />
+      <path d="M6 5.8h12a1.8 1.8 0 0 1 1.8 1.8v10.2a1.8 1.8 0 0 1-1.8 1.8H6a1.8 1.8 0 0 1-1.8-1.8V7.6A1.8 1.8 0 0 1 6 5.8Z" />
+    </svg>
+  );
+}
+
+function BuildingIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M6 20V5.8A1.8 1.8 0 0 1 7.8 4h8.4A1.8 1.8 0 0 1 18 5.8V20" />
+      <path d="M4 20h16" />
+      <path d="M9 8h2" />
+      <path d="M13 8h2" />
+      <path d="M9 11.5h2" />
+      <path d="M13 11.5h2" />
+      <path d="M9 15h2" />
+      <path d="M13 15h2" />
+    </svg>
+  );
+}
+
+function UsersIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M9.4 11.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" />
+      <path d="M3.8 19.2c.35-3 2.45-5.1 5.6-5.1s5.25 2.1 5.6 5.1" />
+      <path d="M16 11.4a2.6 2.6 0 1 0-.1-5.2" />
+      <path d="M16.7 14.2c2.2.45 3.5 2.2 3.8 4.6" />
+    </svg>
+  );
+}
+
+function HandshakeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M7.6 12.4 10 10c1-1 2.2-1 3.2-.2l.8.6c.9.7 2.1.65 2.9-.15l.7-.7" />
+      <path d="m8.6 16.2 1.2 1.2c.45.45 1.2.45 1.65 0 .45-.45.45-1.18 0-1.63" />
+      <path d="m11.2 18.1.55.55c.45.45 1.2.45 1.65 0 .45-.45.45-1.18 0-1.63" />
+      <path d="m13.5 18 .25.25c.45.45 1.2.45 1.65 0 .45-.45.45-1.18 0-1.63L12.8 14" />
+      <path d="M3.8 10.4 7 7.2l4.8 4.8-3.2 3.2Z" />
+      <path d="m16.8 7.1 3.4 3.4-4.7 4.7-3.4-3.4Z" />
+    </svg>
+  );
+}
+
+function CardIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M4.5 6.5h15a1.7 1.7 0 0 1 1.7 1.7v8.6a1.7 1.7 0 0 1-1.7 1.7h-15a1.7 1.7 0 0 1-1.7-1.7V8.2a1.7 1.7 0 0 1 1.7-1.7Z" />
+      <path d="M3.2 10h17.6" />
+      <path d="M7 15h3.5" />
+      <path d="M15.5 15h1.8" />
+    </svg>
+  );
+}
+
+function ChartIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M4 20h16" />
+      <path d="M6.2 20v-5.8h2.5V20" />
+      <path d="M10.8 20V9.2h2.5V20" />
+      <path d="M15.4 20V5h2.5v15" />
+    </svg>
+  );
+}
+
+function SettingsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" />
+      <path d="M19 13.4a7.4 7.4 0 0 0 .05-2.8l2-1.55-2-3.45-2.45 1a7.7 7.7 0 0 0-2.4-1.4L13.85 2h-3.7L9.8 5.2a7.7 7.7 0 0 0-2.4 1.4l-2.45-1-2 3.45 2 1.55a7.4 7.4 0 0 0 .05 2.8l-2.05 1.6 2 3.45 2.5-1a7.2 7.2 0 0 0 2.35 1.35l.35 3.2h3.7l.35-3.2a7.2 7.2 0 0 0 2.35-1.35l2.5 1 2-3.45Z" />
+    </svg>
+  );
+}
+
+function BackIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M19 12H5" />
+      <path d="m12 5-7 7 7 7" />
+    </svg>
+  );
 }
 
 export function AdminSidebar() {
   const t = useTranslations("admin");
+  const locale = useLocale();
   const pathname = usePathname();
+  const isAr = locale === "ar";
 
   const sidebarItems: SidebarItem[] = [
-    {
-      title: t("dashboard"),
-      href: "/admin",
-      icon: DashboardSquare01Icon,
-    },
-    {
-      title: t("bookings"),
-      href: "/admin/bookings",
-      icon: Calendar01Icon,
-    },
-    {
-      title: t("users"),
-      href: "/admin/users",
-      icon: UserMultipleIcon,
-    },
-    {
-      title: t("support"),
-      href: "/admin/support",
-      icon: CustomerServiceIcon,
-    },
-    {
-      title: t("settings"),
-      href: "/admin/settings",
-      icon: Settings01Icon,
-    },
+    { title: t("dashboard"), href: "/admin", icon: HomeIcon },
+    { title: t("bookings"), href: "/admin/bookings", icon: CalendarIcon },
+    { title: isAr ? "الفنادق" : "Hotels", href: "/admin/hotels", icon: BuildingIcon },
+    { title: t("users"), href: "/admin/users", icon: UsersIcon },
+    { title: isAr ? "الوكالات" : "Agencies", href: "/admin/agencies", icon: HandshakeIcon },
+    { title: isAr ? "المدفوعات" : "Payments", href: "/admin/payments", icon: CardIcon },
+    { title: isAr ? "السجلات" : "Logs", href: "/admin/logs", icon: ChartIcon },
+    { title: isAr ? "المدونة" : "Blog", href: "/admin/blog", icon: ChartIcon },
+    { title: t("settings"), href: "/admin/settings", icon: SettingsIcon },
   ];
 
   return (
     <>
-      {/* Mobile Sidebar */}
       <Sheet>
         <SheetTrigger asChild className="lg:hidden">
-          <Button variant="outline" size="icon" className="fixed left-4 top-20 z-40">
-            <HugeiconsIcon icon={Menu01Icon} className="h-5 w-5" />
+          <Button
+            variant="outline"
+            size="icon"
+            className="fixed right-4 top-24 z-50 h-11 w-11 rounded-2xl border-[#E5E7EB] bg-white text-[#0F172A] shadow-xl"
+          >
+            <MenuIcon className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
-          <SidebarContent items={sidebarItems} pathname={pathname} t={t} />
+
+        <SheetContent
+          side="right"
+          className="w-[273px] border-l border-[#E5E7EB] bg-white p-0"
+        >
+          <SidebarContent items={sidebarItems} pathname={pathname} isAr={isAr} />
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-4rem)]">
-        <ScrollArea className="h-full py-4">
-          <SidebarContent items={sidebarItems} pathname={pathname} t={t} />
-        </ScrollArea>
-      </aside>
+      <div className="hidden w-[273px] shrink-0 lg:block">
+        <aside className="fixed right-0 top-0 z-40 h-screen w-[273px] border-l border-[#E5E7EB] bg-white text-[#0F172A] shadow-xl shadow-slate-900/5">
+          <ScrollArea className="h-screen">
+            <SidebarContent items={sidebarItems} pathname={pathname} isAr={isAr} />
+          </ScrollArea>
+        </aside>
+      </div>
     </>
   );
 }
@@ -83,43 +177,84 @@ export function AdminSidebar() {
 function SidebarContent({
   items,
   pathname,
-  t,
+  isAr,
 }: {
   items: SidebarItem[];
   pathname: string;
-  t: (key: string) => string;
+  isAr: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2 px-3">
-      <div className="mb-6 px-3">
-        <h2 className="text-lg font-semibold">{t("adminPanel")}</h2>
-        <p className="text-sm text-muted-foreground">{t("manageYourBusiness")}</p>
+    <div
+      dir="rtl"
+      className="relative flex h-screen flex-col overflow-hidden bg-white px-[13px] pb-[12px] pt-[22px]"
+    >
+      <div className="relative mb-[22px] text-center">
+        <h2 className="text-[28px] font-black leading-none tracking-[0.26em] text-[#F97316]">
+          HOTLENO
+        </h2>
+        <p className="mt-[10px] text-[13px] font-semibold text-slate-500">
+          {isAr ? "إدارة عمليات السفر" : "Clean travel operations"}
+        </p>
       </div>
 
-      <nav className="flex flex-col gap-1">
-        {items.map((item) => (
-          <Link key={item.href} href={item.href}>
-            <Button
-              variant={pathname === item.href ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start gap-3",
-                pathname === item.href && "bg-secondary"
-              )}
-            >
-              <HugeiconsIcon icon={item.icon} className="h-5 w-5" />
-              {item.title}
-            </Button>
-          </Link>
-        ))}
+      <nav className="relative flex flex-col gap-[7px]">
+        {items.map((item) => {
+          const isActive =
+            item.href === "/admin"
+              ? pathname === "/admin"
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+          const Icon = item.icon;
+
+          return (
+            <Link key={item.href} href={item.href}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "flex h-[47px] w-full flex-row items-center justify-start gap-[12px] rounded-xl px-[16px] text-[15px] font-semibold text-slate-600 hover:bg-orange-50 hover:text-[#F97316]",
+                  isActive &&
+                    "bg-[#F97316] text-white shadow-lg shadow-orange-500/20 hover:bg-[#F97316] hover:text-white"
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "h-[21px] w-[21px] shrink-0",
+                    isActive ? "text-white" : "text-slate-500"
+                  )}
+                />
+
+                <span className="leading-none">{item.title}</span>
+              </Button>
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="mt-auto pt-6 border-t">
-        <Link href="/">
-          <Button variant="ghost" className="w-full justify-start gap-3">
-            <HugeiconsIcon icon={ArrowLeft01Icon} className="h-5 w-5" />
-            {t("backToSite")}
-          </Button>
-        </Link>
+      <div className="relative mt-auto pt-[13px]">
+        <div className="overflow-hidden rounded-2xl border border-orange-100 bg-orange-50 shadow-sm">
+          <div className="px-[15px] pb-[12px] pt-[12px] text-center">
+            <h3 className="text-[15px] font-black leading-6 text-[#0F172A]">
+              {isAr ? "إدارة Hotleno" : "Hotleno Admin"}
+            </h3>
+            <p className="mt-[3px] text-[11px] font-medium leading-5 text-slate-500">
+              {isAr ? "لوحة تشغيلية" : "Operational dashboard"}
+            </p>
+
+            <Button className="mt-[10px] flex h-[38px] w-full items-center justify-center rounded-xl bg-[#F97316] text-[12px] font-black text-white hover:bg-[#ea580c]">
+              <span>{isAr ? "مراجعة العمليات" : "Review operations"}</span>
+            </Button>
+
+            <Link href="/">
+              <Button
+                variant="ghost"
+                className="mt-[7px] flex h-[34px] w-full items-center justify-center rounded-xl text-[12px] font-bold text-slate-600 hover:bg-white hover:text-[#F97316]"
+              >
+                <span>{isAr ? "العودة للموقع" : "Back to website"}</span>
+                <BackIcon className="mr-2 h-[16px] w-[16px]" />
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -327,6 +327,9 @@ export default function ResultsPage() {
               <Link 
                 key={hotel.HotelId} 
                 href={`/${locale}/hotel/${hotel.HotelId}`}
+                onClick={() => {
+                  localStorage.setItem('selectedHotel', JSON.stringify(hotel));
+                }}
                 className="block hover:no-underline"
               >
                 <HotelCard

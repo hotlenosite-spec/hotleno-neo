@@ -74,6 +74,25 @@ interface HotelDetailsData {
           );
         }
 
+        const selectedHotel = localStorage.getItem('selectedHotel');
+        if (selectedHotel) {
+          const parsedHotel = JSON.parse(selectedHotel) as HotelSearchResult;
+          if (parsedHotel.HotelId === parseInt(hotelId)) {
+            setHotel(parsedHotel);
+            setHotelDetails({
+              HotelName: parsedHotel.HotelName,
+              StarRating: parsedHotel.StarRating,
+              Address: parsedHotel.Address,
+              CityName: parsedHotel.CityName,
+              CountryName: parsedHotel.CountryName,
+              Images: parsedHotel.Images || [],
+              Facilities: parsedHotel.Facilities || [],
+            });
+            setLoading(false);
+            return;
+          }
+        }
+
         // Fetch hotel details first using GetHotelDetails
         const detailsResponse = await fetch('/api/travellanda', {
           method: 'POST',

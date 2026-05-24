@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Booking from '@/models/Booking';
+import BookingLog from '@/models/BookingLog';
+import User from '@/models/User';
 import { verifyToken } from '@/lib/jwt';
+import { isBookingStatus } from '@/lib/booking-status';
 
 // GET - Fetch user's booking history
 export async function GET(req: NextRequest) {
@@ -79,13 +82,38 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     
     await dbConnect();
+
+    const user = await User.findById(decoded.userId).select(
+      'name email accountType agencyId agencyRole role',
+    );
     
+    const bookingStatus = isBookingStatus(body.status)
+      ? body.status
+      : 'pending_payment';
+    const channel = body.channel === 'b2b' || user?.accountType === 'b2b'
+      ? 'b2b'
+      : 'b2c';
+    const totalPrice = Number(body.totalPrice) || 0;
+    const finalSellingPrice = Number(body.finalSellingPrice) || totalPrice;
+
     // Create new booking
     const booking = new Booking({
       userId: decoded.userId,
+      channel,
+      agencyId: channel === 'b2b' ? body.agencyId || user?.agencyId : null,
+      agencyUserId: channel === 'b2b' ? body.agencyUserId || decoded.userId : null,
+      agencyRole: channel === 'b2b' ? body.agencyRole || user?.agencyRole || '' : '',
+      agentName: channel === 'b2b' ? body.agentName || user?.name || '' : '',
+      customerUserId: channel === 'b2c' ? decoded.userId : body.customerUserId || null,
+      customerEmail: body.customerEmail || body.contactEmail || user?.email || '',
+      customerName: body.customerName || body.leadGuest || user?.name || '',
       bookingReference: body.bookingReference || `HTL-${Date.now()}`,
       travellandaReference: body.travellandaReference,
       yourReference: body.yourReference,
+      supplier: body.supplier || 'none',
+      supplierHotelId: body.supplierHotelId,
+      supplierRateKey: body.supplierRateKey,
+      supplierBookingReference: body.supplierBookingReference,
       hotelId: body.hotelId,
       hotelName: body.hotelName,
       location: body.location,
@@ -95,16 +123,60 @@ export async function POST(req: NextRequest) {
       leadGuest: body.leadGuest,
       contactEmail: body.contactEmail,
       contactPhone: body.contactPhone,
-      totalPrice: body.totalPrice,
+      totalPrice,
+      netPrice: Number(body.netPrice) || totalPrice,
+      markupAmount: Number(body.markupAmount) || 0,
+      markupPercent: Number(body.markupPercent) || 0,
+      commissionAmount: Number(body.commissionAmount) || 0,
+      finalSellingPrice,
       currency: body.currency,
-      status: body.status || 'pending',
+      paymentMethodType: body.paymentMethodType || 'card',
+      agencyBalanceBefore: Number(body.agencyBalanceBefore) || 0,
+      agencyBalanceAfter: Number(body.agencyBalanceAfter) || 0,
+      creditLimitUsed: Number(body.creditLimitUsed) || 0,
+      status: bookingStatus,
+      paymentStatus: body.paymentStatus || 'pending',
+      supplierStatus: body.supplierStatus || 'not_started',
       specialRequests: body.specialRequests,
       cancellationPolicies: body.cancellationPolicies,
       alerts: body.alerts,
       restrictions: body.restrictions,
+      stripeSessionId: body.stripeSessionId,
+      stripeCheckoutSessionId: body.stripeCheckoutSessionId,
+      stripePaymentIntentId: body.stripePaymentIntentId,
+      failureReason: body.failureReason,
+      rawSupplierRequest: body.rawSupplierRequest,
+      rawSupplierResponse: body.rawSupplierResponse,
+      idempotencyKey: body.idempotencyKey,
+      metadata: body.metadata,
     });
     
     await booking.save();
+
+    await BookingLog.create({
+      bookingId: booking._id,
+      type: 'booking_created',
+      status: 'success',
+      message: 'Internal booking created before payment',
+      request: {
+        hotelId: body.hotelId,
+        hotelName: body.hotelName,
+        checkInDate: body.checkInDate,
+        checkOutDate: body.checkOutDate,
+        totalPrice: body.totalPrice,
+        currency: body.currency,
+        supplier: body.supplier || 'none',
+        channel,
+      },
+      response: {
+        bookingId: booking._id,
+        bookingReference: booking.bookingReference,
+        channel: booking.channel,
+        status: booking.status,
+        paymentStatus: booking.paymentStatus,
+        supplierStatus: booking.supplierStatus,
+      },
+    });
     
     return NextResponse.json({
       success: true,

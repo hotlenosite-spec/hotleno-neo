@@ -29,8 +29,8 @@ export function useCountries() {
         }
         
         if (!cancelled) setCountries(countriesData);
-      } catch (err) {
-        console.error('Failed to load countries:', err);
+      } catch {
+        if (!cancelled) setCountries([]);
       }
     }
     

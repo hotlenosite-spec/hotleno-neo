@@ -1,8 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import { USER_ROLES } from '@/models/User';
 import Booking from '@/models/Booking';
 import { verifyToken } from '@/lib/jwt';
+
+const editableRoles = USER_ROLES.filter((role) => role !== 'user');
+
+function getAccountTypeForRole(role: string) {
+  if (role === 'admin') return 'admin';
+  if (role.startsWith('agency_')) return 'b2b';
+  if (role.startsWith('hotel_')) return 'hotel';
+  return 'b2c';
+}
+
+function getAgencyRoleForRole(role: string) {
+  switch (role) {
+    case 'agency_owner':
+      return 'owner';
+    case 'agency_manager':
+      return 'manager';
+    case 'agency_agent':
+      return 'agent';
+    case 'agency_accountant':
+      return 'accountant';
+    default:
+      return null;
+  }
+}
+
+function getHotelRoleForRole(role: string) {
+  switch (role) {
+    case 'hotel_owner':
+      return 'owner';
+    case 'hotel_manager':
+      return 'manager';
+    case 'hotel_staff':
+      return 'staff';
+    default:
+      return null;
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -126,6 +164,13 @@ export async function PATCH(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    if (!editableRoles.includes(role as (typeof editableRoles)[number])) {
+      return NextResponse.json(
+        { error: 'Invalid user role' },
+        { status: 400 }
+      );
+    }
     
     // Prevent admin from demoting themselves
     if (userId === decoded.userId && role !== 'admin') {
@@ -137,8 +182,13 @@ export async function PATCH(req: NextRequest) {
     
     const user = await User.findByIdAndUpdate(
       userId,
-      { role },
-      { new: true }
+      {
+        role,
+        accountType: getAccountTypeForRole(role),
+        agencyRole: getAgencyRoleForRole(role),
+        hotelRole: getHotelRoleForRole(role),
+      },
+      { new: true, runValidators: true }
     ).select('-password');
     
     if (!user) {

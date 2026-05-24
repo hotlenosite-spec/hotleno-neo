@@ -81,15 +81,15 @@ export function GuestSelector({ guests, onChange }: GuestSelectorProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="flex h-[58px] w-full items-center justify-start border-0 bg-transparent px-4 text-[18px] font-normal text-[#808080] shadow-none hover:bg-transparent lg:h-[81px] lg:text-[24px]">
-          <HugeiconsIcon icon={User02FreeIcons} className="mr-3 h-6 w-6 text-[#1865a9]" />
+        <Button variant="outline" className="flex h-11 w-full items-center justify-start border-0 bg-transparent px-1 text-base font-black text-[#0F172A] shadow-none hover:bg-transparent">
+          <HugeiconsIcon icon={User02FreeIcons} className="mr-2 h-5 w-5 shrink-0 text-[#F97316] rtl:ml-2 rtl:mr-0" />
           <span className="truncate">
             {getGuestSummary() || t('selectGuests')}
           </span>
         </Button>
       </PopoverTrigger>
       
-      <PopoverContent className="w-[120%] p-4" align="start">
+      <PopoverContent className="w-[320px] rounded-2xl border-[#E5E7EB] p-4 shadow-xl" align="start">
         <div className="space-y-4">
           {/* Rooms */}
           <div className="space-y-2">
@@ -230,7 +230,7 @@ export function GuestSelector({ guests, onChange }: GuestSelectorProps) {
           <div className="pt-4">
             <Button
               onClick={() => setOpen(false)}
-              className="w-full"
+              className="w-full bg-[#F97316] font-bold text-white hover:bg-[#EA580C]"
             >
               {t('done')}
             </Button>

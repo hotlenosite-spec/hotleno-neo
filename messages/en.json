@@ -15,7 +15,7 @@
     "settings": "Settings",
     "language": "Language",
     "english": "English",
-    "arabic": "العربية",
+    "arabic": "Arabic",
     "menu": "Menu",
     "back": "Back"
   },
@@ -421,6 +421,25 @@
     "closed": "Closed",
     "failedToSendMessage": "Failed to send message",
     "errorOccurred": "An error occurred"
+  },
+  "blog": {
+    "blog": "Blog",
+    "eyebrow": "Hotleno Blog",
+    "title": "Travel ideas for easier bookings",
+    "description": "Short guides to help you plan, choose better stays, and book with confidence.",
+    "adminBlog": "Blog Management",
+    "readMore": "Read more",
+    "backToBlog": "Back to blog",
+    "latestPosts": "Latest posts",
+    "readArticle": "Read article",
+    "noPublishedPosts": "No published posts yet",
+    "published": "Published",
+    "draft": "Draft",
+    "addPost": "Add new post",
+    "edit": "Edit",
+    "delete": "Delete",
+    "publish": "Publish",
+    "hide": "Hide"
   },
   "components": {
     "shared": {

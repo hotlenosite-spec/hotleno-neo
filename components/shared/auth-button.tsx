@@ -21,8 +21,15 @@ export default function AuthButtons() {
     : null;
 
   return (
-    <div className="flex gap-4">
-      {isAuthenticated && userInfo ? <User user={userInfo} /> : <AuthDialog />}
+    <div className="flex items-center gap-3">
+      {isAuthenticated && userInfo ? (
+        <User user={userInfo} />
+      ) : (
+        <>
+          <AuthDialog defaultTab="login" triggerVariant="outline" />
+          <AuthDialog defaultTab="register" triggerVariant="solid" />
+        </>
+      )}
     </div>
   );
 }

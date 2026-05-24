@@ -90,6 +90,12 @@ import {
 import { format } from "date-fns";
 // sonner
 import { toast } from "sonner";
+import {
+  CANCELLABLE_BOOKING_STATUSES,
+  ACTIVE_BOOKING_STATUSES,
+  formatBookingStatus,
+  type BookingStatus,
+} from "@/lib/booking-status";
 
 interface Booking {
   _id: string;
@@ -100,13 +106,7 @@ interface Booking {
   checkOutDate: string;
   totalPrice: number;
   currency: string;
-  status:
-    | "confirmed"
-    | "pending"
-    | "onrequest"
-    | "cancelled"
-    | "rejected"
-    | "completed";
+  status: BookingStatus;
   createdAt: string;
 }
 
@@ -278,21 +278,21 @@ export default function ProfilePage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "confirmed":
-        return <Badge className="bg-green-500">{t("confirmed")}</Badge>;
-      case "pending":
-      case "onrequest":
+      case "supplier_booking_confirmed":
+        return <Badge className="bg-green-500">{formatBookingStatus(status)}</Badge>;
+      case "pending_payment":
+      case "payment_succeeded":
+      case "supplier_booking_pending":
         return (
           <Badge variant="outline" className="text-amber-600 border-amber-600">
-            {t("pending")}
+            {formatBookingStatus(status)}
           </Badge>
         );
       case "cancelled":
         return <Badge variant="destructive">{t("cancelled")}</Badge>;
-      case "completed":
-        return <Badge variant="secondary">{t("completed")}</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">{t("rejected")}</Badge>;
+      case "supplier_booking_failed":
+      case "refund_required":
+        return <Badge variant="destructive">{formatBookingStatus(status)}</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -615,11 +615,8 @@ export default function ProfilePage() {
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold">
                   {
-                    bookings.filter(
-                      (b) =>
-                        b.status === "confirmed" ||
-                        b.status === "pending" ||
-                        b.status === "onrequest",
+                    bookings.filter((b) =>
+                      ACTIVE_BOOKING_STATUSES.includes(b.status),
                     ).length
                   }
                 </div>
@@ -631,10 +628,14 @@ export default function ProfilePage() {
             <Card className="bg-muted/50">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold">
-                  {bookings.filter((b) => b.status === "completed").length}
+                  {
+                    bookings.filter(
+                      (b) => b.status === "supplier_booking_confirmed",
+                    ).length
+                  }
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {t("completed")}
+                  {formatBookingStatus("supplier_booking_confirmed")}
                 </div>
               </CardContent>
             </Card>
@@ -944,9 +945,9 @@ export default function ProfilePage() {
                                   <Button size="sm" variant="outline">
                                     {t("viewDetails")}
                                   </Button>
-                                  {(booking.status === "confirmed" ||
-                                    booking.status === "pending" ||
-                                    booking.status === "onrequest") && (
+                                  {CANCELLABLE_BOOKING_STATUSES.includes(
+                                    booking.status,
+                                  ) && (
                                     <Button size="sm" variant="destructive">
                                       {t("cancel")}
                                     </Button>
@@ -1002,7 +1003,7 @@ export default function ProfilePage() {
                   >
                     <HugeiconsIcon
                       icon={Moon02Icon}
-                      className="h-8 w-8 text-blue-400"
+                      className="h-8 w-8 text-[#F97316]"
                     />
                     <span className="text-sm font-medium">{t("dark")}</span>
                   </button>
@@ -1021,7 +1022,7 @@ export default function ProfilePage() {
                       />
                       <HugeiconsIcon
                         icon={Moon02Icon}
-                        className="h-6 w-6 text-blue-400"
+                        className="h-6 w-6 text-[#F97316]"
                       />
                     </div>
                     <span className="text-sm font-medium">{t("system")}</span>

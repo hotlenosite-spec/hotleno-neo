@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { z } from "zod";
+import { BOOKING_STATUSES } from "@/lib/booking-status";
+import dbConnect from "@/lib/mongodb";
+import Booking from "@/models/Booking";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 const checkoutSchema = z.object({
   amount: z.number().positive(),
-  bookingId: z.string().min(1).optional(),
+  bookingId: z.string().min(1),
   description: z.string().min(1).max(500).optional(),
   currency: z.string().min(3).max(3).optional(),
   locale: z.string().min(2).max(10).optional(),
@@ -14,13 +18,13 @@ const checkoutSchema = z.object({
 
 function getStripeClient() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
-  const stripeEnv = process.env.STRIPE_ENV;
+  const stripeMode = process.env.STRIPE_MODE ?? process.env.STRIPE_ENV;
 
   if (!secretKey) {
     throw new Error("Stripe is not configured");
   }
 
-  if (stripeEnv !== "test" || !secretKey.startsWith("sk_test_")) {
+  if (stripeMode !== "test" || !secretKey.startsWith("sk_test_")) {
     throw new Error("Stripe test mode is required");
   }
 
@@ -29,6 +33,21 @@ function getStripeClient() {
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimitResponse = checkRateLimit(req, {
+      keyPrefix: "payments:stripe-checkout",
+      limit: 15,
+      windowMs: 60_000,
+    });
+
+    if (rateLimitResponse) return rateLimitResponse;
+
+    if (process.env.STRIPE_CHECKOUT_ENABLED !== "true") {
+      return NextResponse.json(
+        { error: "Stripe checkout is not enabled" },
+        { status: 503 },
+      );
+    }
+
     const body = await req.json();
     const validation = checkoutSchema.safeParse(body);
 
@@ -47,6 +66,16 @@ export async function POST(req: NextRequest) {
       currency = "usd",
       locale = "en",
     } = validation.data;
+
+    await dbConnect();
+    const booking = await Booking.findById(bookingId).select("_id");
+
+    if (!booking) {
+      return NextResponse.json(
+        { error: "Booking not found" },
+        { status: 404 },
+      );
+    }
 
     const origin = req.headers.get("origin") ?? new URL(req.url).origin;
     const safeLocale = locale.replace(/[^a-zA-Z-]/g, "") || "en";
@@ -69,13 +98,14 @@ export async function POST(req: NextRequest) {
         },
       ],
       metadata: {
-        bookingId: bookingId ?? "",
-        nextStatus: "payment_succeeded_pending_supplier_booking",
+        bookingId,
+        nextStatus: "payment_succeeded",
+        supportedStatuses: BOOKING_STATUSES.join(","),
       },
       payment_intent_data: {
         metadata: {
-          bookingId: bookingId ?? "",
-          nextStatus: "payment_succeeded_pending_supplier_booking",
+          bookingId,
+          nextStatus: "payment_succeeded",
         },
       },
     });

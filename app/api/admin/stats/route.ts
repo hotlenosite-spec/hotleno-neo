@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import User from '@/models/User';
 import { verifyToken } from '@/lib/jwt';
+import { ACTIVE_BOOKING_STATUSES, PAID_BOOKING_STATUSES } from '@/lib/booking-status';
 
 export async function GET(req: NextRequest) {
   try {
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
     const revenueResult = await Booking.aggregate([
       {
         $match: {
-          status: { $in: ['confirmed', 'completed'] }
+          status: { $in: PAID_BOOKING_STATUSES }
         }
       },
       {
@@ -50,9 +51,9 @@ export async function GET(req: NextRequest) {
     ]);
     const totalRevenue = revenueResult[0]?.total || 0;
     
-    // Get active bookings (confirmed or pending)
+    // Get active bookings across payment and supplier booking workflow
     const activeBookings = await Booking.countDocuments({
-      status: { $in: ['confirmed', 'pending', 'onrequest'] }
+      status: { $in: ACTIVE_BOOKING_STATUSES }
     });
     
     // Get recent bookings

@@ -41,8 +41,8 @@ export function useCities(countryCode?: string) {
         }
         
         if (!cancelled) setCities(citiesData);
-      } catch (err) {
-        console.error('Failed to load cities:', err);
+      } catch {
+        if (!cancelled) setCities([]);
       }
     }
     

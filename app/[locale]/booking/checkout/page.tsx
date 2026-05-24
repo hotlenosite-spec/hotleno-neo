@@ -88,11 +88,14 @@ export default function CheckoutPage() {
   const router = useRouter();
   const locale = useLocale();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const isStripeCheckoutEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_STRIPE_CHECKOUT === "true";
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
   const [travelers, setTravelers] = useState<Traveler[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [contactInfo, setContactInfo] = useState({
     email: "",
     phone: "",
@@ -200,6 +203,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async () => {
     setError(null);
+    setNotice(null);
 
     if (!validateForm()) {
       return;
@@ -245,114 +249,130 @@ export default function CheckoutPage() {
         }
       });
 
-      const bookingRequest = {
-        RequestType: "HotelBooking",
-        OptionId: bookingData.hotel.selectedOption.OptionId,
-        YourReference: `HOTLENO-${Date.now()}`,
-        Rooms: Array.from(roomsMap.values()),
+      const yourReference = `HOTLENO-${Date.now()}`;
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Please sign in to complete your booking");
+      }
+
+      const leadGuest = travelers.find((t) => t.travelerType === "adult");
+      const dbBooking = {
+        bookingReference: yourReference,
+        travellandaReference: "",
+        yourReference,
+        supplier: "none",
+        supplierHotelId: String(bookingData.hotel.HotelId),
+        supplierRateKey: String(bookingData.hotel.selectedOption.OptionId),
+        supplierBookingReference: "",
+        hotelId: bookingData.hotel.HotelId,
+        hotelName: bookingData.hotel.HotelName,
+        location: `${bookingData.hotel.CityName}, ${bookingData.hotel.CountryName}`,
+        checkInDate: bookingData.searchParams.dates.checkIn,
+        checkOutDate: bookingData.searchParams.dates.checkOut,
+        rooms: Array.from(roomsMap.values()).map((room) => ({
+          roomId: room.RoomId,
+          roomName:
+            bookingData.hotel.selectedOption.Rooms.find(
+              (r: { RoomId: number; RoomName: string }) =>
+                r.RoomId === room.RoomId,
+            )?.RoomName || "Room",
+          adults: room.AdultNames.length,
+          children: room.ChildNames?.length || 0,
+        })),
+        leadGuest: leadGuest
+          ? `${leadGuest.title || "Mr"} ${leadGuest.firstName} ${leadGuest.lastName}`
+          : "Guest",
+        contactEmail: contactInfo.email,
+        contactPhone: contactInfo.phone,
+        totalPrice,
+        currency: bookingData.hotel.selectedOption.Currency,
+        status: "pending_payment",
+        paymentStatus: "pending",
+        supplierStatus: "not_started",
+        specialRequests: contactInfo.specialRequests,
+        cancellationPolicies: [],
+        alerts: [],
+        restrictions: [],
+        rawSupplierRequest: null,
+        rawSupplierResponse: null,
+        idempotencyKey: yourReference,
+        metadata: {
+          checkoutFlow: "internal_booking_before_payment",
+          stripeMetadataReady: true,
+        },
       };
 
-      // API call with 120 second timeout as per spec
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const bookingResponse = await fetch("/api/user/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(dbBooking),
+      });
 
-      const response = await fetch("/api/travellanda", {
+      if (!bookingResponse.ok) {
+        const data = await bookingResponse.json().catch(() => null);
+        throw new Error(data?.error || "Failed to create booking");
+      }
+
+      const bookingResult = await bookingResponse.json();
+      const bookingId = bookingResult.booking?._id;
+
+      if (!bookingId) {
+        throw new Error("Booking was created without a booking ID");
+      }
+
+      const pendingPaymentCheckout = {
+        bookingId,
+        bookingReference: yourReference,
+        amount: totalPrice,
+        currency: bookingData.hotel.selectedOption.Currency,
+        stripeMetadata: {
+          bookingId,
+          bookingReference: yourReference,
+          nextStatus: "payment_succeeded",
+        },
+      };
+
+      localStorage.setItem(
+        "pendingPaymentCheckout",
+        JSON.stringify(pendingPaymentCheckout),
+      );
+
+      if (!isStripeCheckoutEnabled) {
+        setNotice(
+          `Booking created with ID ${bookingId}. Payment checkout is not enabled yet.`,
+        );
+        return;
+      }
+
+      const checkoutResponse = await fetch("/api/payments/stripe/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(bookingRequest),
-        signal: controller.signal,
+        body: JSON.stringify({
+          amount: totalPrice,
+          bookingId,
+          currency: bookingData.hotel.selectedOption.Currency,
+          description: `Hotleno booking ${yourReference}`,
+          locale,
+        }),
       });
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error("Booking request failed");
+      if (!checkoutResponse.ok) {
+        const data = await checkoutResponse.json().catch(() => null);
+        throw new Error(data?.error || "Failed to start payment");
       }
 
-      const result = await response.json();
-
-      // Check for API errors
-      if (result.Error) {
-        throw new Error(result.Error.Message);
+      const checkout = await checkoutResponse.json();
+      if (!checkout.url) {
+        throw new Error("Payment session did not return a checkout URL");
       }
 
-      // Save booking to database
-      try {
-        const token = localStorage.getItem("token");
-        if (token) {
-          const leadGuest = travelers.find((t) => t.travelerType === "adult");
-          const dbBooking = {
-            bookingReference:
-              result.BookingReference || bookingRequest.YourReference,
-            travellandaReference: result.BookingReference,
-            yourReference: bookingRequest.YourReference,
-            hotelId: bookingData!.hotel.HotelId,
-            hotelName: bookingData!.hotel.HotelName,
-            location: `${bookingData!.hotel.CityName}, ${bookingData!.hotel.CountryName}`,
-            checkInDate: bookingData!.searchParams.dates.checkIn,
-            checkOutDate: bookingData!.searchParams.dates.checkOut,
-            rooms: Array.from(roomsMap.values()).map((room) => ({
-              roomId: room.RoomId,
-              roomName:
-                bookingData!.hotel.selectedOption.Rooms.find(
-                  (r: { RoomId: number; RoomName: string }) =>
-                    r.RoomId === room.RoomId,
-                )?.RoomName || "Room",
-              adults: room.AdultNames.length,
-              children: room.ChildNames?.length || 0,
-            })),
-            leadGuest: leadGuest
-              ? `${leadGuest.title || "Mr"} ${leadGuest.firstName} ${leadGuest.lastName}`
-              : "Guest",
-            contactEmail: contactInfo.email,
-            contactPhone: contactInfo.phone,
-            totalPrice:
-              result.TotalPrice ||
-              bookingData!.hotel.selectedOption.Price * nights,
-            currency:
-              result.Currency || bookingData!.hotel.selectedOption.Currency,
-            status: result.BookingStatus?.toLowerCase() || "pending",
-            specialRequests: contactInfo.specialRequests,
-            cancellationPolicies: result.CancellationPolicies || [],
-            alerts: result.Alerts || [],
-            restrictions: result.Restrictions || [],
-          };
-
-          await fetch("/api/user/bookings", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(dbBooking),
-          });
-        }
-      } catch (dbError) {
-        console.error("Failed to save booking to database:", dbError);
-        // Don't throw - booking was successful with Travellanda
-      }
-
-      // Store booking confirmation
-      localStorage.setItem(
-        "bookingConfirmation",
-        JSON.stringify({
-          ...result,
-          contactInfo,
-          travelers,
-          bookingRequest,
-        }),
-      );
-
-      // Clear temporary data
-      localStorage.removeItem("selectedOption");
-      localStorage.removeItem("bookingData");
-
-      // Redirect to confirmation page
-      router.push(
-        `/${locale}/booking/confirmation?reference=${result.BookingReference || bookingRequest.YourReference}`,
-      );
+      window.location.href = checkout.url;
     } catch (error) {
       console.error("Booking error:", error);
       if (error instanceof Error && error.name === "AbortError") {
@@ -432,6 +452,13 @@ export default function CheckoutPage() {
         <Alert variant="destructive" className="mb-6">
           <HugeiconsIcon icon={AlertCircleIcon} className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {notice && (
+        <Alert className="mb-6">
+          <HugeiconsIcon icon={CheckmarkCircle02Icon} className="h-4 w-4" />
+          <AlertDescription>{notice}</AlertDescription>
         </Alert>
       )}
 

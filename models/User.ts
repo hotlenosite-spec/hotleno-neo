@@ -10,12 +10,52 @@ export interface IUserPreferences {
   theme: 'light' | 'dark' | 'system';
 }
 
+export const USER_ROLES = [
+  'customer',
+  'agency_owner',
+  'agency_manager',
+  'agency_agent',
+  'agency_accountant',
+  'hotel_owner',
+  'hotel_manager',
+  'hotel_staff',
+  'admin',
+  'user',
+] as const;
+
+export const ACCOUNT_TYPES = ['b2c', 'b2b', 'hotel', 'admin'] as const;
+
+export const AGENCY_ROLES = [
+  'owner',
+  'manager',
+  'agent',
+  'accountant',
+] as const;
+
+export const HOTEL_ROLES = [
+  'owner',
+  'manager',
+  'staff',
+] as const;
+
+export type UserRole = (typeof USER_ROLES)[number];
+export type AccountType = (typeof ACCOUNT_TYPES)[number];
+export type AgencyRole = (typeof AGENCY_ROLES)[number];
+export type HotelRole = (typeof HOTEL_ROLES)[number];
+
 export interface IUser extends Document {
   email: string;
   password: string;
   name: string;
   avatar?: string;
-  role: 'user' | 'admin';
+  role: UserRole;
+  accountType: AccountType;
+  agencyId?: mongoose.Types.ObjectId;
+  agencyRole?: AgencyRole;
+  hotelPartnerId?: mongoose.Types.ObjectId;
+  hotelRole?: HotelRole;
+  isActive: boolean;
+  lastLoginAt?: Date;
   phone?: string;
   birthDate?: Date;
   nationality?: string;
@@ -60,8 +100,45 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     role: {
       type: String,
-      enum: ['user', 'admin'],
-      default: 'user',
+      enum: USER_ROLES,
+      default: 'customer',
+    },
+    accountType: {
+      type: String,
+      enum: ACCOUNT_TYPES,
+      default: 'b2c',
+      index: true,
+    },
+    agencyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Agency',
+      default: null,
+      index: true,
+    },
+    agencyRole: {
+      type: String,
+      enum: AGENCY_ROLES,
+      default: null,
+    },
+    hotelPartnerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'HotelPartner',
+      default: null,
+      index: true,
+    },
+    hotelRole: {
+      type: String,
+      enum: HOTEL_ROLES,
+      default: null,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    lastLoginAt: {
+      type: Date,
+      default: null,
     },
     phone: {
       type: String,

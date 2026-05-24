@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { generateToken } from '@/lib/jwt';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -11,6 +12,14 @@ const loginSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimitResponse = checkRateLimit(req, {
+      keyPrefix: 'auth:login',
+      limit: 10,
+      windowMs: 60_000,
+    });
+
+    if (rateLimitResponse) return rateLimitResponse;
+
     await dbConnect();
     
     const body = await req.json();
@@ -43,6 +52,16 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    if (user.isActive === false) {
+      return NextResponse.json(
+        { error: 'Account is inactive' },
+        { status: 403 }
+      );
+    }
+
+    user.lastLoginAt = new Date();
+    await user.save();
     
     // Generate token
     const token = generateToken({
@@ -59,6 +78,13 @@ export async function POST(req: NextRequest) {
         name: user.name,
         email: user.email,
         role: user.role,
+        accountType: user.accountType,
+        agencyId: user.agencyId,
+        agencyRole: user.agencyRole,
+        hotelPartnerId: user.hotelPartnerId,
+        hotelRole: user.hotelRole,
+        isActive: user.isActive,
+        lastLoginAt: user.lastLoginAt,
         avatar: user.avatar,
       },
       token,

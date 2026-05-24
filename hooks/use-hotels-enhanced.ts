@@ -103,10 +103,20 @@ export function useHotelsEnhanced(): UseHotelsEnhancedReturn {
         requestParams.HotelIds = params.hotelIds.slice(0, 200); // API limit
       }
 
-      const result = await travellandaClient.request<HotelSearchResponse>({
-        RequestType: 'HotelSearch',
-        ...requestParams,
+      const response = await fetch('/api/hotels/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestParams),
       });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || data?.error || 'Failed to search hotels');
+      }
+
+      const result = await response.json() as HotelSearchResponse;
       
       // Check for API errors
       if (result.Error) {

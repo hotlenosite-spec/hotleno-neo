@@ -33,7 +33,6 @@ export class TravellandaClient {
 
       return await response.json();
     } catch (error) {
-      console.error('Travellanda request failed:', error);
       throw error;
     }
   }

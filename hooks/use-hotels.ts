@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useTravellanda } from './use-travellanda';
 
 export interface HotelSearchParams {
   cityId?: number;
@@ -17,15 +16,14 @@ export interface HotelSearchParams {
 }
 
 export function useHotels() {
-  const { 
-    loading, 
-    error, 
-    execute 
-  } = useTravellanda();
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<Record<string, unknown> | null>(null);
 
   const search = useCallback(async (params: HotelSearchParams) => {
+    setLoading(true);
+    setError(null);
+
     try {
       const requestParams: Record<string, unknown> = {
         CheckInDate: params.checkInDate,
@@ -43,15 +41,31 @@ export function useHotels() {
         requestParams.HotelIds = params.hotelIds;
       }
 
-      const result = await execute('HotelSearch', requestParams);
+      const response = await fetch('/api/hotels/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestParams),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || data?.error || 'Hotel search failed');
+      }
+
+      const result = await response.json();
       
       setSearchResults(result as Record<string, unknown>);
       return result;
     } catch (err) {
       console.error('Hotel search failed:', err);
+      setError(err instanceof Error ? err.message : 'Hotel search failed');
       throw err;
+    } finally {
+      setLoading(false);
     }
-  }, [execute]);
+  }, []);
 
   return {
     search,

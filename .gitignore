@@ -26,15 +26,35 @@
 # misc
 .DS_Store
 *.pem
+*.tmp
+*.temp
+*.zip
+!TBO-certification-complete-logs-*.zip
+/tmp/
+/temp/
+/.tmp/
 
 # debug
+*.log
+*.err
+*.out
+*.err.log
+*.out.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.next-dev-*.log
+
+# runtime logs
+/logs/*
+!/logs/tbo-certification/
+!/logs/tbo-certification/**
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!.env.local.example
 
 # vercel
 .vercel

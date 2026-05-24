@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { generateToken } from '@/lib/jwt';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 
 const registerSchema = z.object({
@@ -12,6 +13,14 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimitResponse = checkRateLimit(req, {
+      keyPrefix: 'auth:register',
+      limit: 5,
+      windowMs: 60_000,
+    });
+
+    if (rateLimitResponse) return rateLimitResponse;
+
     await dbConnect();
     
     const body = await req.json();
@@ -58,6 +67,12 @@ export async function POST(req: NextRequest) {
         name: user.name,
         email: user.email,
         role: user.role,
+        accountType: user.accountType,
+        agencyId: user.agencyId,
+        agencyRole: user.agencyRole,
+        hotelPartnerId: user.hotelPartnerId,
+        hotelRole: user.hotelRole,
+        isActive: user.isActive,
       },
       token,
     }, { status: 201 });

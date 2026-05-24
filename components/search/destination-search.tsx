@@ -96,7 +96,7 @@ export function DestinationSearch({
   );
 
   return (
-    <div className="flex min-h-[58px] items-center rtl:flex-row-reverse lg:min-h-[81px]">
+    <div className="flex min-h-11 items-center rtl:flex-row-reverse">
       {/* Country Search */}
       <div className="space-y-2 flex-1">
         <Popover open={countryOpen} onOpenChange={setCountryOpen}>
@@ -105,13 +105,13 @@ export function DestinationSearch({
               variant="outline"
               role="combobox"
               aria-expanded={countryOpen}
-              className={cn("h-[58px] w-full justify-between rounded-r-none border-0 bg-transparent px-4 text-[18px] font-normal text-[#808080] shadow-none hover:bg-transparent lg:h-[81px] lg:text-[24px]")}
+              className={cn("h-11 w-full justify-between rounded-xl border-0 bg-transparent px-1 text-base font-black text-[#0F172A] shadow-none hover:bg-transparent")}
               disabled={countriesLoading}
             >
               <div className="flex items-center gap-2">
                 <HugeiconsIcon 
                   icon={MapingIcon} 
-                  className="h-6 w-6 text-[#1865a9]" 
+                  className="h-5 w-5 shrink-0 text-[#F97316]" 
                 />
                 <span className={cn(
                   "truncate",
@@ -126,7 +126,7 @@ export function DestinationSearch({
             </Button>
           </PopoverTrigger>
           
-          <PopoverContent className="w-[133%] p-0" align="start">
+          <PopoverContent className="w-[320px] rounded-2xl border-[#E5E7EB] p-0 shadow-xl" align="start">
             <Command>
               <CommandInput
                 placeholder={t('searchCountries')}
@@ -174,13 +174,13 @@ export function DestinationSearch({
               variant="outline"
               role="combobox"
               aria-expanded={cityOpen}
-              className="h-[58px] w-full justify-between rounded-l-none border-0 bg-transparent px-4 text-[18px] font-normal text-[#808080] shadow-none hover:bg-transparent lg:h-[81px] lg:text-[24px]"
+              className="h-11 w-full justify-between rounded-xl border-0 bg-transparent px-1 text-base font-black text-[#0F172A] shadow-none hover:bg-transparent"
               disabled={!selectedCountry || citiesLoading}
             >
               <div className="flex items-center gap-2">
                 <HugeiconsIcon 
                   icon={MapingIcon} 
-                  className="h-6 w-6 text-[#1865a9]" 
+                  className="h-5 w-5 shrink-0 text-[#F97316]" 
                 />
                 <span className={cn(
                   "truncate",
@@ -195,7 +195,7 @@ export function DestinationSearch({
             </Button>
           </PopoverTrigger>
           
-          <PopoverContent className="w-[133%] p-0" align="start">
+          <PopoverContent className="w-[320px] rounded-2xl border-[#E5E7EB] p-0 shadow-xl" align="start">
             <Command>
               <CommandInput
                 placeholder={`${t('searchCities')} ${selectedCountryName}`}

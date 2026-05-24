@@ -13,6 +13,13 @@ interface User {
   name: string;
   email: string;
   role: string;
+  accountType?: string;
+  agencyId?: string;
+  agencyRole?: string;
+  hotelPartnerId?: string;
+  hotelRole?: string;
+  isActive?: boolean;
+  lastLoginAt?: string;
   avatar?: string;
 }
 

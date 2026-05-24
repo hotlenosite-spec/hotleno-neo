@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,22 +16,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
-export function AuthDialog() {
+interface AuthDialogProps {
+  defaultTab?: "login" | "register";
+  triggerLabel?: string;
+  triggerVariant?: "outline" | "solid";
+}
+
+export function AuthDialog({
+  defaultTab = "login",
+  triggerLabel,
+  triggerVariant = "outline",
+}: AuthDialogProps) {
   const t = useTranslations("auth");
+  const locale = useLocale();
+  const isAr = locale === "ar";
   const { login, register } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Login form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-
-  // Register form state
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
+
+  const labels = {
+    login: isAr ? "تسجيل الدخول" : t("signIn"),
+    register: isAr ? "إنشاء حساب" : t("signUp"),
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,27 +91,48 @@ export function AuthDialog() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (open) setActiveTab(defaultTab);
+      }}
+    >
       <DialogTrigger asChild>
         <Button
-          variant="outline"
+          variant={triggerVariant === "solid" ? "default" : "outline"}
           size="sm"
-          className="h-[60px] rounded-[28px] border-[3px] border-white bg-transparent px-10 text-[28px] font-bold text-white shadow-[0px_4px_4px_rgba(0,0,0,0.25)] hover:bg-white/15 hover:text-white"
+          className={cn(
+            "h-10 rounded-full px-5 text-sm font-black",
+            triggerVariant === "solid"
+              ? "bg-[#F97316] text-white shadow-sm shadow-orange-500/20 hover:bg-[#EA580C]"
+              : "border-[#E5E7EB] bg-white text-[#0F172A] hover:border-[#F97316] hover:bg-orange-50 hover:text-[#F97316]",
+          )}
         >
-          login
+          {triggerLabel || labels[defaultTab === "register" ? "register" : "login"]}
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="rounded-3xl border-[#E5E7EB] sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{t("welcome")}</DialogTitle>
+          <DialogTitle className="text-2xl font-black text-[#0F172A]">
+            {t("welcome")}
+          </DialogTitle>
           <DialogDescription>{t("welcomeDescription")}</DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">{t("signIn")}</TabsTrigger>
-            <TabsTrigger value="register">{t("signUp")}</TabsTrigger>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as "login" | "register")}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-[#F8FAFC]">
+            <TabsTrigger value="login" className="rounded-xl">
+              {labels.login}
+            </TabsTrigger>
+            <TabsTrigger value="register" className="rounded-xl">
+              {labels.register}
+            </TabsTrigger>
           </TabsList>
 
           {error && (
@@ -105,7 +142,7 @@ export function AuthDialog() {
           )}
 
           <TabsContent value="login">
-            <form onSubmit={handleLogin} className="space-y-4 mt-4">
+            <form onSubmit={handleLogin} className="mt-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="login-email">{t("email")}</Label>
                 <Input
@@ -129,14 +166,18 @@ export function AuthDialog() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? t("signingIn") : t("signIn")}
+              <Button
+                type="submit"
+                className="w-full bg-[#F97316] font-black text-white hover:bg-[#EA580C]"
+                disabled={isLoading}
+              >
+                {isLoading ? t("signingIn") : labels.login}
               </Button>
             </form>
           </TabsContent>
 
           <TabsContent value="register">
-            <form onSubmit={handleRegister} className="space-y-4 mt-4">
+            <form onSubmit={handleRegister} className="mt-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="register-name">{t("fullName")}</Label>
                 <Input
@@ -172,8 +213,12 @@ export function AuthDialog() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? t("creatingAccount") : t("createAccount")}
+              <Button
+                type="submit"
+                className="w-full bg-[#F97316] font-black text-white hover:bg-[#EA580C]"
+                disabled={isLoading}
+              >
+                {isLoading ? t("creatingAccount") : labels.register}
               </Button>
             </form>
           </TabsContent>

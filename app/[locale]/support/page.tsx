@@ -124,7 +124,7 @@ export default function SupportPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge className="bg-blue-500">{t("open")}</Badge>;
+        return <Badge className="bg-[#F97316]">{t("open")}</Badge>;
       case "in_progress":
         return <Badge className="bg-amber-500">{t("inProgress")}</Badge>;
       case "waiting":

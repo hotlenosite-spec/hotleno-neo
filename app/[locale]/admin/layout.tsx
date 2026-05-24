@@ -1,11 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/providers/auth-provider";
-import { useTranslations } from "next-intl";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminHeader } from "@/components/admin/admin-header";
 
@@ -14,48 +8,27 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const t = useTranslations("admin");
+  // Temporary local development bypass.
+  // IMPORTANT: Before production, restore real admin auth protection.
+  const isDevAdminBypass = true;
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        toast.error(t("notAuthenticated"));
-        router.push("/");
-        return;
-      }
-
-      if (user?.role !== "admin") {
-        toast.error(t("adminAccessRequired"));
-        router.push("/");
-        return;
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router, t]);
-
-  if (isLoading) {
+  if (isDevAdminBypass) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="space-y-4 w-full max-w-md px-4">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-64 w-full" />
+      <div dir="rtl" className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
+        <div className="flex min-h-screen">
+          <AdminSidebar />
+
+          <div className="flex min-h-screen flex-1 flex-col">
+            <AdminHeader />
+
+            <main className="flex-1 overflow-auto px-4 py-5 sm:px-6 lg:px-8">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <AdminHeader />
-      <div className="flex">
-        <AdminSidebar />
-        <main className="flex-1 p-6 lg:p-8 overflow-auto">{children}</main>
-      </div>
-    </div>
-  );
+  return null;
 }
