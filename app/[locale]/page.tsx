@@ -113,6 +113,16 @@ export default async function Home({
     night: isAr ? "لليلة" : "night",
     plannerCta: isAr ? "خطط رحلتك بميزانيتك" : "Plan your trip by budget",
     blogCta: isAr ? "استكشف المدونة" : "Explore the blog",
+    transfersTitle: isAr ? "النقل من وإلى المطار" : "Airport transfers",
+    transfersDesc: isAr
+      ? "احجز خدمات النقل بين المطار والفندق بسهولة. الخدمة قيد التجهيز وسيتم ربطها مع Hotelbeds Transfers."
+      : "Book transfers between the airport and your hotel with ease. This service is being prepared for Hotelbeds Transfers.",
+    transfersCta: isAr ? "استكشف خدمة النقل" : "Explore transfers",
+    activitiesTitle: isAr ? "الأنشطة والتجارب" : "Activities and experiences",
+    activitiesDesc: isAr
+      ? "استكشف الجولات والتجارب السياحية حسب الوجهة والتاريخ والمسافرين عبر Hotelbeds Activities."
+      : "Explore tours and travel experiences by destination, dates, and travellers with Hotelbeds Activities.",
+    activitiesCta: isAr ? "استكشف الأنشطة" : "Explore activities",
   };
 
   const benefits = [
@@ -183,6 +193,52 @@ export default async function Home({
                 <HugeiconsIcon icon={Tick02Icon} className="h-5 w-5" />
               </span>
               <span className="text-sm font-bold text-[#0F172A]">{item}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+        <div className="grid gap-5 lg:grid-cols-2">
+          {[
+            {
+              title: copy.transfersTitle,
+              description: copy.transfersDesc,
+              cta: copy.transfersCta,
+              href: `/${locale}/transfers`,
+            },
+            {
+              title: copy.activitiesTitle,
+              description: copy.activitiesDesc,
+              cta: copy.activitiesCta,
+              href: `/${locale}/activities`,
+            },
+          ].map((service) => (
+            <div
+              key={service.href}
+              className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-[#F8FAFC] p-5 shadow-sm md:p-7"
+            >
+              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div className="flex gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
+                    <HugeiconsIcon icon={Hotel01Icon} className="h-6 w-6" />
+                  </span>
+                  <div>
+                    <h2 className="text-2xl font-black text-[#0F172A]">
+                      {service.title}
+                    </h2>
+                    <p className="mt-2 max-w-3xl text-sm font-medium leading-7 text-slate-600">
+                      {service.description}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={service.href}
+                  className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-[#F97316] px-6 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-[#ea580c]"
+                >
+                  {service.cta}
+                </Link>
+              </div>
             </div>
           ))}
         </div>

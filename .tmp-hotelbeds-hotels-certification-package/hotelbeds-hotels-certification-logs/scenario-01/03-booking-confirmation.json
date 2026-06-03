@@ -1,0 +1,13 @@
+{
+  "status": "confirmed",
+  "supplier": "Hotelbeds Accommodation",
+  "strategy": "BOOKABLE_DIRECT",
+  "bookingReference": "102-20736378",
+  "clientReference": "HOTLENO-HOTEL-01",
+  "hotelName": "Sercotel Rosellon",
+  "hotelCode": 120473,
+  "roomName": "CLASSIC TWIN",
+  "boardName": "ROOM ONLY",
+  "amount": "150.85",
+  "currency": "EUR"
+}

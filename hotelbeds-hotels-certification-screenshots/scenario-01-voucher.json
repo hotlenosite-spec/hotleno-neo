@@ -1,0 +1,21 @@
+{
+  "scenario": {
+    "scenario": "scenario-01",
+    "title": "Scenario 1 - Hotelbeds Accommodation booking funnel",
+    "supplier": "Hotelbeds Accommodation",
+    "status": "Completed successfully",
+    "bookingReference": "102-20736378",
+    "hotelName": "Sercotel Rosellon",
+    "destination": "Barcelona",
+    "checkIn": "2026-08-17",
+    "checkOut": "2026-08-18",
+    "room": "CLASSIC TWIN",
+    "board": "ROOM ONLY",
+    "rate": "150.85",
+    "currency": "EUR",
+    "voucherStatus": "Generated",
+    "cancellationStatus": "Cancelled"
+  },
+  "stepName": "Voucher",
+  "status": "Generated"
+}

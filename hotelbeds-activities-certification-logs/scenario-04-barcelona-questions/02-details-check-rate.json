@@ -1,0 +1,27 @@
+{
+  "status": "Success",
+  "activityCode": "A1AANO0485",
+  "activityName": "Girona and Dali Museum in Figueres - Tour with Transfers",
+  "destination": "Barcelona / BCN",
+  "dateFrom": "2026-07-07",
+  "dateTo": "2026-07-07",
+  "modality": "Private Tour spanish 08:30",
+  "questionCount": 3,
+  "questions": [
+    {
+      "code": "EMAIL",
+      "text": "Please provide an email address",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "MOBILE",
+      "text": "Please indicate your mobile number",
+      "answeredWithTestValue": true
+    }
+  ]
+}

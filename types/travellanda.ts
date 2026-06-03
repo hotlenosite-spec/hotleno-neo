@@ -117,9 +117,11 @@ export interface HotelSearchResult {
   CountryName: string;
   Latitude?: number;
   Longitude?: number;
+  Description?: string;
   Images: HotelImage[];
   Facilities: string[];
   Options: HotelOption[];
+  supplierOffers?: unknown[];
 }
 
 export interface HotelSearchResponse extends TravellandaResponse {

@@ -4,7 +4,10 @@ import process from "node:process";
 
 const LOG_ROOT = path.join(process.cwd(), "logs", "tbo-certification");
 const DEFAULT_HOTEL_CODES = "1120548,1247101";
-const DEFAULT_NATIONALITY = "AE";
+const DEFAULT_NATIONALITY = "SA";
+const MIN_RESPONSE_TIME_SECONDS = 5;
+const MAX_RESPONSE_TIME_SECONDS = 23;
+// TBO recommends PaymentMode=Limit for certification booking flows.
 const PAYMENT_MODE = "Limit";
 
 const TIMEOUTS = {
@@ -104,12 +107,39 @@ function requireConfig() {
     username: process.env.TBO_USERNAME,
     password: process.env.TBO_PASSWORD,
     environment: process.env.TBO_ENV,
+    guestNationality: normalizeCountryCode(
+      process.env.TBO_GUEST_NATIONALITY || DEFAULT_NATIONALITY,
+      "TBO_GUEST_NATIONALITY",
+    ),
+    responseTime: normalizeResponseTime(process.env.TBO_RESPONSE_TIME_SECONDS),
   };
 }
 
-function getDates() {
+function normalizeCountryCode(value, label) {
+  const normalized = String(value || "").trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) {
+    throw new Error(`${label} must be a 2-letter country code`);
+  }
+  return normalized;
+}
+
+function normalizeResponseTime(value) {
+  const parsed = Number.parseInt(value || `${MAX_RESPONSE_TIME_SECONDS}`, 10);
+  if (
+    !Number.isInteger(parsed) ||
+    parsed < MIN_RESPONSE_TIME_SECONDS ||
+    parsed > MAX_RESPONSE_TIME_SECONDS
+  ) {
+    throw new Error(
+      `TBO_RESPONSE_TIME_SECONDS must be between ${MIN_RESPONSE_TIME_SECONDS} and ${MAX_RESPONSE_TIME_SECONDS}`,
+    );
+  }
+  return parsed;
+}
+
+function getDates(caseNumber) {
   const checkIn = new Date();
-  checkIn.setDate(checkIn.getDate() + 30);
+  checkIn.setDate(checkIn.getDate() + 30 + caseNumber);
 
   const checkOut = new Date(checkIn);
   checkOut.setDate(checkOut.getDate() + 2);
@@ -166,6 +196,57 @@ function hasSupplements(room) {
   return Array.isArray(room?.Supplements) && room.Supplements.flat(Infinity).length > 0;
 }
 
+function normalizeHotelCodes(value) {
+  const hotelCodes = String(value || "")
+    .split(",")
+    .map((code) => code.trim())
+    .filter(Boolean);
+
+  if (hotelCodes.length === 0) {
+    throw new Error("At least one TBO hotel code is required for certification search");
+  }
+
+  if (hotelCodes.length > 100) {
+    throw new Error("TBO city search must not send more than 100 HotelCodes in one request");
+  }
+
+  return hotelCodes.join(",");
+}
+
+function validatePaxRooms(paxRooms) {
+  if (!Array.isArray(paxRooms) || paxRooms.length === 0) {
+    throw new Error("PaxRooms must contain at least one room");
+  }
+
+  if (paxRooms.length > 6) {
+    throw new Error("TBO Search supports a maximum of 6 PaxRooms");
+  }
+
+  paxRooms.forEach((room, index) => {
+    const roomNumber = index + 1;
+    if (!Number.isInteger(room.Adults) || room.Adults < 1 || room.Adults > 6) {
+      throw new Error(`PaxRooms[${roomNumber}].Adults must be between 1 and 6`);
+    }
+
+    if (!Number.isInteger(room.Children) || room.Children < 0 || room.Children > 4) {
+      throw new Error(`PaxRooms[${roomNumber}].Children must be between 0 and 4`);
+    }
+
+    const ages = Array.isArray(room.ChildrenAges) ? room.ChildrenAges : [];
+    if (ages.length !== room.Children) {
+      throw new Error(`PaxRooms[${roomNumber}].ChildrenAges must match Children count`);
+    }
+
+    for (const age of ages) {
+      if (!Number.isInteger(age) || age < 0 || age > 18) {
+        throw new Error(`PaxRooms[${roomNumber}].ChildrenAges values must be between 0 and 18`);
+      }
+    }
+  });
+
+  return paxRooms;
+}
+
 function selectRoom(searchResponse, requiresSupplements = false) {
   const hotelResults = Array.isArray(searchResponse?.HotelResult)
     ? searchResponse.HotelResult
@@ -182,16 +263,17 @@ function selectRoom(searchResponse, requiresSupplements = false) {
   return { hotel: null, room: null };
 }
 
-function buildSearchRequest(testCase) {
-  const dates = getDates();
+function buildSearchRequest(config, testCase) {
+  const dates = getDates(testCase.number);
+  const paxRooms = validatePaxRooms(testCase.paxRooms);
 
   return {
     CheckIn: dates.CheckIn,
     CheckOut: dates.CheckOut,
-    HotelCodes: DEFAULT_HOTEL_CODES,
-    GuestNationality: DEFAULT_NATIONALITY,
-    PaxRooms: testCase.paxRooms,
-    ResponseTime: 23,
+    HotelCodes: normalizeHotelCodes(process.env.TBO_CERTIFICATION_HOTEL_CODES || DEFAULT_HOTEL_CODES),
+    GuestNationality: config.guestNationality,
+    PaxRooms: paxRooms,
+    ResponseTime: config.responseTime,
     IsDetailedResponse: true,
     Filters: {
       Refundable: false,
@@ -223,7 +305,7 @@ function buildCustomerDetails(paxRooms, caseNumber) {
 
     for (let childIndex = 0; childIndex < room.Children; childIndex += 1) {
       customerNames.push({
-        Title: "Master",
+        Title: "Mr",
         FirstName: `TBOCert${caseNumber}C${childIndex + 1}`,
         LastName: `Room${roomIndex + 1}`,
         Type: "Child",
@@ -250,26 +332,70 @@ function buildBookRequest(room, paxRooms, caseNumber) {
   };
 }
 
-function extractBookingIdentifier(bookResponse) {
+function extractBookingIdentifiers(bookResponse, bookingRequest) {
+  const identifiers = {
+    bookingReferenceId:
+      getString(bookResponse?.BookingReferenceId) ||
+      getString(bookResponse?.HotelBooking?.BookingReferenceId) ||
+      getString(bookingRequest?.BookingReferenceId),
+    confirmationNumber:
+      getString(bookResponse?.ConfirmationNumber) ||
+      getString(bookResponse?.HotelBooking?.ConfirmationNumber),
+    bookingId: getString(bookResponse?.BookingId) || getString(bookResponse?.HotelBooking?.BookingId),
+    bookingReference:
+      getString(bookResponse?.BookingReference) || getString(bookResponse?.HotelBooking?.BookingReference),
+  };
+
+  return identifiers;
+}
+
+function getString(value) {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function getPrimaryBookingIdentifier(identifiers) {
   const candidates = [
-    bookResponse?.ConfirmationNumber,
-    bookResponse?.BookingId,
-    bookResponse?.BookingReferenceId,
-    bookResponse?.BookingReference,
-    bookResponse?.HotelBooking?.ConfirmationNumber,
-    bookResponse?.HotelBooking?.BookingId,
-    bookResponse?.HotelBooking?.BookingReferenceId,
+    identifiers.bookingReferenceId,
+    identifiers.confirmationNumber,
+    identifiers.bookingId,
+    identifiers.bookingReference,
   ];
 
   return candidates.find((candidate) => typeof candidate === "string" && candidate.length > 0);
 }
 
-function buildBookingDetailRequests(identifier) {
-  return [
-    { ConfirmationNumber: identifier, PaymentMode: PAYMENT_MODE },
-    { BookingId: identifier, PaymentMode: PAYMENT_MODE },
-    { BookingReferenceId: identifier, PaymentMode: PAYMENT_MODE },
-  ];
+function buildBookingDetailRequests(identifiers) {
+  const attempts = [];
+
+  if (identifiers.bookingReferenceId) {
+    attempts.push({
+      BookingReferenceId: identifiers.bookingReferenceId,
+      PaymentMode: PAYMENT_MODE,
+    });
+  }
+
+  if (identifiers.confirmationNumber) {
+    attempts.push({
+      ConfirmationNumber: identifiers.confirmationNumber,
+      PaymentMode: PAYMENT_MODE,
+    });
+  }
+
+  if (identifiers.bookingId) {
+    attempts.push({
+      BookingId: identifiers.bookingId,
+      PaymentMode: PAYMENT_MODE,
+    });
+  }
+
+  if (identifiers.bookingReference) {
+    attempts.push({
+      BookingReferenceId: identifiers.bookingReference,
+      PaymentMode: PAYMENT_MODE,
+    });
+  }
+
+  return attempts;
 }
 
 async function requestTbo(config, endpoint, requestBody, timeoutMs) {
@@ -339,9 +465,9 @@ async function runStep(config, testCase, stepName, requestBody) {
   return response;
 }
 
-async function runBookingDetail(config, caseNumber, identifier) {
+async function runBookingDetail(config, caseNumber, identifiers) {
   const dir = caseDir(caseNumber);
-  const attempts = buildBookingDetailRequests(identifier);
+  const attempts = buildBookingDetailRequests(identifiers);
   let lastResponse = null;
 
   for (const requestBody of attempts) {
@@ -374,6 +500,18 @@ async function runBookingDetail(config, caseNumber, identifier) {
   };
 }
 
+function extractRoomCommercialTerms(room, hotelResult) {
+  return {
+    totalFare: room?.TotalFare,
+    totalTax: room?.TotalTax,
+    cancelPolicies: room?.CancelPolicies || [],
+    supplements: room?.Supplements || [],
+    inclusion: room?.Inclusion || null,
+    rateConditions: hotelResult?.RateConditions || room?.RateConditions || [],
+    roomPromotion: room?.RoomPromotion || [],
+  };
+}
+
 async function runCase(config, testCase) {
   console.log(`Case ${testCase.number}: ${testCase.name}`);
   await mkdir(caseDir(testCase.number), { recursive: true });
@@ -386,10 +524,16 @@ async function runCase(config, testCase) {
     book: false,
     bookingDetail: false,
     bookingIdentifier: null,
+    bookingReferenceId: null,
+    preBookFinalPrice: null,
+    preBookCancelPoliciesCount: 0,
+    supplementsCount: 0,
+    rateConditionsCount: 0,
+    roomPromotionsCount: 0,
     error: null,
   };
 
-  const searchRequest = buildSearchRequest(testCase);
+  const searchRequest = buildSearchRequest(config, testCase);
   const searchResponse = await runStep(config, testCase, "Search", searchRequest);
 
   if (!isSuccess(searchResponse.body)) {
@@ -418,7 +562,15 @@ async function runCase(config, testCase) {
 
   result.preBook = true;
 
-  const preBookRoom = selectRoom(preBookResponse.body).room ?? room;
+  const { hotel: preBookHotel, room: selectedPreBookRoom } = selectRoom(preBookResponse.body);
+  const preBookRoom = selectedPreBookRoom ?? room;
+  const commercialTerms = extractRoomCommercialTerms(preBookRoom, preBookHotel);
+  result.preBookFinalPrice = commercialTerms.totalFare ?? null;
+  result.preBookCancelPoliciesCount = commercialTerms.cancelPolicies.length;
+  result.supplementsCount = commercialTerms.supplements.flat(Infinity).length;
+  result.rateConditionsCount = commercialTerms.rateConditions.length;
+  result.roomPromotionsCount = commercialTerms.roomPromotion.length;
+
   const bookRequest = buildBookRequest(preBookRoom, testCase.paxRooms, testCase.number);
   const bookResponse = await runStep(config, testCase, "Book", bookRequest);
 
@@ -428,7 +580,9 @@ async function runCase(config, testCase) {
   }
 
   result.book = true;
-  result.bookingIdentifier = extractBookingIdentifier(bookResponse.body);
+  const bookingIdentifiers = extractBookingIdentifiers(bookResponse.body, bookRequest);
+  result.bookingIdentifier = getPrimaryBookingIdentifier(bookingIdentifiers);
+  result.bookingReferenceId = bookingIdentifiers.bookingReferenceId || null;
 
   if (!result.bookingIdentifier) {
     result.error = "Book succeeded but no booking identifier was found for BookingDetail";
@@ -438,7 +592,7 @@ async function runCase(config, testCase) {
   const bookingDetailResult = await runBookingDetail(
     config,
     testCase.number,
-    result.bookingIdentifier,
+    bookingIdentifiers,
   );
 
   result.bookingDetail = bookingDetailResult.success;
@@ -459,6 +613,8 @@ async function main() {
 
   console.log("TBO certification test started");
   console.log(`Environment: ${config.environment}`);
+  console.log(`GuestNationality: ${config.guestNationality}`);
+  console.log(`ResponseTime: ${config.responseTime}`);
   console.log(`Logs: ${LOG_ROOT}`);
 
   const results = [];

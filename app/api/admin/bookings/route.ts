@@ -5,14 +5,17 @@ import BookingLog from '@/models/BookingLog';
 import SupplierLog from '@/models/SupplierLog';
 import User from '@/models/User';
 import { verifyToken } from '@/lib/jwt';
-import { isBookingStatus } from '@/lib/booking-status';
+import { getNextBookingStatus, isBookingStatus } from '@/lib/booking-status';
 
 const operationalStatuses = [
   'pending_payment',
   'payment_succeeded',
+  'supplier_booking_processing',
   'supplier_booking_pending',
   'supplier_booking_failed',
+  'manual_review_required',
   'refund_required',
+  'refunded',
 ];
 
 export async function GET(req: NextRequest) {
@@ -65,7 +68,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (operationalFilter === 'refund_required') {
-      query.status = 'refund_required';
+      query.status = { $in: ['manual_review_required', 'refund_required'] };
     }
 
     if (operationalFilter === 'supplier_booking_failed') {
@@ -191,14 +194,14 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      if (!['supplier_booking_failed', 'refund_required'].includes(booking.status)) {
+      if (!['supplier_booking_failed', 'manual_review_required', 'refund_required'].includes(booking.status)) {
         return NextResponse.json(
           { error: 'Retry is only available for failed supplier bookings or refund-required bookings' },
           { status: 400 }
         );
       }
 
-      booking.status = 'supplier_booking_pending';
+      booking.status = getNextBookingStatus(booking.status, 'supplier_booking_processing');
       booking.supplierStatus = 'pending';
       booking.failureReason = '';
       booking.metadata = {
@@ -279,7 +282,7 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      booking.status = 'refund_required';
+      booking.status = getNextBookingStatus(booking.status, 'manual_review_required');
       booking.paymentStatus = 'refund_required';
       booking.metadata = {
         ...(booking.metadata ?? {}),
@@ -291,9 +294,9 @@ export async function PATCH(req: NextRequest) {
 
       await BookingLog.create({
         bookingId: booking._id,
-        type: 'booking_marked_refund_required',
+        type: 'booking_marked_manual_review_required',
         status: 'success',
-        message: 'Admin marked booking as refund required; no Stripe refund was executed',
+        message: 'Admin marked booking as manual review required; no Stripe refund was executed',
         request: { action },
         response: {
           bookingStatus: booking.status,
@@ -303,7 +306,7 @@ export async function PATCH(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: 'Booking marked as refund required',
+        message: 'Booking marked as manual review required',
         booking,
       });
     }
@@ -318,7 +321,7 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      booking.status = 'cancelled';
+      booking.status = getNextBookingStatus(booking.status, 'cancelled');
       booking.supplierStatus = 'cancelled';
       booking.metadata = {
         ...(booking.metadata ?? {}),
@@ -406,18 +409,17 @@ export async function PATCH(req: NextRequest) {
       );
     }
     
-    const booking = await Booking.findByIdAndUpdate(
-      bookingId,
-      { status },
-      { new: true }
-    );
-    
+    const booking = await Booking.findById(bookingId);
+
     if (!booking) {
       return NextResponse.json(
         { error: 'Booking not found' },
         { status: 404 }
       );
     }
+
+    booking.status = getNextBookingStatus(booking.status, status);
+    await booking.save();
 
     await BookingLog.create({
       bookingId: booking._id,
@@ -436,6 +438,16 @@ export async function PATCH(req: NextRequest) {
     
   } catch (error) {
     console.error('Booking update error:', error);
+    if (
+      error instanceof Error &&
+      error.message.startsWith('Invalid booking status transition')
+    ) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to update booking' },
       { status: 500 }

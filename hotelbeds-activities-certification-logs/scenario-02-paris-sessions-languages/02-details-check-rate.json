@@ -1,0 +1,52 @@
+{
+  "status": "Success",
+  "activityCode": "A1IMNO0580",
+  "activityName": "Discover Paris - Private Walking Tour",
+  "destination": "Paris / PAR",
+  "dateFrom": "2026-07-07",
+  "dateTo": "2026-07-07",
+  "modality": "6h tour spanish 16:00",
+  "questionCount": 8,
+  "questions": [
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "answeredWithTestValue": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "answeredWithTestValue": true
+    }
+  ]
+}

@@ -23,6 +23,9 @@
 # production
 /build
 
+# local scratch files
+/.tmp/
+
 # misc
 .DS_Store
 *.pem
@@ -55,6 +58,9 @@ yarn-error.log*
 .env*
 !.env.example
 !.env.local.example
+
+# Supplier certification bundles may contain private credentials or logs.
+/integrations/hotelbeds/certification/
 
 # vercel
 .vercel

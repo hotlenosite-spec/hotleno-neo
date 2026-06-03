@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "tbo-certification": "node scripts/tbo-certification.mjs"
+    "tbo-certification": "node scripts/tbo-certification.mjs",
+    "hotelbeds-transfers-certification": "node scripts/hotelbeds-transfers-certification.mjs",
+    "hotelbeds-hotels-certification:package": "node scripts/package-hotelbeds-hotels-certification.mjs",
+    "hotelbeds-hotels-certification:screenshots": "node scripts/capture-hotelbeds-hotels-certification-screenshots.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",

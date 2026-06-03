@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   HOTEL_OWNER_LOCAL_KEYS,
   LocalHotelAvailability,
+  LocalHotelImage,
+  LocalHotelPricing,
   LocalHotelProperty,
   LocalHotelRoom,
   readLocalItems,
@@ -14,7 +16,9 @@ import {
 interface LocalCounts {
   properties: number;
   rooms: number;
+  pricing: number;
   availability: number;
+  images: number;
 }
 
 export default function HotelOwnerDashboardPage() {
@@ -32,39 +36,46 @@ export default function HotelOwnerDashboardPage() {
   }, []);
 
   const hasLocalData =
-    counts.properties > 0 || counts.rooms > 0 || counts.availability > 0;
+    counts.properties > 0 ||
+    counts.rooms > 0 ||
+    counts.pricing > 0 ||
+    counts.availability > 0 ||
+    counts.images > 0;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold">Dashboard</h2>
+        <h2 className="text-3xl font-bold">لوحة التحكم</h2>
         <p className="text-muted-foreground">
-          Local workspace for testing Hotel Owner Portal setup before production.
+          مساحة محلية لاختبار إعداد بوابة مالك الفندق قبل الإنتاج.
         </p>
       </div>
 
       <Card className="border-dashed">
         <CardContent className="flex flex-wrap items-center gap-3 p-4 text-sm text-muted-foreground">
-          <Badge variant="secondary">Local draft mode</Badge>
-          <span>No database, payments, supplier calls, or customer search publishing are active here.</span>
+          <Badge variant="secondary">وضع مسودات محلية</Badge>
+          <span>لا توجد قاعدة بيانات أو مدفوعات أو استدعاءات موردين أو نشر في بحث العملاء هنا.</span>
         </CardContent>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <DashboardCard label="Properties" value={counts.properties} />
-        <DashboardCard label="Rooms" value={counts.rooms} />
-        <DashboardCard label="Availability" value={counts.availability} />
-        <DashboardCard label="Bookings" value={null} />
-        <DashboardCard label="Payouts" value={null} />
+        <DashboardCard label="الفنادق / المنشآت" value={counts.properties} />
+        <DashboardCard label="الغرف" value={counts.rooms} />
+        <DashboardCard label="الأسعار" value={counts.pricing} />
+        <DashboardCard label="التوفر" value={counts.availability} />
+        <DashboardCard label="الصور" value={counts.images} />
+        <DashboardCard label="الحجوزات" value={null} />
+        <DashboardCard label="المدفوعات المستحقة" value={null} />
       </div>
 
       {!hasLocalData && (
         <Card>
           <CardContent className="space-y-3 p-8 text-center">
-            <Badge variant="secondary">Empty state</Badge>
-            <h3 className="text-xl font-semibold">No local setup data yet</h3>
+            <Badge variant="secondary">حالة فارغة</Badge>
+            <h3 className="text-xl font-semibold">لا توجد بيانات إعداد محلية بعد</h3>
             <p className="text-sm text-muted-foreground">
-              Add a property, room, or availability entry to preview the local owner workflow.
+              سجّل فندقًا أو أضف منشأة أو غرفة أو سعرًا أو توفرًا أو صورة
+              لمعاينة مسار مالك الفندق المحلي.
             </p>
           </CardContent>
         </Card>
@@ -72,12 +83,12 @@ export default function HotelOwnerDashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Publishing status</CardTitle>
+          <CardTitle>حالة النشر</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>Local drafts are not saved to MongoDB.</p>
-          <p>Local drafts are not published to customer search.</p>
-          <p>No internal booking, payout, Stripe, or supplier operation is active here.</p>
+          <p>المسودات المحلية لا تُحفظ في MongoDB.</p>
+          <p>المسودات المحلية لا تُنشر في بحث العملاء.</p>
+          <p>لا توجد عمليات حجز داخلي أو مدفوعات مستحقة أو Stripe أو موردين مفعلة هنا.</p>
         </CardContent>
       </Card>
     </div>
@@ -90,9 +101,14 @@ function getLocalCounts(): LocalCounts {
       HOTEL_OWNER_LOCAL_KEYS.properties,
     ).length,
     rooms: readLocalItems<LocalHotelRoom>(HOTEL_OWNER_LOCAL_KEYS.rooms).length,
+    pricing: readLocalItems<LocalHotelPricing>(
+      HOTEL_OWNER_LOCAL_KEYS.pricing,
+    ).length,
     availability: readLocalItems<LocalHotelAvailability>(
       HOTEL_OWNER_LOCAL_KEYS.availability,
     ).length,
+    images: readLocalItems<LocalHotelImage>(HOTEL_OWNER_LOCAL_KEYS.images)
+      .length,
   };
 }
 
@@ -110,16 +126,16 @@ function DashboardCard({
       </CardHeader>
       <CardContent>
         {value === null ? (
-          <Badge variant="secondary">Not connected</Badge>
+          <Badge variant="secondary">غير متصل</Badge>
         ) : value === 0 ? (
-          <Badge variant="secondary">Empty</Badge>
+          <Badge variant="secondary">فارغ</Badge>
         ) : (
           <p className="text-3xl font-bold">{value}</p>
         )}
         <p className="mt-3 text-sm text-muted-foreground">
           {value === null
-            ? "Production workflow not enabled."
-            : "Count reflects this browser only."}
+            ? "مسار الإنتاج غير مفعل."
+            : "العدد يعكس هذا المتصفح فقط."}
         </p>
       </CardContent>
     </Card>

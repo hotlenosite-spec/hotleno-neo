@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   HOTEL_OWNER_LOCAL_KEYS,
   LocalHotelProperty,
+  LocalHotelReviewStatus,
   createLocalId,
   readLocalItems,
   writeLocalItems,
@@ -28,6 +29,7 @@ const emptyProperty = {
   checkOutTime: "",
   amenities: "",
   policies: "",
+  status: "draft" as LocalHotelReviewStatus,
 };
 
 export default function HotelOwnerPropertiesPage() {
@@ -61,21 +63,21 @@ export default function HotelOwnerPropertiesPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Properties</h2>
+          <h2 className="text-3xl font-bold">الفنادق / المنشآت</h2>
           <p className="text-muted-foreground">
-            Create local draft hotel records for testing the owner workflow.
+            أنشئ سجلات فنادق محلية كمسودات لاختبار مسار مالك الفندق.
           </p>
         </div>
         <Button onClick={() => setShowForm((value) => !value)}>
-          {showForm ? "Close form" : "Add Property"}
+          {showForm ? "إغلاق النموذج" : "إضافة منشأة"}
         </Button>
       </div>
 
       <Card className="border-dashed">
         <CardContent className="flex flex-wrap items-center gap-3 p-4 text-sm text-muted-foreground">
-          <Badge variant="secondary">Draft/local only</Badge>
+          <Badge variant="secondary">مسودة محلية فقط</Badge>
           <span>
-            These records stay in this browser localStorage and are not saved to MongoDB or shown in customer search.
+            تبقى هذه السجلات في localStorage لهذا المتصفح ولا تُحفظ في MongoDB أو تظهر في بحث العملاء.
           </span>
         </CardContent>
       </Card>
@@ -83,18 +85,18 @@ export default function HotelOwnerPropertiesPage() {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Add Property</CardTitle>
+            <CardTitle>إضافة منشأة</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-              <Field label="Name" required>
+              <Field label="الاسم" required>
                 <Input
                   value={form.name}
                   onChange={(event) => updateField("name", event.target.value)}
                   required
                 />
               </Field>
-              <Field label="Star rating">
+              <Field label="تصنيف النجوم">
                 <Input
                   type="number"
                   min="0"
@@ -103,72 +105,89 @@ export default function HotelOwnerPropertiesPage() {
                   onChange={(event) => updateField("starRating", event.target.value)}
                 />
               </Field>
-              <Field label="Country">
+              <Field label="الدولة">
                 <Input
                   value={form.country}
                   onChange={(event) => updateField("country", event.target.value)}
                 />
               </Field>
-              <Field label="City">
+              <Field label="المدينة">
                 <Input
                   value={form.city}
                   onChange={(event) => updateField("city", event.target.value)}
                 />
               </Field>
-              <Field label="Address">
+              <Field label="العنوان">
                 <Input
                   value={form.address}
                   onChange={(event) => updateField("address", event.target.value)}
                 />
               </Field>
-              <Field label="Phone">
+              <Field label="الهاتف">
                 <Input
                   value={form.phone}
                   onChange={(event) => updateField("phone", event.target.value)}
                 />
               </Field>
-              <Field label="Email">
+              <Field label="البريد الإلكتروني">
                 <Input
                   type="email"
                   value={form.email}
                   onChange={(event) => updateField("email", event.target.value)}
                 />
               </Field>
-              <Field label="Check-in time">
+              <Field label="وقت تسجيل الدخول">
                 <Input
                   type="time"
                   value={form.checkInTime}
                   onChange={(event) => updateField("checkInTime", event.target.value)}
                 />
               </Field>
-              <Field label="Check-out time">
+              <Field label="وقت تسجيل الخروج">
                 <Input
                   type="time"
                   value={form.checkOutTime}
                   onChange={(event) => updateField("checkOutTime", event.target.value)}
                 />
               </Field>
-              <Field label="Amenities">
+              <Field label="المرافق">
                 <Textarea
                   value={form.amenities}
                   onChange={(event) => updateField("amenities", event.target.value)}
-                  placeholder="Pool, Wi-Fi, parking"
+                  placeholder="مسبح، واي فاي، مواقف"
                 />
               </Field>
-              <Field label="Policies">
+              <Field label="السياسات">
                 <Textarea
                   value={form.policies}
                   onChange={(event) => updateField("policies", event.target.value)}
                 />
               </Field>
-              <Field label="Description" className="md:col-span-2">
+              <Field label="الحالة">
+                <select
+                  value={form.status}
+                  onChange={(event) =>
+                    updateField(
+                      "status",
+                      event.target.value as LocalHotelReviewStatus,
+                    )
+                  }
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="draft">مسودة</option>
+                  <option value="pending_review">بانتظار المراجعة</option>
+                  <option value="approved">معتمد محليًا</option>
+                  <option value="rejected">مرفوض محليًا</option>
+                </select>
+              </Field>
+              <Field label="الوصف" className="md:col-span-2">
                 <Textarea
                   value={form.description}
                   onChange={(event) => updateField("description", event.target.value)}
                 />
               </Field>
               <div className="md:col-span-2">
-                <Button type="submit">Save local draft</Button>
+                <Button type="submit">حفظ المسودة المحلية</Button>
               </div>
             </form>
           </CardContent>
@@ -178,10 +197,10 @@ export default function HotelOwnerPropertiesPage() {
       {properties.length === 0 ? (
         <Card>
           <CardContent className="space-y-3 p-8 text-center">
-            <Badge variant="secondary">Empty state</Badge>
-            <h3 className="text-xl font-semibold">No local properties yet</h3>
+            <Badge variant="secondary">حالة فارغة</Badge>
+            <h3 className="text-xl font-semibold">لا توجد منشآت محلية بعد</h3>
             <p className="text-sm text-muted-foreground">
-              Add a property to test the local Hotel Owner Portal experience.
+              أضف منشأة لاختبار تجربة بوابة مالك الفندق المحلية.
             </p>
           </CardContent>
         </Card>
@@ -194,10 +213,10 @@ export default function HotelOwnerPropertiesPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-semibold">{property.name}</h3>
-                      <Badge variant="outline">Local draft</Badge>
+                      <Badge variant="outline">{formatStatus(property.status)}</Badge>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {[property.city, property.country].filter(Boolean).join(", ") || "Location not set"}
+                      {[property.city, property.country].filter(Boolean).join(", ") || "لم يتم تحديد الموقع"}
                     </p>
                     {property.description && (
                       <p className="mt-3 text-sm text-muted-foreground">
@@ -206,7 +225,7 @@ export default function HotelOwnerPropertiesPage() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Not published
+                    غير منشور
                   </p>
                 </div>
               </CardContent>
@@ -216,6 +235,13 @@ export default function HotelOwnerPropertiesPage() {
       )}
     </div>
   );
+}
+
+function formatStatus(status?: LocalHotelReviewStatus) {
+  if (status === "pending_review") return "بانتظار المراجعة";
+  if (status === "approved") return "معتمد محليًا";
+  if (status === "rejected") return "مرفوض محليًا";
+  return "مسودة";
 }
 
 function Field({

@@ -1,0 +1,16 @@
+{
+  "status": "booking_not_accepted",
+  "attempt": 1,
+  "supplier": "Hotelbeds Accommodation",
+  "safeMessage": "Price has changed: Unable to book as the price difference exceeds the allowed tolerance - Current tolerance: 2.00%",
+  "statusCode": 500,
+  "selectedRate": {
+    "hotelName": "Alexandre Fira Congress",
+    "hotelCode": 14915,
+    "roomName": "Executive Double or Twin Room",
+    "boardName": "ROOM ONLY",
+    "amount": "115.15",
+    "currency": "EUR",
+    "rateKeyMasked": "20260817...00120f73"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "status": "manual cancellation required",
+  "supplier": "Hotelbeds Accommodation",
+  "bookingReference": "102-20736378",
+  "statusCode": 409,
+  "safeMessage": "The booking has already been cancelled."
+}

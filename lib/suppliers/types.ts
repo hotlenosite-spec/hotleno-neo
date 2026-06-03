@@ -36,6 +36,14 @@ export interface SupplierHotelResult {
   cityName?: string;
   countryName?: string;
   address?: string;
+  description?: string;
+  images?: Array<{
+    url: string;
+    description?: string;
+  }>;
+  facilities?: string[];
+  latitude?: number;
+  longitude?: number;
   stars?: number;
   rates: SupplierHotelRate[];
   metadata?: Record<string, unknown>;
@@ -58,6 +66,8 @@ export interface SupplierPreBookRequest {
   metadata?: Record<string, unknown>;
 }
 
+export type SupplierCheckAvailabilityRequest = SupplierPreBookRequest;
+
 export interface SupplierPreBookResponse {
   supplier: SupplierProviderName;
   supplierHotelId: string;
@@ -69,6 +79,8 @@ export interface SupplierPreBookResponse {
   rawSupplierRequest?: unknown;
   rawSupplierResponse?: unknown;
 }
+
+export type SupplierCheckAvailabilityResponse = SupplierPreBookResponse;
 
 export interface SupplierBookRequest {
   idempotencyKey: string;
@@ -137,6 +149,10 @@ export interface SupplierProvider {
     request: SupplierSearchHotelsRequest,
   ): Promise<SupplierSearchHotelsResponse>;
   preBook(request: SupplierPreBookRequest): Promise<SupplierPreBookResponse>;
+  checkAvailability?(
+    request: SupplierCheckAvailabilityRequest,
+  ): Promise<SupplierCheckAvailabilityResponse>;
+  checkRates?(request: SupplierPreBookRequest): Promise<SupplierPreBookResponse>;
   book(request: SupplierBookRequest): Promise<SupplierBookResponse>;
   getBookingDetails(
     request: SupplierBookingDetailsRequest,

@@ -1,0 +1,8 @@
+{
+  "status": "booking_not_confirmed",
+  "supplier": "Hotelbeds Accommodation",
+  "clientReference": "HOTLENO-HOTEL-01",
+  "safeError": "Price has changed: Unable to book as the price difference exceeds the allowed tolerance - Current tolerance: 2.00%",
+  "bookingCreated": false,
+  "bookingReference": ""
+}

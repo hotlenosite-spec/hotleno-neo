@@ -56,12 +56,22 @@ const HOTEL_PLACEHOLDER = '/hotel-image-placeholder.jpg';
 
 export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
   const t = useTranslations();
-  const [images, setImages] = useState<HotelImage[]>([]);
-  const [imagesLoading, setImagesLoading] = useState(true);
+  const [images, setImages] = useState<HotelImage[]>(hotel.Images || []);
+  const [imagesLoading, setImagesLoading] = useState(
+    !(hotel.Images && hotel.Images.length > 0),
+  );
   
   // Fetch hotel details for images
   useEffect(() => {
     let cancelled = false;
+
+    if (hotel.Images && hotel.Images.length > 0) {
+      setImages(hotel.Images);
+      setImagesLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
     
     async function fetchHotelImages() {
       try {
@@ -91,7 +101,7 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
     fetchHotelImages();
     
     return () => { cancelled = true; };
-  }, [hotel.HotelId]);
+  }, [hotel.HotelId, hotel.Images]);
 
   const mainImage = images[0]?.Url || HOTEL_PLACEHOLDER;
   

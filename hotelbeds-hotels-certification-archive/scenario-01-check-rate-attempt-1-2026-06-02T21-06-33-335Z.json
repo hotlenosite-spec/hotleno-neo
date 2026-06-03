@@ -1,0 +1,15 @@
+{
+  "status": "check_rate_not_accepted",
+  "attempt": 1,
+  "safeError": "Insufficient allotment",
+  "statusCode": 500,
+  "selectedRate": {
+    "hotelName": "Portaventura Colorado Creek+ Ticket Included",
+    "hotelCode": 646942,
+    "roomName": "SUPERIOR 2 ADULTS",
+    "boardName": "BED AND BREAKFAST",
+    "amount": "263.07",
+    "currency": "EUR",
+    "rateKeyMasked": "20260707...05207107"
+  }
+}

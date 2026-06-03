@@ -1,0 +1,689 @@
+{
+  "scenario": "Test Case 1 - Barcelona basic booking funnel",
+  "activityCode": "A1AANO0488",
+  "name": "Barcelona in One Day: Sagrada Familia, Park Güell and the Old Town - Walking Tour with Hotel Pick-up",
+  "modalityCount": 1,
+  "questionCount": 12,
+  "sessionCount": 4,
+  "languages": [
+    "English",
+    "Spanish"
+  ],
+  "requiredQuestions": [
+    {
+      "code": "COUNTRY OF ORIGIN",
+      "text": "Please indicate your country of birth",
+      "required": true
+    },
+    {
+      "code": "EMAIL",
+      "text": "Please provide an email address",
+      "required": true
+    },
+    {
+      "code": "HOTEL BCN",
+      "text": "Please advise name and address of your hotel in barcelona",
+      "required": true
+    },
+    {
+      "code": "PAX NAME",
+      "text": "Please provide the full names of all passengers",
+      "required": true
+    },
+    {
+      "code": "PAX_PASSPORT",
+      "text": "Please provide the passport numbers of all passengers travelling",
+      "required": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "required": true
+    },
+    {
+      "code": "COUNTRY OF ORIGIN",
+      "text": "Please indicate your country of birth",
+      "required": true
+    },
+    {
+      "code": "EMAIL",
+      "text": "Please provide an email address",
+      "required": true
+    },
+    {
+      "code": "HOTEL BCN",
+      "text": "Please advise name and address of your hotel in barcelona",
+      "required": true
+    },
+    {
+      "code": "PAX NAME",
+      "text": "Please provide the full names of all passengers",
+      "required": true
+    },
+    {
+      "code": "PAX_PASSPORT",
+      "text": "Please provide the passport numbers of all passengers travelling",
+      "required": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "required": true
+    }
+  ],
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "activityCode": "A1AANO0488",
+      "name": "Barcelona in One Day: Sagrada Familia, Park Güell and the Old Town - Walking Tour with Hotel Pick-up",
+      "destinationName": "Barcelona",
+      "countryName": "Spain",
+      "modalities": [
+        {
+          "code": "177753407#PVTOUR",
+          "name": "Private Tour",
+          "duration": {
+            "value": 1,
+            "metric": "DAYS"
+          },
+          "questions": [
+            {
+              "code": "COUNTRY OF ORIGIN",
+              "text": "Please indicate your country of birth",
+              "required": true
+            },
+            {
+              "code": "EMAIL",
+              "text": "Please provide an email address",
+              "required": true
+            },
+            {
+              "code": "HOTEL BCN",
+              "text": "Please advise name and address of your hotel in barcelona",
+              "required": true
+            },
+            {
+              "code": "PAX NAME",
+              "text": "Please provide the full names of all passengers",
+              "required": true
+            },
+            {
+              "code": "PAX_PASSPORT",
+              "text": "Please provide the passport numbers of all passengers travelling",
+              "required": true
+            },
+            {
+              "code": "PHONENUMBER",
+              "text": "Guests telephone with international code required",
+              "required": true
+            }
+          ],
+          "destinationCode": "BCN",
+          "contract": {
+            "incomingOffice": 102,
+            "code": 16589,
+            "name": "BCNIN01PRY25/6"
+          },
+          "languages": [],
+          "amountsFrom": [
+            {
+              "paxType": "ADULT",
+              "ageFrom": 0,
+              "ageTo": 999,
+              "amount": 516.94,
+              "boxOfficeAmount": 585,
+              "mandatoryApplyAmount": true
+            }
+          ],
+          "rates": [
+            {
+              "rateCode": "STANDARD",
+              "rateClass": "NOR",
+              "freeCancellation": false,
+              "rateDetails": [
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                }
+              ]
+            }
+          ],
+          "amountUnitType": "PAX",
+          "uniqueIdentifier": "177753407"
+        }
+      ],
+      "totalAmount": 516.94,
+      "currency": "EUR",
+      "cancellationPolicies": [
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 516.94,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 516.94
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 516.94,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 516.94
+          }
+        }
+      ],
+      "questions": [
+        {
+          "code": "COUNTRY OF ORIGIN",
+          "text": "Please indicate your country of birth",
+          "required": true
+        },
+        {
+          "code": "EMAIL",
+          "text": "Please provide an email address",
+          "required": true
+        },
+        {
+          "code": "HOTEL BCN",
+          "text": "Please advise name and address of your hotel in barcelona",
+          "required": true
+        },
+        {
+          "code": "PAX NAME",
+          "text": "Please provide the full names of all passengers",
+          "required": true
+        },
+        {
+          "code": "PAX_PASSPORT",
+          "text": "Please provide the passport numbers of all passengers travelling",
+          "required": true
+        },
+        {
+          "code": "PHONENUMBER",
+          "text": "Guests telephone with international code required",
+          "required": true
+        },
+        {
+          "code": "COUNTRY OF ORIGIN",
+          "text": "Please indicate your country of birth",
+          "required": true
+        },
+        {
+          "code": "EMAIL",
+          "text": "Please provide an email address",
+          "required": true
+        },
+        {
+          "code": "HOTEL BCN",
+          "text": "Please advise name and address of your hotel in barcelona",
+          "required": true
+        },
+        {
+          "code": "PAX NAME",
+          "text": "Please provide the full names of all passengers",
+          "required": true
+        },
+        {
+          "code": "PAX_PASSPORT",
+          "text": "Please provide the passport numbers of all passengers travelling",
+          "required": true
+        },
+        {
+          "code": "PHONENUMBER",
+          "text": "Guests telephone with international code required",
+          "required": true
+        }
+      ],
+      "sessions": [
+        {
+          "code": "09:00",
+          "name": "09:00"
+        },
+        {
+          "code": "09:00",
+          "name": "09:00"
+        },
+        {
+          "code": "09:00",
+          "name": "09:00"
+        },
+        {
+          "code": "09:00",
+          "name": "09:00"
+        }
+      ],
+      "languages": [
+        "English",
+        "Spanish"
+      ],
+      "rawAvailabilityOption": {
+        "id": "A1AANO0488",
+        "supplier": "hotelbeds-activities",
+        "activityCode": "A1AANO0488",
+        "name": "Barcelona in One Day: Sagrada Familia, Park Güell and the Old Town - Walking Tour with Hotel Pick-up",
+        "destinationName": "Barcelona",
+        "countryName": "Spain",
+        "categoryName": "City tours",
+        "duration": "1 day",
+        "languages": [
+          "English",
+          "Spanish"
+        ],
+        "imageUrl": "https://media.activitiesbank.com/58118/ENG/XL/05%20%2831%29%20%281%29.jpg",
+        "price": {
+          "amount": 516.94,
+          "currency": "EUR"
+        },
+        "cancellationPolicies": [
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 516.94,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 516.94
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 516.94,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 516.94
+            }
+          }
+        ],
+        "modalities": [
+          {
+            "code": "177753407#PVTOUR",
+            "name": "Private Tour",
+            "duration": {
+              "value": 1,
+              "metric": "DAYS"
+            },
+            "questions": [
+              {
+                "code": "COUNTRY OF ORIGIN",
+                "text": "Please indicate your country of birth",
+                "required": true
+              },
+              {
+                "code": "EMAIL",
+                "text": "Please provide an email address",
+                "required": true
+              },
+              {
+                "code": "HOTEL BCN",
+                "text": "Please advise name and address of your hotel in barcelona",
+                "required": true
+              },
+              {
+                "code": "PAX NAME",
+                "text": "Please provide the full names of all passengers",
+                "required": true
+              },
+              {
+                "code": "PAX_PASSPORT",
+                "text": "Please provide the passport numbers of all passengers travelling",
+                "required": true
+              },
+              {
+                "code": "PHONENUMBER",
+                "text": "Guests telephone with international code required",
+                "required": true
+              }
+            ],
+            "destinationCode": "BCN",
+            "contract": {
+              "incomingOffice": 102,
+              "code": 16589,
+              "name": "BCNIN01PRY25/6"
+            },
+            "languages": [],
+            "amountsFrom": [
+              {
+                "paxType": "ADULT",
+                "ageFrom": 0,
+                "ageTo": 999,
+                "amount": 516.94,
+                "boxOfficeAmount": 585,
+                "mandatoryApplyAmount": true
+              }
+            ],
+            "rates": [
+              {
+                "rateCode": "STANDARD",
+                "rateClass": "NOR",
+                "freeCancellation": false,
+                "rateDetails": [
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "amountUnitType": "PAX",
+            "uniqueIdentifier": "177753407"
+          }
+        ],
+        "raw": {
+          "activityCode": "A1AANO0488",
+          "country": {
+            "code": "ES",
+            "name": "Spain",
+            "destinations": [
+              {
+                "code": "BCN",
+                "name": "Barcelona"
+              }
+            ]
+          },
+          "operationDays": [
+            {
+              "code": "MON",
+              "name": "Monday"
+            },
+            {
+              "code": "TUE",
+              "name": "Tuesday"
+            },
+            {
+              "code": "WED",
+              "name": "Wednesday"
+            },
+            {
+              "code": "THU",
+              "name": "Thursday"
+            },
+            {
+              "code": "FRI",
+              "name": "Friday"
+            },
+            {
+              "code": "SAT",
+              "name": "Saturday"
+            },
+            {
+              "code": "SUN",
+              "name": "Sunday"
+            }
+          ],
+          "modalities": [
+            {
+              "code": "177753407#PVTOUR",
+              "name": "Private Tour",
+              "duration": {
+                "value": 1,
+                "metric": "DAYS"
+              },
+              "questions": [
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                }
+              ],
+              "destinationCode": "BCN",
+              "contract": {
+                "incomingOffice": 102,
+                "code": 16589,
+                "name": "BCNIN01PRY25/6"
+              },
+              "languages": [],
+              "amountsFrom": [
+                {
+                  "paxType": "[MaxDepth]",
+                  "ageFrom": "[MaxDepth]",
+                  "ageTo": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "boxOfficeAmount": "[MaxDepth]",
+                  "mandatoryApplyAmount": "[MaxDepth]"
+                }
+              ],
+              "rates": [
+                {
+                  "rateCode": "[MaxDepth]",
+                  "rateClass": "[MaxDepth]",
+                  "freeCancellation": "[MaxDepth]",
+                  "rateDetails": "[MaxDepth]"
+                }
+              ],
+              "amountUnitType": "PAX",
+              "uniqueIdentifier": "177753407"
+            }
+          ],
+          "currencyName": "Euro",
+          "amountsFrom": [
+            {
+              "paxType": "ADULT",
+              "ageFrom": 0,
+              "ageTo": 999,
+              "amount": 516.94,
+              "boxOfficeAmount": 585,
+              "mandatoryApplyAmount": true
+            }
+          ],
+          "content": {
+            "name": "Barcelona in One Day: Sagrada Familia, Park Güell and the Old Town - Walking Tour with Hotel Pick-up",
+            "detailedInfo": [],
+            "featureGroups": [
+              {
+                "groupCode": "MEAL",
+                "excluded": [
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "groupCode": "TRANSPORT",
+                "included": [
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "groupCode": "DRINKS",
+                "excluded": [
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "groupCode": "TICKET",
+                "included": [
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "groupCode": "UNKNOWN",
+                "included": [
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "guidingOptions": {
+              "guideType": "TOURGUIDE",
+              "included": true,
+              "tips": "INCLUDED"
+            },
+            "importantInfo": [
+              "Children must be accompanied by an adult. "
+            ],
+            "location": {
+              "endPoints": [
+                {
+                  "type": "[MaxDepth]",
+                  "description": "[MaxDepth]"
+                }
+              ],
+              "startingPoints": [
+                {
+                  "type": "[MaxDepth]",
+                  "meetingPoint": "[MaxDepth]",
+                  "pickupInstructions": "[MaxDepth]"
+                }
+              ]
+            },
+            "media": {
+              "images": [
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                }
+              ]
+            },
+            "redeemInfo": {
+              "type": "VOCUHERLESS",
+              "directEntrance": false,
+              "comments": [
+                {
+                  "description": "[MaxDepth]"
+                }
+              ]
+            },
+            "scheduling": {
+              "duration": {
+                "value": 8,
+                "metric": "HOURS",
+                "type": "AFTER"
+              }
+            },
+            "segmentationGroups": [
+              {
+                "code": 16,
+                "name": "Services",
+                "segments": [
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "code": 1,
+                "name": "Categories",
+                "segments": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "code": 2,
+                "name": "Daytime",
+                "segments": [
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "code": 15,
+                "name": "Voucher validity",
+                "segments": [
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "activityFactsheetType": "ACTIVITIES",
+            "activityCode": "E-E10-A1AANO0488",
+            "modalityCode": "SGTOUR1",
+            "modalityName": "Shared tour",
+            "contentId": "58118",
+            "description": "Start your tour in a comfy vehicle that will come to pick you up at your hotel. Enjoy an 8-hours tour which includes a complete visit of the best of Barcelona, such as the Passeig de Gràcia, an elegant boulevard that hosts a wealth of modernist architecture like La Pedrera and Casa Batlló. Merge yourself in a dream world with Gaudi’s masterpieces, visit the astonishing Sagrada Familia and the wonderful Park Guell.<br />\n<br />\nExplore the incredible history of Barcelona’s Gothic Quarter in a walking tour of the Old Town, drive to the beach to have a look to the Old Port and the Barceloneta neighbourhood and finish with great views of Barcelona from the top of the Montjuic hill.<br />\n<br />\n<strong>Highlights</strong><br />\n• Sample the best of Barcelona on this full-day sightseeing tour<br />\n• Enjoy breathtaking panoramic views of the city, and tour the 1992 Olympic Village located on top of Montuïc Mountain<br />\n• Avoid long lines at La Sagrada Familia, Gaudí’s crowning masterpiece<br />\n• Enjoy a guided tour inside the Sagrada Familia<br />\n• Wander along the ancient Roman walls and narrow, winding streets of the Gothic Quarter before visiting a 2,000-year-old Roman Temple<br />\n• Gain priority access to Park Güell, a beautifully landscaped park decorated with Gaudí's works<br />\n• Stroll down the elegant Passeig de Gracia, marveling at Modernist masterpieces like La Pedrera and Casa Batlló<br />\n• Get a taste of the Mediterranean lifestyle and enjoy Barcelona’s coastline through the city’s old fishing district and modern-day beach Platja La Barceloneta<br />\n<br />\nExperience the different faces of Barcelona in this thorough and complete tour to the main highlights of the city with our expert guide that will share fascinating stories about the city’s one-of-a-kind architecture, culture and history.<br />\n<br />\nStart your tour from your hotel, our guide will come to pick you up in a comfy minivan to start your tour. Pass by Barcelona’s main highlights, have a look to the Plaça Catalunya, Barcelona’s central square, that connects to the avenue Passeig de Grácia, an elegant boulevard that hosts a wealth of modernist architecture like the famous Gaudi’s Casa Batlló and La Pedrera, but also the amazing Casa Ametller and Casa Lleo i Morera.<br />\n<br />\nContinue your visit with your expert guide to the modernist area of the city heading to the bohemian Gràcia district, all the way to Park Güell. This magical park is located on the top of a hill that provides spectacular views of Barcelona. Merge yourself in Gaudi’s dream world, walk into unique architectural structures that perfectly fuse with natural elements, designed to leave a lifelong impression. Your guide will be the perfect host during your journey inside the Park.<br />\n<br />\nPass by the old Hospital de la Santa Creu i Sant Pau, declared a UNESCO World Heritage for its exceptional beauty and functionality, explore the Eixample district following the footsteps of Gaudi to visit a true gem of human heritage, the Sagrada Familia.<br />\n<br />\nThe work of a genius or of a fool, this indisputable masterpiece will certainly be the highlight of your visit to Barcelona. Take your time to visit the peculiar shape of the columns, ceilings, the organic architecture of the basilica and the many examples of religious symbolism hidden in its unique façades.<br />\n<br />\nContinue your day passing by the Agbar Tower, in the heart of the economic district of Barcelona, and by the Plaza de Toros Monumental on the way to the seaside.<br />\nEnjoy the refreshing breeze while you have a look at the Olympic Village and the Olympic Port, the result of Barcelona’s 1992 Olympic Games. Take a picture to the Golden Fish by Frank Gehry at the feet of the Arts Hotel, one of the most famous skyscrapers in town.<br />\n<br />\nThe visit to the Olympic Barcelona continues to the top of the Montjuic Hill, where you will admire the Olympic Stadium and the Sant Jordi Palace, as well as the famous Calatrava’s Communication Tower with your expert guide that will answer all of your questions.<br />\n<br />\nPass by Plaza España, designed for the 1929 International Exhibition and inspired by the Vatican’s Saint Peter Square. Have a look at the Magic Fountain before heading to the Old Town.<br />\n<br />\nReach the Gothic Quarter to discover a maze of winding streets dating back to Roman times. Relax in intimate squares and visit medieval Barcelona with its charming Gothic Cathedral, have a look to Sant Jaume Square, the political heart of Barcelona since Romans times and nowadays flanked by Barcelona's two political powerhouses: Barcelona City Hall and the seat of the Catalan government, the Palau de la Generalitat de Catalunya.<br />\n ",
+            "lastUpdate": "2025-02-28",
+            "advancedTips": [],
+            "countries": [
+              {
+                "code": "ES",
+                "name": "Spain",
+                "destinations": [
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "highligths": [],
+            "language": "en"
+          },
+          "order": 1,
+          "name": "Barcelona in One Day: Sagrada Familia, Park Güell and the Old Town - Walking Tour with Hotel Pick-up",
+          "currency": "EUR",
+          "code": "E-E10-A1AANO0488",
+          "type": "TICKET"
+        }
+      }
+    },
+    "debug": {
+      "reason": "availability_option_used_for_check_rate_context"
+    }
+  }
+}

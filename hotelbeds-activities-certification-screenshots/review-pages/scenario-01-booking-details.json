@@ -1,0 +1,124 @@
+{
+  "scenario": {
+    "scenario": "scenario-01-barcelona",
+    "title": "Test Case 1 - Barcelona",
+    "destination": "Barcelona / BCN",
+    "status": "Completed successfully",
+    "supplier": "Hotelbeds Activities",
+    "bookingReference": "102-20736359",
+    "activityCode": "A1AANO0488",
+    "activityName": "Barcelona in One Day: Sagrada Familia, Park Güell and the Old Town - Walking Tour with Hotel Pick-up",
+    "dateFrom": "2026-07-07",
+    "dateTo": "2026-07-07",
+    "modality": "Tour english 09:00",
+    "languageSessionSelected": false,
+    "session": "",
+    "language": "",
+    "holder": {
+      "name": "TEST CERTIFICATION",
+      "emailDomain": "hotleno.com",
+      "phonePresent": true
+    },
+    "search": {
+      "status": "Success",
+      "destinationCode": "BCN",
+      "optionCount": 20
+    },
+    "details": {
+      "status": "Success",
+      "modalityCount": 1,
+      "questionCount": 12
+    },
+    "booking": {
+      "status": "Confirmed",
+      "bookingReference": "102-20736359"
+    },
+    "bookingDetails": {
+      "status": "Retrieved",
+      "supplierStatus": "confirmed"
+    },
+    "voucher": {
+      "generated": true,
+      "officialHotelbedsPdfVoucherReturned": false,
+      "officialVoucherCount": 0,
+      "mode": "Internal voucher summary because Hotelbeds did not return a PDF voucher"
+    },
+    "cancellation": {
+      "status": "Cancelled",
+      "bookingReference": "102-20736359"
+    },
+    "questions": {
+      "displayed": false,
+      "answersSubmitted": false,
+      "items": [
+        {
+          "code": "COUNTRY OF ORIGIN",
+          "text": "Please indicate your country of birth",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "EMAIL",
+          "text": "Please provide an email address",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "HOTEL BCN",
+          "text": "Please advise name and address of your hotel in barcelona",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "PAX NAME",
+          "text": "Please provide the full names of all passengers",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "PAX_PASSPORT",
+          "text": "Please provide the passport numbers of all passengers travelling",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "PHONENUMBER",
+          "text": "Guests telephone with international code required",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "COUNTRY OF ORIGIN",
+          "text": "Please indicate your country of birth",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "EMAIL",
+          "text": "Please provide an email address",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "HOTEL BCN",
+          "text": "Please advise name and address of your hotel in barcelona",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "PAX NAME",
+          "text": "Please provide the full names of all passengers",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "PAX_PASSPORT",
+          "text": "Please provide the passport numbers of all passengers travelling",
+          "answeredWithTestValue": true
+        },
+        {
+          "code": "PHONENUMBER",
+          "text": "Guests telephone with international code required",
+          "answeredWithTestValue": true
+        }
+      ]
+    },
+    "evidence": {
+      "cancellationConfirmed": true,
+      "bookingDetailsRetrieved": true,
+      "voucherCaptured": true
+    }
+  },
+  "stepName": "Booking Details",
+  "status": "Success"
+}

@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-05-21T11:28:23.238Z",
-  "endedAt": "2026-05-21T11:30:28.043Z",
+  "startedAt": "2026-05-26T17:25:08.356Z",
+  "endedAt": "2026-05-26T17:27:09.999Z",
   "environment": "staging",
   "logRoot": "C:\\development\\hotleno-main\\logs\\tbo-certification",
   "totals": {
@@ -18,7 +18,13 @@
       "preBook": true,
       "book": true,
       "bookingDetail": true,
-      "bookingIdentifier": "LWURI9",
+      "bookingIdentifier": "TBO-BR-1-1779816312858",
+      "bookingReferenceId": "TBO-BR-1-1779816312858",
+      "preBookFinalPrice": 213.69,
+      "preBookCancelPoliciesCount": 2,
+      "supplementsCount": 1,
+      "rateConditionsCount": 10,
+      "roomPromotionsCount": 1,
       "error": null
     },
     {
@@ -28,7 +34,13 @@
       "preBook": true,
       "book": true,
       "bookingDetail": true,
-      "bookingIdentifier": "P7AZ3M",
+      "bookingIdentifier": "TBO-BR-2-1779816334456",
+      "bookingReferenceId": "TBO-BR-2-1779816334456",
+      "preBookFinalPrice": 218.14,
+      "preBookCancelPoliciesCount": 2,
+      "supplementsCount": 1,
+      "rateConditionsCount": 10,
+      "roomPromotionsCount": 1,
       "error": null
     },
     {
@@ -38,7 +50,13 @@
       "preBook": true,
       "book": true,
       "bookingDetail": true,
-      "bookingIdentifier": "SHR6OZ",
+      "bookingIdentifier": "TBO-BR-3-1779816350453",
+      "bookingReferenceId": "TBO-BR-3-1779816350453",
+      "preBookFinalPrice": 213.89,
+      "preBookCancelPoliciesCount": 2,
+      "supplementsCount": 1,
+      "rateConditionsCount": 10,
+      "roomPromotionsCount": 1,
       "error": null
     },
     {
@@ -48,7 +66,13 @@
       "preBook": true,
       "book": true,
       "bookingDetail": true,
-      "bookingIdentifier": "VS7EAC",
+      "bookingIdentifier": "TBO-BR-4-1779816367326",
+      "bookingReferenceId": "TBO-BR-4-1779816367326",
+      "preBookFinalPrice": 427.38,
+      "preBookCancelPoliciesCount": 2,
+      "supplementsCount": 2,
+      "rateConditionsCount": 10,
+      "roomPromotionsCount": 2,
       "error": null
     },
     {
@@ -58,7 +82,13 @@
       "preBook": true,
       "book": true,
       "bookingDetail": true,
-      "bookingIdentifier": "Z2NLVP",
+      "bookingIdentifier": "TBO-BR-5-1779816384452",
+      "bookingReferenceId": "TBO-BR-5-1779816384452",
+      "preBookFinalPrice": 425.04,
+      "preBookCancelPoliciesCount": 2,
+      "supplementsCount": 2,
+      "rateConditionsCount": 10,
+      "roomPromotionsCount": 2,
       "error": null
     },
     {
@@ -68,7 +98,13 @@
       "preBook": true,
       "book": true,
       "bookingDetail": true,
-      "bookingIdentifier": "2D3TH2",
+      "bookingIdentifier": "TBO-BR-6-1779816399971",
+      "bookingReferenceId": "TBO-BR-6-1779816399971",
+      "preBookFinalPrice": 426.6,
+      "preBookCancelPoliciesCount": 2,
+      "supplementsCount": 2,
+      "rateConditionsCount": 10,
+      "roomPromotionsCount": 2,
       "error": null
     },
     {
@@ -78,7 +114,13 @@
       "preBook": true,
       "book": true,
       "bookingDetail": true,
-      "bookingIdentifier": "5NK12F",
+      "bookingIdentifier": "TBO-BR-7-1779816416835",
+      "bookingReferenceId": "TBO-BR-7-1779816416835",
+      "preBookFinalPrice": 213.43,
+      "preBookCancelPoliciesCount": 2,
+      "supplementsCount": 1,
+      "rateConditionsCount": 10,
+      "roomPromotionsCount": 1,
       "error": null
     }
   ]

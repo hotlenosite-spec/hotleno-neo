@@ -1,6 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
+import {
+  isDevPreviewAllPagesEnabled,
+  warnDevPreviewAllPagesEnabled,
+} from "@/lib/security/dev-flags";
 import { AuthDialog } from "./auth-dialog";
 
 export default function ProtectedRoute({
@@ -9,6 +14,15 @@ export default function ProtectedRoute({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const isDevPreviewAllPages = isDevPreviewAllPagesEnabled();
+
+  useEffect(() => {
+    warnDevPreviewAllPagesEnabled();
+  }, []);
+
+  if (isDevPreviewAllPages) {
+    return <>{children}</>;
+  }
 
   // Show a proper loading state
   if (isLoading) {

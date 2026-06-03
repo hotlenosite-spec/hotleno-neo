@@ -1,5 +1,5 @@
 {
-  "BookingCode": "1120548!TB!1!TB!6d357406-5508-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+  "BookingCode": "1120548!TB!1!TB!161448f9-5928-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
   "CustomerDetails": [
     {
       "CustomerNames": [
@@ -18,9 +18,9 @@
       ]
     }
   ],
-  "ClientReferenceId": "TBO-CERT-7-1779363014205",
-  "BookingReferenceId": "TBO-BR-7-1779363014205",
-  "TotalFare": 213.82,
+  "ClientReferenceId": "TBO-CERT-7-1779816416835",
+  "BookingReferenceId": "TBO-BR-7-1779816416835",
+  "TotalFare": 213.43,
   "EmailId": "certification@uranustravel.com",
   "PhoneNumber": "971501234567",
   "BookingType": "Voucher",

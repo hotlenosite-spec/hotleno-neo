@@ -1,0 +1,19 @@
+{
+  "status": "booking-direct_not_accepted",
+  "attempt": 1,
+  "supplier": "Hotelbeds Accommodation",
+  "safeMessage": "Price has changed: Unable to book as the price difference exceeds the allowed tolerance - Current tolerance: 2.00%",
+  "statusCode": 500,
+  "selectedRate": {
+    "hotelName": "B&B HOTEL Barcelona Mollet Porta de Gallecs",
+    "hotelCode": 81986,
+    "roomName": "DOUBLE STANDARD ROOM",
+    "boardName": "ROOM ONLY",
+    "amount": "74.45",
+    "currency": "EUR",
+    "rateClass": "NOR",
+    "rateType": "BOOKABLE",
+    "allotment": 8,
+    "rateKeyMasked": "20260817...00122d4a"
+  }
+}

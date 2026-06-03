@@ -1,0 +1,300 @@
+{
+  "scenario": "Test Case 2 - Paris sessions and languages",
+  "bookingReference": "197-14372763",
+  "status": "confirmed",
+  "request": {
+    "language": "en",
+    "clientReference": "HA02780422028789",
+    "holder": {
+      "title": "Mr",
+      "name": "TEST",
+      "surname": "CERTIFICATION",
+      "email": "certification-test@hotleno.com",
+      "country": "SA",
+      "telephones": [
+        "+966500000000"
+      ]
+    },
+    "activities": [
+      {
+        "rateKey": "gr84jura1b12v67a9n0vtbg7o21940",
+        "from": "2026-07-07",
+        "to": "2026-07-07",
+        "paxes": [
+          {
+            "age": 30,
+            "name": "TEST",
+            "surname": "CERTIFICATION",
+            "type": "ADULT"
+          }
+        ],
+        "session": "16:00",
+        "answers": [
+          {
+            "question": {
+              "code": "HOTEL",
+              "text": "Please provide the name of your hotel",
+              "required": true
+            },
+            "answer": "TEST ANSWER FOR HOTEL"
+          },
+          {
+            "question": {
+              "code": "PHONENUMBER",
+              "text": "Guests telephone with international code required",
+              "required": true
+            },
+            "answer": "TEST ANSWER FOR PHONENUMBER"
+          },
+          {
+            "question": {
+              "code": "HOTEL",
+              "text": "Please provide the name of your hotel",
+              "required": true
+            },
+            "answer": "TEST ANSWER FOR HOTEL"
+          },
+          {
+            "question": {
+              "code": "PHONENUMBER",
+              "text": "Guests telephone with international code required",
+              "required": true
+            },
+            "answer": "TEST ANSWER FOR PHONENUMBER"
+          },
+          {
+            "question": {
+              "code": "HOTEL",
+              "text": "Please provide the name of your hotel",
+              "required": true
+            },
+            "answer": "TEST ANSWER FOR HOTEL"
+          },
+          {
+            "question": {
+              "code": "PHONENUMBER",
+              "text": "Guests telephone with international code required",
+              "required": true
+            },
+            "answer": "TEST ANSWER FOR PHONENUMBER"
+          },
+          {
+            "question": {
+              "code": "HOTEL",
+              "text": "Please provide the name of your hotel",
+              "required": true
+            },
+            "answer": "TEST ANSWER FOR HOTEL"
+          },
+          {
+            "question": {
+              "code": "PHONENUMBER",
+              "text": "Guests telephone with international code required",
+              "required": true
+            },
+            "answer": "TEST ANSWER FOR PHONENUMBER"
+          }
+        ]
+      }
+    ],
+    "amount": 141.38,
+    "currency": "EUR"
+  },
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "status": "confirmed",
+      "bookingReference": "197-14372763",
+      "clientReference": "HA02780422028789",
+      "voucher": {
+        "supplier": "hotelbeds-activities",
+        "bookingReference": "197-14372763",
+        "clientReference": "HA02780422028789",
+        "confirmationDate": "2026-06-02T21:40:30.000Z",
+        "activityName": "Tour Privado por París",
+        "dateFrom": "2026-07-07",
+        "dateTo": "2026-07-07",
+        "modalityName": "6h tour spanish 16:00",
+        "holder": {
+          "title": "Mr",
+          "name": "TEST",
+          "surname": "CERTIFICATION",
+          "email": "certification-test@hotleno.com",
+          "country": "SA",
+          "telephones": [
+            "+966500000000"
+          ]
+        },
+        "paxes": [
+          {
+            "age": 30,
+            "name": "TEST",
+            "surname": "CERTIFICATION",
+            "type": "ADULT"
+          }
+        ],
+        "childrenAges": [],
+        "contractRemarks": [
+          "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes.",
+          "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes."
+        ],
+        "redeemInformation": [
+          "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes."
+        ],
+        "supplierInfo": "HOTELBEDS SPAIN, S.L.U",
+        "selectedSession": "16:00",
+        "cancellationPolicies": [],
+        "officialVouchers": [],
+        "raw": {
+          "operationId": "f577adcfd504daea",
+          "auditData": {
+            "processTime": 1.263,
+            "time": "2026-06-02T19:40:30.782Z",
+            "serverId": "blank",
+            "environment": "blank"
+          },
+          "booking": {
+            "reference": "197-14372763",
+            "status": "CONFIRMED",
+            "currency": "EUR",
+            "pendingAmount": 220.91,
+            "agency": {
+              "code": 99994,
+              "branch": 1,
+              "comments": "",
+              "sucursal": {
+                "name": "HOTELBEDS SPAIN - PRUEBAS",
+                "street": "PEREZ GALDOS 32",
+                "zip": "07006",
+                "city": "PALMA DE MALLORCA",
+                "phone": "971771700",
+                "region": "BALEARES"
+              }
+            },
+            "creationDate": "2026-06-02T21:40:30.000Z",
+            "paymentData": {
+              "paymentType": {
+                "code": "C"
+              },
+              "invoicingCompany": {
+                "code": "E14",
+                "name": "HOTELBEDS S.L.U.",
+                "registrationNumber": "ESB57218372"
+              }
+            },
+            "extraData": [
+              {
+                "id": "WEBIP",
+                "value": "5.110.180.34, 3.172.64.105, 10.214.142.109, 10.214.131.185"
+              }
+            ],
+            "clientReference": "HA02780422028789",
+            "holder": {
+              "name": "TEST",
+              "title": "",
+              "email": "certification-test@hotleno.com",
+              "mailing": false,
+              "surname": "CERTIFICATION",
+              "telephones": [
+                "+966500000000"
+              ]
+            },
+            "total": 220.91,
+            "totalNet": 220.91,
+            "activities": [
+              {
+                "status": "CONFIRMED",
+                "supplier": {
+                  "name": "[MaxDepth]",
+                  "vatNumber": "[MaxDepth]"
+                },
+                "comments": [
+                  "[MaxDepth]"
+                ],
+                "type": "TICKET",
+                "vouchers": [],
+                "activityReference": "197-14372763",
+                "code": "E-E10-A1IMNO0580",
+                "name": "Tour Privado por París",
+                "modality": {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "rates": "[MaxDepth]",
+                  "amountUnitType": "[MaxDepth]"
+                },
+                "dateFrom": "2026-07-07",
+                "dateTo": "2026-07-07",
+                "cancellationPolicies": [
+                  "[MaxDepth]"
+                ],
+                "paxes": [
+                  "[MaxDepth]"
+                ],
+                "questions": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "id": "197#O#1",
+                "agencyCommission": {
+                  "percentage": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "vatAmount": "[MaxDepth]"
+                },
+                "contactInfo": {
+                  "address": "[MaxDepth]",
+                  "postalCode": "[MaxDepth]",
+                  "city": "[MaxDepth]",
+                  "country": "[MaxDepth]"
+                },
+                "amountDetail": {
+                  "paxAmounts": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]"
+                },
+                "extraData": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "providerInformation": {
+                  "name": "[MaxDepth]"
+                },
+                "content": {
+                  "name": "[MaxDepth]",
+                  "detailedInfo": "[MaxDepth]",
+                  "featureGroups": "[MaxDepth]",
+                  "guidingOptions": "[MaxDepth]",
+                  "importantInfo": "[MaxDepth]",
+                  "location": "[MaxDepth]",
+                  "media": "[MaxDepth]",
+                  "redeemInfo": "[MaxDepth]",
+                  "routes": "[MaxDepth]",
+                  "scheduling": "[MaxDepth]",
+                  "segmentationGroups": "[MaxDepth]",
+                  "activityFactsheetType": "[MaxDepth]",
+                  "activityCode": "[MaxDepth]",
+                  "contentId": "[MaxDepth]",
+                  "description": "[MaxDepth]",
+                  "lastUpdate": "[MaxDepth]",
+                  "advancedTips": "[MaxDepth]",
+                  "countries": "[MaxDepth]",
+                  "highligths": "[MaxDepth]",
+                  "language": "[MaxDepth]"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "debug": {
+      "reason": "activities_booking_success",
+      "bookingReference": "197-14372763",
+      "status": "confirmed",
+      "hasOfficialVoucher": false
+    }
+  }
+}

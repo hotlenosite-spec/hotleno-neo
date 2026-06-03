@@ -1,3 +1,10 @@
+import {
+  buildMockBookResponse,
+  buildMockBookingDetailsResponse,
+  buildMockCancelBookingResponse,
+  buildMockPreBookResponse,
+  buildMockSearchHotelsResponse,
+} from "./mock-utils";
 import type {
   SupplierBookRequest,
   SupplierBookResponse,
@@ -5,6 +12,8 @@ import type {
   SupplierBookingDetailsResponse,
   SupplierCancelBookingRequest,
   SupplierCancelBookingResponse,
+  SupplierCheckAvailabilityRequest,
+  SupplierCheckAvailabilityResponse,
   SupplierPreBookRequest,
   SupplierPreBookResponse,
   SupplierProvider,
@@ -12,36 +21,42 @@ import type {
   SupplierSearchHotelsResponse,
 } from "./types";
 
-function notImplemented(): never {
-  throw new Error("TBO supplier provider is not implemented yet");
-}
-
 export class TboSupplierProvider implements SupplierProvider {
   readonly name = "tbo" as const;
 
   async searchHotels(
-    _request: SupplierSearchHotelsRequest,
+    request: SupplierSearchHotelsRequest,
   ): Promise<SupplierSearchHotelsResponse> {
-    notImplemented();
+    return buildMockSearchHotelsResponse(this.name, request);
   }
 
-  async preBook(_request: SupplierPreBookRequest): Promise<SupplierPreBookResponse> {
-    notImplemented();
+  async checkAvailability(
+    request: SupplierCheckAvailabilityRequest,
+  ): Promise<SupplierCheckAvailabilityResponse> {
+    return this.preBook(request);
   }
 
-  async book(_request: SupplierBookRequest): Promise<SupplierBookResponse> {
-    notImplemented();
+  async checkRates(request: SupplierPreBookRequest): Promise<SupplierPreBookResponse> {
+    return this.preBook(request);
+  }
+
+  async preBook(request: SupplierPreBookRequest): Promise<SupplierPreBookResponse> {
+    return buildMockPreBookResponse(this.name, request);
+  }
+
+  async book(request: SupplierBookRequest): Promise<SupplierBookResponse> {
+    return buildMockBookResponse(this.name, request);
   }
 
   async getBookingDetails(
-    _request: SupplierBookingDetailsRequest,
+    request: SupplierBookingDetailsRequest,
   ): Promise<SupplierBookingDetailsResponse> {
-    notImplemented();
+    return buildMockBookingDetailsResponse(this.name, request);
   }
 
   async cancelBooking(
-    _request: SupplierCancelBookingRequest,
+    request: SupplierCancelBookingRequest,
   ): Promise<SupplierCancelBookingResponse> {
-    notImplemented();
+    return buildMockCancelBookingResponse(this.name, request);
   }
 }

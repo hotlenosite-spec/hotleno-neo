@@ -1,0 +1,1351 @@
+{
+  "scenario": "Test Case 2 - Paris sessions and languages",
+  "activityCode": "A1IMNO0580",
+  "name": "Discover Paris - Private Walking Tour",
+  "modalityCount": 2,
+  "questionCount": 8,
+  "sessionCount": 36,
+  "languages": [
+    "Spanish"
+  ],
+  "requiredQuestions": [
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "required": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "required": true
+    },
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "required": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "required": true
+    },
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "required": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "required": true
+    },
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "required": true
+    },
+    {
+      "code": "PHONENUMBER",
+      "text": "Guests telephone with international code required",
+      "required": true
+    }
+  ],
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "activityCode": "A1IMNO0580",
+      "name": "Discover Paris - Private Walking Tour",
+      "destinationName": "Paris",
+      "countryName": "France",
+      "modalities": [
+        {
+          "code": "1943401261#6TOUR",
+          "name": "6-hour tour",
+          "duration": {
+            "value": 1,
+            "metric": "DAYS"
+          },
+          "questions": [
+            {
+              "code": "HOTEL",
+              "text": "Please provide the name of your hotel",
+              "required": true
+            },
+            {
+              "code": "PHONENUMBER",
+              "text": "Guests telephone with international code required",
+              "required": true
+            }
+          ],
+          "destinationCode": "PAR",
+          "contract": {
+            "incomingOffice": 197,
+            "code": 6881,
+            "name": "A1IMNO0580 -26"
+          },
+          "languages": [],
+          "amountsFrom": [
+            {
+              "paxType": "ADULT",
+              "ageFrom": 16,
+              "ageTo": 999,
+              "amount": 220.91,
+              "boxOfficeAmount": 250,
+              "mandatoryApplyAmount": false
+            },
+            {
+              "paxType": "CHILD",
+              "ageFrom": 0,
+              "ageTo": 15,
+              "amount": 0,
+              "boxOfficeAmount": 0,
+              "mandatoryApplyAmount": false
+            }
+          ],
+          "rates": [
+            {
+              "rateCode": "STANDARD",
+              "rateClass": "NOR",
+              "freeCancellation": false,
+              "rateDetails": [
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                }
+              ]
+            }
+          ],
+          "amountUnitType": "SERVICE",
+          "uniqueIdentifier": "1943401261"
+        },
+        {
+          "code": "1428921137#TOUR",
+          "name": "3-hour tour",
+          "duration": {
+            "value": 1,
+            "metric": "DAYS"
+          },
+          "questions": [
+            {
+              "code": "HOTEL",
+              "text": "Please provide the name of your hotel",
+              "required": true
+            },
+            {
+              "code": "PHONENUMBER",
+              "text": "Guests telephone with international code required",
+              "required": true
+            }
+          ],
+          "destinationCode": "PAR",
+          "contract": {
+            "incomingOffice": 197,
+            "code": 6881,
+            "name": "A1IMNO0580 -26"
+          },
+          "languages": [],
+          "amountsFrom": [
+            {
+              "paxType": "ADULT",
+              "ageFrom": 16,
+              "ageTo": 999,
+              "amount": 141.38,
+              "boxOfficeAmount": 160,
+              "mandatoryApplyAmount": false
+            },
+            {
+              "paxType": "CHILD",
+              "ageFrom": 0,
+              "ageTo": 15,
+              "amount": 0,
+              "boxOfficeAmount": 0,
+              "mandatoryApplyAmount": false
+            }
+          ],
+          "rates": [
+            {
+              "rateCode": "STANDARD",
+              "rateClass": "NOR",
+              "freeCancellation": false,
+              "rateDetails": [
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                }
+              ]
+            }
+          ],
+          "amountUnitType": "SERVICE",
+          "uniqueIdentifier": "1428921137"
+        }
+      ],
+      "totalAmount": 141.38,
+      "currency": "EUR",
+      "cancellationPolicies": [
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 220.91,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 141.38,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38
+          }
+        }
+      ],
+      "questions": [
+        {
+          "code": "HOTEL",
+          "text": "Please provide the name of your hotel",
+          "required": true
+        },
+        {
+          "code": "PHONENUMBER",
+          "text": "Guests telephone with international code required",
+          "required": true
+        },
+        {
+          "code": "HOTEL",
+          "text": "Please provide the name of your hotel",
+          "required": true
+        },
+        {
+          "code": "PHONENUMBER",
+          "text": "Guests telephone with international code required",
+          "required": true
+        },
+        {
+          "code": "HOTEL",
+          "text": "Please provide the name of your hotel",
+          "required": true
+        },
+        {
+          "code": "PHONENUMBER",
+          "text": "Guests telephone with international code required",
+          "required": true
+        },
+        {
+          "code": "HOTEL",
+          "text": "Please provide the name of your hotel",
+          "required": true
+        },
+        {
+          "code": "PHONENUMBER",
+          "text": "Guests telephone with international code required",
+          "required": true
+        }
+      ],
+      "sessions": [
+        {
+          "code": "16:00",
+          "name": "16:00"
+        },
+        {
+          "code": "12:00",
+          "name": "12:00"
+        },
+        {
+          "code": "14:00",
+          "name": "14:00"
+        },
+        {
+          "code": "15:00",
+          "name": "15:00"
+        },
+        {
+          "code": "10:00",
+          "name": "10:00"
+        },
+        {
+          "code": "13:00",
+          "name": "13:00"
+        },
+        {
+          "code": "09:00",
+          "name": "09:00"
+        },
+        {
+          "code": "17:00",
+          "name": "17:00"
+        },
+        {
+          "code": "11:00",
+          "name": "11:00"
+        },
+        {
+          "code": "16:00",
+          "name": "16:00"
+        },
+        {
+          "code": "14:00",
+          "name": "14:00"
+        },
+        {
+          "code": "13:00",
+          "name": "13:00"
+        },
+        {
+          "code": "11:00",
+          "name": "11:00"
+        },
+        {
+          "code": "10:00",
+          "name": "10:00"
+        },
+        {
+          "code": "15:00",
+          "name": "15:00"
+        },
+        {
+          "code": "17:00",
+          "name": "17:00"
+        },
+        {
+          "code": "09:00",
+          "name": "09:00"
+        },
+        {
+          "code": "12:00",
+          "name": "12:00"
+        },
+        {
+          "code": "16:00",
+          "name": "16:00"
+        },
+        {
+          "code": "12:00",
+          "name": "12:00"
+        },
+        {
+          "code": "14:00",
+          "name": "14:00"
+        },
+        {
+          "code": "15:00",
+          "name": "15:00"
+        },
+        {
+          "code": "10:00",
+          "name": "10:00"
+        },
+        {
+          "code": "13:00",
+          "name": "13:00"
+        },
+        {
+          "code": "09:00",
+          "name": "09:00"
+        },
+        {
+          "code": "17:00",
+          "name": "17:00"
+        },
+        {
+          "code": "11:00",
+          "name": "11:00"
+        },
+        {
+          "code": "16:00",
+          "name": "16:00"
+        },
+        {
+          "code": "14:00",
+          "name": "14:00"
+        },
+        {
+          "code": "13:00",
+          "name": "13:00"
+        },
+        {
+          "code": "11:00",
+          "name": "11:00"
+        },
+        {
+          "code": "10:00",
+          "name": "10:00"
+        },
+        {
+          "code": "15:00",
+          "name": "15:00"
+        },
+        {
+          "code": "17:00",
+          "name": "17:00"
+        },
+        {
+          "code": "09:00",
+          "name": "09:00"
+        },
+        {
+          "code": "12:00",
+          "name": "12:00"
+        }
+      ],
+      "languages": [
+        "Spanish"
+      ],
+      "rawAvailabilityOption": {
+        "id": "A1IMNO0580",
+        "supplier": "hotelbeds-activities",
+        "activityCode": "A1IMNO0580",
+        "name": "Discover Paris - Private Walking Tour",
+        "destinationName": "Paris",
+        "countryName": "France",
+        "categoryName": "City tours",
+        "duration": "1 day",
+        "languages": [
+          "Spanish"
+        ],
+        "imageUrl": "https://media.activitiesbank.com/61394/ENG/XL/Louvre.jpg",
+        "price": {
+          "amount": 141.38,
+          "currency": "EUR"
+        },
+        "cancellationPolicies": [
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 220.91,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 220.91
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          },
+          {
+            "from": "2026-07-06T00:00:00.000Z",
+            "amount": 141.38,
+            "raw": {
+              "dateFrom": "2026-07-06T00:00:00.000Z",
+              "amount": 141.38
+            }
+          }
+        ],
+        "modalities": [
+          {
+            "code": "1943401261#6TOUR",
+            "name": "6-hour tour",
+            "duration": {
+              "value": 1,
+              "metric": "DAYS"
+            },
+            "questions": [
+              {
+                "code": "HOTEL",
+                "text": "Please provide the name of your hotel",
+                "required": true
+              },
+              {
+                "code": "PHONENUMBER",
+                "text": "Guests telephone with international code required",
+                "required": true
+              }
+            ],
+            "destinationCode": "PAR",
+            "contract": {
+              "incomingOffice": 197,
+              "code": 6881,
+              "name": "A1IMNO0580 -26"
+            },
+            "languages": [],
+            "amountsFrom": [
+              {
+                "paxType": "ADULT",
+                "ageFrom": 16,
+                "ageTo": 999,
+                "amount": 220.91,
+                "boxOfficeAmount": 250,
+                "mandatoryApplyAmount": false
+              },
+              {
+                "paxType": "CHILD",
+                "ageFrom": 0,
+                "ageTo": 15,
+                "amount": 0,
+                "boxOfficeAmount": 0,
+                "mandatoryApplyAmount": false
+              }
+            ],
+            "rates": [
+              {
+                "rateCode": "STANDARD",
+                "rateClass": "NOR",
+                "freeCancellation": false,
+                "rateDetails": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "amountUnitType": "SERVICE",
+            "uniqueIdentifier": "1943401261"
+          },
+          {
+            "code": "1428921137#TOUR",
+            "name": "3-hour tour",
+            "duration": {
+              "value": 1,
+              "metric": "DAYS"
+            },
+            "questions": [
+              {
+                "code": "HOTEL",
+                "text": "Please provide the name of your hotel",
+                "required": true
+              },
+              {
+                "code": "PHONENUMBER",
+                "text": "Guests telephone with international code required",
+                "required": true
+              }
+            ],
+            "destinationCode": "PAR",
+            "contract": {
+              "incomingOffice": 197,
+              "code": 6881,
+              "name": "A1IMNO0580 -26"
+            },
+            "languages": [],
+            "amountsFrom": [
+              {
+                "paxType": "ADULT",
+                "ageFrom": 16,
+                "ageTo": 999,
+                "amount": 141.38,
+                "boxOfficeAmount": 160,
+                "mandatoryApplyAmount": false
+              },
+              {
+                "paxType": "CHILD",
+                "ageFrom": 0,
+                "ageTo": 15,
+                "amount": 0,
+                "boxOfficeAmount": 0,
+                "mandatoryApplyAmount": false
+              }
+            ],
+            "rates": [
+              {
+                "rateCode": "STANDARD",
+                "rateClass": "NOR",
+                "freeCancellation": false,
+                "rateDetails": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "amountUnitType": "SERVICE",
+            "uniqueIdentifier": "1428921137"
+          }
+        ],
+        "raw": {
+          "activityCode": "A1IMNO0580",
+          "country": {
+            "code": "FR",
+            "name": "France",
+            "destinations": [
+              {
+                "code": "PAR",
+                "name": "Paris"
+              }
+            ]
+          },
+          "operationDays": [
+            {
+              "code": "MON",
+              "name": "Monday"
+            },
+            {
+              "code": "TUE",
+              "name": "Tuesday"
+            },
+            {
+              "code": "WED",
+              "name": "Wednesday"
+            },
+            {
+              "code": "THU",
+              "name": "Thursday"
+            },
+            {
+              "code": "FRI",
+              "name": "Friday"
+            },
+            {
+              "code": "SAT",
+              "name": "Saturday"
+            },
+            {
+              "code": "SUN",
+              "name": "Sunday"
+            }
+          ],
+          "modalities": [
+            {
+              "code": "1943401261#6TOUR",
+              "name": "6-hour tour",
+              "duration": {
+                "value": 1,
+                "metric": "DAYS"
+              },
+              "questions": [
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                }
+              ],
+              "destinationCode": "PAR",
+              "contract": {
+                "incomingOffice": 197,
+                "code": 6881,
+                "name": "A1IMNO0580 -26"
+              },
+              "languages": [],
+              "amountsFrom": [
+                {
+                  "paxType": "[MaxDepth]",
+                  "ageFrom": "[MaxDepth]",
+                  "ageTo": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "boxOfficeAmount": "[MaxDepth]",
+                  "mandatoryApplyAmount": "[MaxDepth]"
+                },
+                {
+                  "paxType": "[MaxDepth]",
+                  "ageFrom": "[MaxDepth]",
+                  "ageTo": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "boxOfficeAmount": "[MaxDepth]",
+                  "mandatoryApplyAmount": "[MaxDepth]"
+                }
+              ],
+              "rates": [
+                {
+                  "rateCode": "[MaxDepth]",
+                  "rateClass": "[MaxDepth]",
+                  "freeCancellation": "[MaxDepth]",
+                  "rateDetails": "[MaxDepth]"
+                }
+              ],
+              "amountUnitType": "SERVICE",
+              "uniqueIdentifier": "1943401261"
+            },
+            {
+              "code": "1428921137#TOUR",
+              "name": "3-hour tour",
+              "duration": {
+                "value": 1,
+                "metric": "DAYS"
+              },
+              "questions": [
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                }
+              ],
+              "destinationCode": "PAR",
+              "contract": {
+                "incomingOffice": 197,
+                "code": 6881,
+                "name": "A1IMNO0580 -26"
+              },
+              "languages": [],
+              "amountsFrom": [
+                {
+                  "paxType": "[MaxDepth]",
+                  "ageFrom": "[MaxDepth]",
+                  "ageTo": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "boxOfficeAmount": "[MaxDepth]",
+                  "mandatoryApplyAmount": "[MaxDepth]"
+                },
+                {
+                  "paxType": "[MaxDepth]",
+                  "ageFrom": "[MaxDepth]",
+                  "ageTo": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "boxOfficeAmount": "[MaxDepth]",
+                  "mandatoryApplyAmount": "[MaxDepth]"
+                }
+              ],
+              "rates": [
+                {
+                  "rateCode": "[MaxDepth]",
+                  "rateClass": "[MaxDepth]",
+                  "freeCancellation": "[MaxDepth]",
+                  "rateDetails": "[MaxDepth]"
+                }
+              ],
+              "amountUnitType": "SERVICE",
+              "uniqueIdentifier": "1428921137"
+            }
+          ],
+          "currencyName": "Euro",
+          "amountsFrom": [
+            {
+              "paxType": "ADULT",
+              "ageFrom": 16,
+              "ageTo": 999,
+              "amount": 141.38,
+              "boxOfficeAmount": 160,
+              "mandatoryApplyAmount": false
+            },
+            {
+              "paxType": "CHILD",
+              "ageFrom": 0,
+              "ageTo": 15,
+              "amount": 0,
+              "boxOfficeAmount": 0,
+              "mandatoryApplyAmount": false
+            }
+          ],
+          "content": {
+            "name": "Discover Paris - Private Walking Tour",
+            "detailedInfo": [],
+            "featureGroups": [
+              {
+                "groupCode": "MEAL",
+                "excluded": [
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "groupCode": "TRANSPORT",
+                "excluded": [
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "groupCode": "DRINKS",
+                "excluded": [
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "groupCode": "TICKET",
+                "excluded": [
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "groupCode": "UNKNOWN",
+                "included": [
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "guidingOptions": {
+              "guideType": "TOURGUIDE",
+              "included": true
+            },
+            "importantInfo": [
+              "As this tour involves a fair amount of walking, please wear comfortable shoes.",
+              "Please make sure you answer all the mandatory questions during the booking process."
+            ],
+            "location": {
+              "endPoints": [
+                {
+                  "type": "[MaxDepth]",
+                  "description": "[MaxDepth]"
+                }
+              ],
+              "startingPoints": [
+                {
+                  "type": "[MaxDepth]",
+                  "meetingPoint": "[MaxDepth]",
+                  "pickupInstructions": "[MaxDepth]"
+                }
+              ]
+            },
+            "media": {
+              "images": [
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                },
+                {
+                  "visualizationOrder": "[MaxDepth]",
+                  "mimeType": "[MaxDepth]",
+                  "language": "[MaxDepth]",
+                  "urls": "[MaxDepth]"
+                }
+              ]
+            },
+            "redeemInfo": {
+              "type": "VOCUHERLESS",
+              "directEntrance": false,
+              "comments": [
+                {
+                  "description": "[MaxDepth]"
+                }
+              ]
+            },
+            "routes": [],
+            "scheduling": {},
+            "segmentationGroups": [
+              {
+                "code": 2,
+                "name": "Duration",
+                "segments": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "code": 16,
+                "name": "Services",
+                "segments": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              },
+              {
+                "code": 1,
+                "name": "Categories",
+                "segments": [
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "activityFactsheetType": "ACTIVITIES",
+            "activityCode": "E-E10-A1IMNO0580",
+            "modalityCode": "6TOUR",
+            "modalityName": "6-hour tour",
+            "contentId": "61394",
+            "description": "If you want<strong> to get to know Paris in the most comfortable and personal way,</strong> with a guide at your complete disposal, come with us to discover the most interesting corners of the city.<br />\nThe guide will make <strong>an itinerary based on your tastes and preferences.</strong><br />\n<br />\nWe will <strong>discover Paris quietly</strong>, with time to take photos, buy souvenirs and have lunch in a restaurant of your choice. It will be a unique tour in which our guide will also tell you details and curiosities about local Parisian life.<br />\n<br />\nIn our standard itinerary we will see the most important monuments and attractions of Paris: Notre Dame Cathedral, Latin Quarter, Seine River, Pont Neuf, Pont des Arts, Louvre Museum pyramid, Opéra Garnier, Tuileries Garden, Champs Elysées, Arc de Triomphe, Pont Alexandre III, Eiffel Tower, Île de la Cité, Place Vendôme, Montmartre, Sacré-Coeur Basilica, Moulin Rouge...<br />\n<quillbot-extension-portal></quillbot-extension-portal><quillbot-extension-portal></quillbot-extension-portal>",
+            "lastUpdate": "2023-05-03",
+            "advancedTips": [],
+            "countries": [
+              {
+                "code": "FR",
+                "name": "France",
+                "destinations": [
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "highligths": [],
+            "language": "en"
+          },
+          "order": 9,
+          "name": "Discover Paris - Private Walking Tour",
+          "currency": "EUR",
+          "code": "E-E10-A1IMNO0580",
+          "type": "TICKET"
+        }
+      }
+    },
+    "debug": {
+      "reason": "availability_option_used_for_check_rate_context"
+    }
+  }
+}

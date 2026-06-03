@@ -108,9 +108,12 @@ interface BookingLogs {
 const operationalStatuses = [
   "pending_payment",
   "payment_succeeded",
+  "supplier_booking_processing",
   "supplier_booking_pending",
   "supplier_booking_failed",
+  "manual_review_required",
   "refund_required",
+  "refunded",
 ] as const;
 
 const paymentStatuses = [
@@ -219,7 +222,7 @@ export default function AdminBookingsPage() {
         const data = await response.json();
         setSelectedLogs(data.logs);
       } else {
-        toast.error("Failed to fetch booking logs");
+        toast.error("فشل جلب سجلات الحجز");
       }
     } catch (_error) {
       toast.error(t("errorOccurred"));
@@ -297,10 +300,10 @@ export default function AdminBookingsPage() {
     try {
       await patchBooking({ action });
       const messages = {
-        retry_supplier_booking: "Retry placeholder queued",
-        mark_reviewed: "Booking marked as reviewed",
-        mark_refund_required: "Booking marked as refund required",
-        mark_cancelled: "Booking marked as cancelled",
+        retry_supplier_booking: "تمت جدولة محاولة الإعادة",
+        mark_reviewed: "تم تعليم الحجز كمراجع",
+        mark_refund_required: "تم تعليم الحجز للمراجعة اليدوية",
+        mark_cancelled: "تم تعليم الحجز كملغي",
       };
       toast.success(messages[action]);
     } catch (error) {
@@ -312,7 +315,7 @@ export default function AdminBookingsPage() {
     try {
       await patchBooking({ action: "add_admin_note", note: adminNote });
       setAdminNote("");
-      toast.success("Admin note added");
+      toast.success("تمت إضافة ملاحظة الأدمن");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("errorOccurred"));
     }
@@ -328,6 +331,7 @@ export default function AdminBookingsPage() {
         );
       case "pending_payment":
       case "payment_succeeded":
+      case "supplier_booking_processing":
       case "supplier_booking_pending":
         return (
           <Badge className="rounded-full bg-amber-50 px-3 py-1 text-amber-700 hover:bg-amber-50">
@@ -341,7 +345,9 @@ export default function AdminBookingsPage() {
           </Badge>
         );
       case "supplier_booking_failed":
+      case "manual_review_required":
       case "refund_required":
+      case "refunded":
         return (
           <Badge className="rounded-full bg-red-50 px-3 py-1 text-red-700 hover:bg-red-50">
             {formatBookingStatus(status)}
@@ -357,7 +363,7 @@ export default function AdminBookingsPage() {
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("ar-SA", {
       style: "currency",
       currency,
     }).format(amount);
@@ -365,7 +371,7 @@ export default function AdminBookingsPage() {
 
   const formatDate = (value?: string) => {
     if (!value) return "-";
-    return format(new Date(value), "MMM d, yyyy h:mm a");
+    return format(new Date(value), "yyyy-MM-dd HH:mm");
   };
 
   const renderDetail = (label: string, value?: string | number | null) => (
@@ -377,12 +383,35 @@ export default function AdminBookingsPage() {
     </div>
   );
 
+  const formatAdminValue = (value?: string | number | null) => {
+    if (value === undefined || value === null || value === "") return "-";
+    if (typeof value === "number") return value;
+
+    const labels: Record<string, string> = {
+      pending: "بانتظار",
+      paid: "مدفوع",
+      succeeded: "ناجح",
+      failed: "فشل",
+      cancelled: "ملغي",
+      refund_required: "استرداد مطلوب",
+      refunded: "تم الاسترداد",
+      not_started: "لم يبدأ",
+      confirmed: "مؤكد",
+      success: "ناجح",
+      error: "خطأ",
+      timeout: "انتهت المهلة",
+      skipped: "تم التخطي",
+    };
+
+    return labels[value] || value;
+  };
+
   const renderLogList = (title: string, logs: AdminLogEntry[]) => (
     <div className="space-y-3">
       <h4 className="font-black text-slate-950">{title}</h4>
       {logs.length === 0 ? (
         <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-          No logs yet
+          لا توجد سجلات بعد
         </p>
       ) : (
         <div className="space-y-3">
@@ -391,7 +420,7 @@ export default function AdminBookingsPage() {
               <div className="flex items-center justify-between gap-2">
                 <span className="font-black text-slate-900">{log.type}</span>
                 <Badge className="rounded-full bg-slate-100 text-slate-700 hover:bg-slate-100">
-                  {log.status}
+                  {formatAdminValue(log.status)}
                 </Badge>
               </div>
               {log.message && (
@@ -424,7 +453,7 @@ export default function AdminBookingsPage() {
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div>
             <div className="mb-4 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-[#f4d58d]">
-              HOTLENO Bookings Control
+              إدارة حجوزات HOTLENO
             </div>
             <h1 className="text-3xl font-black tracking-tight md:text-4xl">
               {t("bookings")}
@@ -478,7 +507,7 @@ export default function AdminBookingsPage() {
                   className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
                 />
                 <Input
-                  placeholder="Search reference, customer email, guest, or hotel..."
+                  placeholder="ابحث بالمرجع أو بريد العميل أو النزيل أو الفندق..."
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && handleSearch()}
@@ -523,13 +552,13 @@ export default function AdminBookingsPage() {
               }}
             >
               <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50">
-                <SelectValue placeholder="Payment status" />
+                <SelectValue placeholder="حالة الدفع" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All payments</SelectItem>
+                <SelectItem value="all">كل المدفوعات</SelectItem>
                 {paymentStatuses.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {status}
+                    {formatAdminValue(status)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -543,13 +572,13 @@ export default function AdminBookingsPage() {
               }}
             >
               <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50">
-                <SelectValue placeholder="Supplier status" />
+                <SelectValue placeholder="حالة المورد" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All suppliers</SelectItem>
+                <SelectItem value="all">كل الموردين</SelectItem>
                 {supplierStatuses.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {status}
+                    {formatAdminValue(status)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -564,12 +593,12 @@ export default function AdminBookingsPage() {
               }}
             >
               <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50">
-                <SelectValue placeholder="Needs attention" />
+                <SelectValue placeholder="يحتاج متابعة" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All operational</SelectItem>
-                <SelectItem value="refund_required">Refund required</SelectItem>
-                <SelectItem value="supplier_booking_failed">Supplier failed</SelectItem>
+                <SelectItem value="all">كل الحالات التشغيلية</SelectItem>
+                <SelectItem value="refund_required">مراجعة يدوية / استرداد مطلوب</SelectItem>
+                <SelectItem value="supplier_booking_failed">فشل المورد</SelectItem>
               </SelectContent>
             </Select>
 
@@ -578,7 +607,7 @@ export default function AdminBookingsPage() {
               onClick={clearFilters}
               className="h-12 rounded-2xl border-slate-200 px-5 font-bold"
             >
-              Clear
+              مسح
             </Button>
           </div>
         </CardContent>
@@ -616,10 +645,10 @@ export default function AdminBookingsPage() {
                       </span>
                       {getStatusBadge(booking.status)}
                       <Badge className="rounded-full bg-orange-50 px-3 py-1 text-orange-700 hover:bg-orange-50">
-                        {booking.paymentStatus || "payment -"}
+                        {formatAdminValue(booking.paymentStatus)}
                       </Badge>
                       <Badge className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 hover:bg-slate-100">
-                        {booking.supplierStatus || "supplier -"}
+                        {formatAdminValue(booking.supplierStatus)}
                       </Badge>
                     </div>
 
@@ -633,8 +662,8 @@ export default function AdminBookingsPage() {
                     </p>
 
                     <p className="text-xs font-bold text-slate-400">
-                      {format(new Date(booking.checkInDate), "MMM d")} -{" "}
-                      {format(new Date(booking.checkOutDate), "MMM d, yyyy")}
+                      {format(new Date(booking.checkInDate), "yyyy-MM-dd")} -{" "}
+                      {format(new Date(booking.checkOutDate), "yyyy-MM-dd")}
                     </p>
                   </div>
 
@@ -650,7 +679,7 @@ export default function AdminBookingsPage() {
                       className="rounded-2xl border-slate-200 font-bold"
                     >
                       <HugeiconsIcon icon={ViewIcon} className="ml-1 h-4 w-4" />
-                      Details
+                      التفاصيل
                     </Button>
                   </div>
                 </div>
@@ -692,7 +721,7 @@ export default function AdminBookingsPage() {
         <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl border-slate-200 sm:max-w-5xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-slate-950">
-              Booking operational details
+              التفاصيل التشغيلية للحجز
             </DialogTitle>
             <DialogDescription className="font-bold text-slate-500">
               {selectedBooking?.bookingReference}
@@ -701,64 +730,64 @@ export default function AdminBookingsPage() {
 
           <div className="space-y-6 py-4">
             <div className="grid gap-3 sm:grid-cols-3">
-              {renderDetail("Booking status", selectedBooking?.status ? formatBookingStatus(selectedBooking.status) : "-")}
-              {renderDetail("Payment status", selectedBooking?.paymentStatus)}
-              {renderDetail("Supplier status", selectedBooking?.supplierStatus)}
+              {renderDetail("حالة الحجز", selectedBooking?.status ? formatBookingStatus(selectedBooking.status) : "-")}
+              {renderDetail("حالة الدفع", formatAdminValue(selectedBooking?.paymentStatus))}
+              {renderDetail("حالة المورد", formatAdminValue(selectedBooking?.supplierStatus))}
             </div>
 
             <section className="space-y-3">
-              <h3 className="text-lg font-black text-slate-950">Customer</h3>
+              <h3 className="text-lg font-black text-slate-950">العميل</h3>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {renderDetail("Lead guest", selectedBooking?.leadGuest)}
-                {renderDetail("Contact email", selectedBooking?.contactEmail || selectedBooking?.userId?.email)}
-                {renderDetail("Contact phone", selectedBooking?.contactPhone)}
-                {renderDetail("Account name", selectedBooking?.userId?.name)}
+                {renderDetail("النزيل الرئيسي", selectedBooking?.leadGuest)}
+                {renderDetail("بريد التواصل", selectedBooking?.contactEmail || selectedBooking?.userId?.email)}
+                {renderDetail("هاتف التواصل", selectedBooking?.contactPhone)}
+                {renderDetail("اسم الحساب", selectedBooking?.userId?.name)}
               </div>
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-lg font-black text-slate-950">Hotel and price</h3>
+              <h3 className="text-lg font-black text-slate-950">الفندق والسعر</h3>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {renderDetail("Hotel", selectedBooking?.hotelName)}
-                {renderDetail("Location", selectedBooking?.location)}
-                {renderDetail("Hotel ID", selectedBooking?.hotelId)}
-                {renderDetail("Final price", selectedBooking ? formatCurrency(selectedBooking.totalPrice, selectedBooking.currency) : "-")}
-                {renderDetail("Check-in", selectedBooking?.checkInDate ? format(new Date(selectedBooking.checkInDate), "MMM d, yyyy") : "-")}
-                {renderDetail("Check-out", selectedBooking?.checkOutDate ? format(new Date(selectedBooking.checkOutDate), "MMM d, yyyy") : "-")}
-                {renderDetail("Created", formatDate(selectedBooking?.createdAt))}
-                {renderDetail("Updated", formatDate(selectedBooking?.updatedAt))}
+                {renderDetail("الفندق", selectedBooking?.hotelName)}
+                {renderDetail("الموقع", selectedBooking?.location)}
+                {renderDetail("معرف الفندق", selectedBooking?.hotelId)}
+                {renderDetail("السعر النهائي", selectedBooking ? formatCurrency(selectedBooking.totalPrice, selectedBooking.currency) : "-")}
+                {renderDetail("تسجيل الدخول", selectedBooking?.checkInDate ? format(new Date(selectedBooking.checkInDate), "yyyy-MM-dd") : "-")}
+                {renderDetail("تسجيل الخروج", selectedBooking?.checkOutDate ? format(new Date(selectedBooking.checkOutDate), "yyyy-MM-dd") : "-")}
+                {renderDetail("تاريخ الإنشاء", formatDate(selectedBooking?.createdAt))}
+                {renderDetail("آخر تحديث", formatDate(selectedBooking?.updatedAt))}
               </div>
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-lg font-black text-slate-950">Supplier and payment IDs</h3>
+              <h3 className="text-lg font-black text-slate-950">معرفات المورد والدفع</h3>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {renderDetail("Internal booking ID", selectedBooking?._id)}
-                {renderDetail("Internal reference", selectedBooking?.bookingReference)}
-                {renderDetail("Supplier", selectedBooking?.supplier)}
-                {renderDetail("supplierHotelId", selectedBooking?.supplierHotelId)}
-                {renderDetail("supplierRateKey", selectedBooking?.supplierRateKey)}
-                {renderDetail("supplierBookingReference", selectedBooking?.supplierBookingReference)}
-                {renderDetail("stripeSessionId", selectedBooking?.stripeSessionId || selectedBooking?.stripeCheckoutSessionId)}
-                {renderDetail("stripePaymentIntentId", selectedBooking?.stripePaymentIntentId)}
-                {renderDetail("failureReason", selectedBooking?.failureReason)}
+                {renderDetail("معرف الحجز الداخلي", selectedBooking?._id)}
+                {renderDetail("المرجع الداخلي", selectedBooking?.bookingReference)}
+                {renderDetail("المورد", selectedBooking?.supplier)}
+                {renderDetail("معرف فندق المورد (supplierHotelId)", selectedBooking?.supplierHotelId)}
+                {renderDetail("مفتاح سعر المورد (supplierRateKey)", selectedBooking?.supplierRateKey)}
+                {renderDetail("مرجع حجز المورد (supplierBookingReference)", selectedBooking?.supplierBookingReference)}
+                {renderDetail("معرف جلسة Stripe", selectedBooking?.stripeSessionId || selectedBooking?.stripeCheckoutSessionId)}
+                {renderDetail("معرف عملية دفع Stripe", selectedBooking?.stripePaymentIntentId)}
+                {renderDetail("سبب الفشل", selectedBooking?.failureReason)}
               </div>
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-lg font-black text-slate-950">Operational actions</h3>
+              <h3 className="text-lg font-black text-slate-950">إجراءات التشغيل</h3>
               <div className="flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="outline" onClick={() => handleBookingAction("mark_reviewed")} className="rounded-2xl">
                   <HugeiconsIcon icon={CheckmarkCircle02Icon} className="ml-2 h-4 w-4" />
-                  Mark as reviewed
+                  تعليم كمراجع
                 </Button>
 
                 <Button type="button" size="sm" variant="outline" onClick={() => handleBookingAction("mark_refund_required")} className="rounded-2xl">
-                  Mark as refund required
+                  تعليم للمراجعة / فحص الاسترداد
                 </Button>
 
                 <Button type="button" size="sm" variant="outline" onClick={() => handleBookingAction("mark_cancelled")} className="rounded-2xl">
-                  Mark as cancelled
+                  تعليم كملغي
                 </Button>
 
                 <Button
@@ -768,25 +797,25 @@ export default function AdminBookingsPage() {
                   onClick={() => handleBookingAction("retry_supplier_booking")}
                   disabled={
                     selectedBooking
-                      ? !["supplier_booking_failed", "refund_required"].includes(selectedBooking.status)
+                      ? !["supplier_booking_failed", "manual_review_required", "refund_required"].includes(selectedBooking.status)
                       : true
                   }
                   className="rounded-2xl"
                 >
                   <HugeiconsIcon icon={RefreshIcon} className="ml-2 h-4 w-4" />
-                  Retry supplier booking
+                  إعادة محاولة حجز المورد
                 </Button>
               </div>
 
               {selectedBooking?.metadata?.reviewedAt && (
                 <Badge className="rounded-full bg-slate-100 text-slate-700 hover:bg-slate-100">
-                  Reviewed {formatDate(selectedBooking.metadata.reviewedAt)}
+                  تمت المراجعة {formatDate(selectedBooking.metadata.reviewedAt)}
                 </Badge>
               )}
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-lg font-black text-slate-950">Admin notes</h3>
+              <h3 className="text-lg font-black text-slate-950">ملاحظات الأدمن</h3>
 
               <div className="space-y-2">
                 {selectedBooking?.metadata?.adminNotes?.length ? (
@@ -800,7 +829,7 @@ export default function AdminBookingsPage() {
                   ))
                 ) : (
                   <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-                    No admin notes yet
+                    لا توجد ملاحظات أدمن بعد
                   </p>
                 )}
               </div>
@@ -808,7 +837,7 @@ export default function AdminBookingsPage() {
               <Textarea
                 value={adminNote}
                 onChange={(event) => setAdminNote(event.target.value)}
-                placeholder="Add an internal admin note..."
+                placeholder="أضف ملاحظة أدمن داخلية..."
                 className="rounded-2xl border-slate-200"
               />
 
@@ -818,13 +847,13 @@ export default function AdminBookingsPage() {
                 disabled={!adminNote.trim()}
                 className="rounded-2xl bg-[#071b33] font-bold text-white hover:bg-[#0a2a4f]"
               >
-                Add admin note
+                إضافة ملاحظة أدمن
               </Button>
             </section>
 
             {metadataEntries.length > 0 && (
               <section className="space-y-3">
-                <h3 className="text-lg font-black text-slate-950">Metadata</h3>
+                <h3 className="text-lg font-black text-slate-950">البيانات الوصفية</h3>
                 <pre className="max-h-56 overflow-auto rounded-2xl border border-slate-100 bg-slate-950 p-4 text-xs text-slate-100">
                   {JSON.stringify(Object.fromEntries(metadataEntries), null, 2)}
                 </pre>
@@ -832,7 +861,7 @@ export default function AdminBookingsPage() {
             )}
 
             <section className="space-y-3">
-              <h3 className="text-lg font-black text-slate-950">Manual status update</h3>
+              <h3 className="text-lg font-black text-slate-950">تحديث الحالة يدويًا</h3>
 
               <div className="flex gap-2">
                 <Select value={newStatus} onValueChange={setNewStatus}>
@@ -858,7 +887,7 @@ export default function AdminBookingsPage() {
             </section>
 
             <section className="space-y-5">
-              <h3 className="text-lg font-black text-slate-950">Booking Logs</h3>
+              <h3 className="text-lg font-black text-slate-950">سجلات الحجز</h3>
 
               {logsLoading ? (
                 <div className="space-y-2">
@@ -867,13 +896,13 @@ export default function AdminBookingsPage() {
                 </div>
               ) : selectedLogs ? (
                 <>
-                  {renderLogList("Booking", selectedLogs.bookingLogs)}
-                  {renderLogList("Payment", selectedLogs.paymentLogs)}
-                  {renderLogList("Supplier", selectedLogs.supplierLogs)}
+                  {renderLogList("الحجز", selectedLogs.bookingLogs)}
+                  {renderLogList("الدفع", selectedLogs.paymentLogs)}
+                  {renderLogList("المورد", selectedLogs.supplierLogs)}
                 </>
               ) : (
                 <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-                  Logs unavailable
+                  السجلات غير متاحة
                 </p>
               )}
             </section>

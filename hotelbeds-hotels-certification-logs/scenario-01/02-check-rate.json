@@ -1,0 +1,20 @@
+{
+  "status": "success",
+  "supplier": "Hotelbeds Accommodation",
+  "strategy": "Not required - BOOKABLE direct",
+  "hotelName": "Sercotel Rosellon",
+  "hotelCode": 120473,
+  "roomName": "CLASSIC TWIN",
+  "boardName": "ROOM ONLY",
+  "amount": "150.85",
+  "currency": "EUR",
+  "cancellationPolicies": [
+    {
+      "amount": "150.85",
+      "from": "2026-06-01T23:59:00+02:00"
+    }
+  ],
+  "rateClass": "NOR",
+  "allotment": 4,
+  "rateKeyMasked": "20260817...00125596"
+}

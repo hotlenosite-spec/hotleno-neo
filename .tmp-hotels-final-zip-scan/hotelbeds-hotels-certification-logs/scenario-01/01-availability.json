@@ -1,0 +1,10 @@
+{
+  "status": "success",
+  "supplier": "Hotelbeds Accommodation",
+  "checkIn": "2026-08-17",
+  "checkOut": "2026-08-18",
+  "rooms": 1,
+  "adults": 2,
+  "children": 0,
+  "excludedPackageHotels": true
+}

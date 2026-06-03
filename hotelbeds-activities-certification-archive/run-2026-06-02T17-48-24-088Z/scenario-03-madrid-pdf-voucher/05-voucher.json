@@ -1,0 +1,41 @@
+{
+  "supplier": "hotelbeds-activities",
+  "bookingReference": "102-20736360",
+  "activityName": "TEST Madrid City Tour",
+  "officialHotelbedsPdfVoucherReturned": true,
+  "officialVouchers": [
+    {
+      "code": "XeLJgNoIoOfrHaW",
+      "language": "CAS",
+      "url": "https://voucher-service.int.hotelbeds.com/vouser/rest/voucher/get/XeLJgNoIoOfrHaW",
+      "mimeType": "text/html",
+      "dateFrom": "2026-07-07",
+      "dateTo": "2026-07-07"
+    },
+    {
+      "code": "qWi1UE5R0xfgU5x",
+      "language": "CAS",
+      "url": "https://voucher-service.int.hotelbeds.com/vouser/rest/voucher/get/qWi1UE5R0xfgU5x",
+      "mimeType": "application/pdf",
+      "dateFrom": "2026-07-07",
+      "dateTo": "2026-07-07"
+    },
+    {
+      "code": "efKWOypUo12GIu7",
+      "language": "ENG",
+      "url": "https://voucher-service.int.hotelbeds.com/vouser/rest/voucher/get/efKWOypUo12GIu7",
+      "mimeType": "text/html",
+      "dateFrom": "2026-07-07",
+      "dateTo": "2026-07-07"
+    },
+    {
+      "code": "QtPzea9XGL3PvF4",
+      "language": "ENG",
+      "url": "https://voucher-service.int.hotelbeds.com/vouser/rest/voucher/get/QtPzea9XGL3PvF4",
+      "mimeType": "application/pdf",
+      "dateFrom": "2026-07-07",
+      "dateTo": "2026-07-07"
+    }
+  ],
+  "internalVoucherGenerated": false
+}

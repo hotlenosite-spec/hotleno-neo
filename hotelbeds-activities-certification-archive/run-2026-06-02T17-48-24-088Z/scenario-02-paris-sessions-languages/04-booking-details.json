@@ -1,0 +1,196 @@
+{
+  "scenario": "Test Case 2 - Paris sessions and languages",
+  "bookingReference": "197-14372763",
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "status": "confirmed",
+      "bookingReference": "197-14372763",
+      "clientReference": "HA02780422028789",
+      "voucher": {
+        "supplier": "hotelbeds-activities",
+        "bookingReference": "197-14372763",
+        "clientReference": "HA02780422028789",
+        "confirmationDate": "2026-06-02T21:40:30.000Z",
+        "activityName": "Tour Privado por París",
+        "dateFrom": "2026-07-07",
+        "dateTo": "2026-07-07",
+        "modalityName": "6h tour spanish 16:00",
+        "holder": {
+          "name": "TEST",
+          "title": "",
+          "email": "certification-test@hotleno.com",
+          "mailing": false,
+          "surname": "CERTIFICATION",
+          "telephones": [
+            "+966500000000"
+          ]
+        },
+        "paxes": [
+          {
+            "name": "TEST",
+            "mailing": false,
+            "surname": "CERTIFICATION",
+            "customerId": "1",
+            "age": 30,
+            "paxType": "AD",
+            "passport": ""
+          }
+        ],
+        "childrenAges": [],
+        "contractRemarks": [
+          "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes.",
+          "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes."
+        ],
+        "redeemInformation": [
+          "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes."
+        ],
+        "supplierInfo": "HOTELBEDS SPAIN, S.L.U",
+        "cancellationPolicies": [],
+        "officialVouchers": [],
+        "raw": {
+          "operationId": "05687515ff874a71",
+          "auditData": {
+            "processTime": 0.197,
+            "time": "2026-06-02T19:40:31.222Z",
+            "serverId": "blank",
+            "environment": "blank"
+          },
+          "booking": {
+            "reference": "197-14372763",
+            "status": "CONFIRMED",
+            "currency": "EUR",
+            "pendingAmount": 220.91,
+            "agency": {
+              "code": 99994,
+              "branch": 1,
+              "comments": "",
+              "sucursal": {
+                "name": "HOTELBEDS SPAIN - PRUEBAS",
+                "street": "PEREZ GALDOS 32",
+                "zip": "07006",
+                "city": "PALMA DE MALLORCA",
+                "phone": "971771700",
+                "region": "BALEARES"
+              }
+            },
+            "creationDate": "2026-06-02T21:40:30.000Z",
+            "paymentData": {
+              "paymentType": {
+                "code": "C"
+              },
+              "invoicingCompany": {
+                "code": "E14",
+                "name": "HOTELBEDS S.L.U.",
+                "registrationNumber": "ESB57218372"
+              }
+            },
+            "extraData": [
+              {
+                "id": "WEBIP",
+                "value": "5.110.180.34, 3.172.64.105, 10.214.142.109, 10.214.131.185"
+              }
+            ],
+            "clientReference": "HA02780422028789",
+            "holder": {
+              "name": "TEST",
+              "title": "",
+              "email": "certification-test@hotleno.com",
+              "mailing": false,
+              "surname": "CERTIFICATION",
+              "telephones": [
+                "+966500000000"
+              ]
+            },
+            "total": 220.91,
+            "totalNet": 220.91,
+            "activities": [
+              {
+                "status": "CONFIRMED",
+                "supplier": {
+                  "name": "[MaxDepth]",
+                  "vatNumber": "[MaxDepth]"
+                },
+                "comments": [
+                  "[MaxDepth]"
+                ],
+                "type": "TICKET",
+                "vouchers": [],
+                "activityReference": "197-14372763",
+                "code": "E-E10-A1IMNO0580",
+                "name": "Tour Privado por París",
+                "modality": {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "rates": "[MaxDepth]",
+                  "amountUnitType": "[MaxDepth]"
+                },
+                "dateFrom": "2026-07-07",
+                "dateTo": "2026-07-07",
+                "cancellationPolicies": [
+                  "[MaxDepth]"
+                ],
+                "paxes": [
+                  "[MaxDepth]"
+                ],
+                "questions": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "id": "197#O#1",
+                "agencyCommission": {
+                  "percentage": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "vatAmount": "[MaxDepth]"
+                },
+                "contactInfo": {
+                  "address": "[MaxDepth]",
+                  "postalCode": "[MaxDepth]",
+                  "city": "[MaxDepth]",
+                  "country": "[MaxDepth]"
+                },
+                "amountDetail": {
+                  "paxAmounts": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]"
+                },
+                "extraData": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "providerInformation": {
+                  "name": "[MaxDepth]"
+                },
+                "content": {
+                  "name": "[MaxDepth]",
+                  "detailedInfo": "[MaxDepth]",
+                  "featureGroups": "[MaxDepth]",
+                  "location": "[MaxDepth]",
+                  "media": "[MaxDepth]",
+                  "segmentationGroups": "[MaxDepth]",
+                  "geolocation": "[MaxDepth]",
+                  "activityFactsheetType": "[MaxDepth]",
+                  "activityCode": "[MaxDepth]",
+                  "modalityCode": "[MaxDepth]",
+                  "contentId": "[MaxDepth]",
+                  "description": "[MaxDepth]",
+                  "countries": "[MaxDepth]"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "debug": {
+      "reason": "activities_booking_details_success",
+      "bookingReference": "197-14372763",
+      "status": "confirmed",
+      "hasOfficialVoucher": false
+    }
+  }
+}

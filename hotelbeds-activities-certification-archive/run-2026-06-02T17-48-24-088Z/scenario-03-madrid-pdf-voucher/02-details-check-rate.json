@@ -1,0 +1,160 @@
+{
+  "scenario": "Test Case 3 - Madrid direct integration PDF voucher",
+  "activityCode": "MADTEST",
+  "name": "TEST Madrid City Tour",
+  "modalityCount": 1,
+  "questionCount": 0,
+  "sessionCount": 0,
+  "languages": [],
+  "requiredQuestions": [],
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "activityCode": "MADTEST",
+      "name": "TEST Madrid City Tour",
+      "description": "<p>Get ready for the experience of a lifetime as you explore Madrid like never before aboard a double-decker sightseeing bus!&nbsp;Enjoy 2 panoramic routes with the same ticket, switch between routes, and discover Madrid's history through a headphone audio guide system available in fourteen different languages!</p><p><br></p><p><strong>Blue Route </strong></p><p class=\"ql-align-justify\">This route will take you to discover Historical Madrid. This circular route takes you through a complete historical, artistic, and monumental circuit featuring the city’s key landmarks. Travel along the beautiful tree-lined Paseo del Prado and admire the magnificent architectural treasures of the Habsburg royal legacy. Discover parts of Madrid’s Art Triangle and enjoy stunning views from the Royal Palace to the Temple of Debod.</p><p class=\"ql-align-justify\"><br></p><p class=\"ql-align-justify\"><strong>Green route</strong></p><p class=\"ql-align-justify\">This route will take you to discover Modern Madrid. Explore the city beyond its historical landmarks and royal monuments. From Atocha Station to Nuevos Ministerios, and from the iconic Puerta de Alcalá to Puerta del Sol. Admire the most contemporary architectural works in the capital, including the imposing KIO Towers, the modern sculptures of the Public Art Museum, and Real Madrid's Santiago Bernabéu Stadium. Discover Madrid’s vibrant life, art, and modern customs on this itinerary.</p><p class=\"ql-align-justify\"><br></p><p><strong>Madrid Walking Tour</strong></p><p>Enjoy a 2-hour walking tour of Madrid. More information on board. This tour operates daily from 11am from the centre of Madrid.</p><p><br></p><p><strong>Languages</strong></p><p>Audio guide in Spanish, English, French, German, Italian, Portuguese, Dutch, Russian, Japanese, Mandarin, Arabic, Catalan, Basque and Galician.</p><p>Kids’ Channel available in English and Spanish</p><p><br></p><p><strong>Important information</strong></p><p class=\"ql-align-justify\">&nbsp;•&nbsp;Please note that the itinerary is subject to change due to events taking place in the city (demonstrations, sporting events, cultural events, official acts and public works).</p><p class=\"ql-align-justify\">&nbsp;•&nbsp;This is not a hop-on, hop-off bus tour. Once you board a bus, you are required to complete a full loop. You are not permitted to disembark from the bus along the route.&nbsp;</p>",
+      "images": [
+        "https://media.activitiesbank.com/13580/ENG/XL/13580_1.jpg"
+      ],
+      "destinationName": "Madrid",
+      "countryName": "Spain",
+      "features": [],
+      "operationDates": [],
+      "modalities": [
+        {
+          "code": "835714230#1 DAY",
+          "name": "1 day duration",
+          "rates": [
+            {
+              "rateCode": "STANDARD",
+              "rateClass": "NOR",
+              "freeCancellation": false,
+              "rateDetails": [
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                }
+              ]
+            }
+          ],
+          "sessions": [],
+          "languages": [],
+          "questions": [],
+          "cancellationPolicies": [
+            {
+              "from": "2026-07-06T00:00:00.000Z",
+              "amount": 25.75,
+              "raw": {
+                "dateFrom": "2026-07-06T00:00:00.000Z",
+                "amount": 25.75
+              }
+            }
+          ],
+          "price": {
+            "amount": 25.75,
+            "currency": ""
+          },
+          "raw": {
+            "code": "835714230#1 DAY",
+            "name": "1 day duration",
+            "duration": {
+              "value": 1,
+              "metric": "DAYS"
+            },
+            "questions": [],
+            "comments": [
+              {
+                "type": "CONTRACT_REMARKS",
+                "text": "TEST"
+              }
+            ],
+            "supplierInformation": {
+              "name": "HOTELBEDS SPAIN, S.L.U",
+              "vatNumber": "ESB28916765"
+            },
+            "providerInformation": {
+              "name": "SPANAIR, S.A."
+            },
+            "destinationCode": "MAD",
+            "contract": {
+              "incomingOffice": 102,
+              "code": 16864,
+              "name": "TEST TEST "
+            },
+            "languages": [],
+            "amountsFrom": [
+              {
+                "paxType": "ADULT",
+                "ageFrom": 11,
+                "ageTo": 999,
+                "amount": 25.75,
+                "boxOfficeAmount": 29,
+                "mandatoryApplyAmount": false
+              },
+              {
+                "paxType": "CHILD",
+                "ageFrom": 0,
+                "ageTo": 2,
+                "amount": 0,
+                "boxOfficeAmount": 0,
+                "mandatoryApplyAmount": false
+              },
+              {
+                "paxType": "CHILD",
+                "ageFrom": 3,
+                "ageTo": 10,
+                "amount": 19.54,
+                "boxOfficeAmount": 22,
+                "mandatoryApplyAmount": false
+              }
+            ],
+            "rates": [
+              {
+                "rateCode": "STANDARD",
+                "rateClass": "NOR",
+                "freeCancellation": false,
+                "rateDetails": [
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "amountUnitType": "PAX",
+            "uniqueIdentifier": "835714230"
+          }
+        }
+      ],
+      "totalAmount": 25.75,
+      "currency": "EUR",
+      "cancellationPolicies": [
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 25.75,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 25.75
+          }
+        }
+      ],
+      "questions": [],
+      "sessions": [],
+      "languages": [],
+      "contractRemarks": [],
+      "routes": []
+    },
+    "debug": {
+      "reason": "activities_details_success",
+      "activityCode": "MADTEST",
+      "modalityCount": 1,
+      "questionCount": 0
+    }
+  }
+}

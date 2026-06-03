@@ -175,6 +175,7 @@ export default function AdminDashboardPage() {
           </Badge>
         );
       case "payment_succeeded":
+      case "supplier_booking_processing":
       case "supplier_booking_pending":
         return (
           <Badge className="rounded-full bg-orange-50 px-3 py-1 text-xs font-black text-orange-700 hover:bg-orange-50">
@@ -188,6 +189,7 @@ export default function AdminDashboardPage() {
           </Badge>
         );
       case "supplier_booking_failed":
+      case "manual_review_required":
       case "refund_required":
         return (
           <Badge className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-50">

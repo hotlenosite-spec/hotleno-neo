@@ -1,0 +1,270 @@
+{
+  "scenario": "Test Case 4 - Barcelona required questions",
+  "bookingReference": "102-20736361",
+  "status": "confirmed",
+  "request": {
+    "language": "en",
+    "clientReference": "HA04780422037675",
+    "holder": {
+      "title": "Mr",
+      "name": "TEST",
+      "surname": "CERTIFICATION",
+      "email": "certification-test@hotleno.com",
+      "country": "SA",
+      "telephones": [
+        "+966500000000"
+      ]
+    },
+    "activities": [
+      {
+        "rateKey": "vnsfpb35k07qkfsj8r7q8d9egs1940",
+        "from": "2026-07-07",
+        "to": "2026-07-07",
+        "paxes": [
+          {
+            "age": 30,
+            "name": "TEST",
+            "surname": "CERTIFICATION",
+            "type": "ADULT"
+          }
+        ],
+        "answers": [
+          {
+            "question": {
+              "code": "EMAIL",
+              "text": "Please provide an email address",
+              "required": true,
+              "raw": {
+                "code": "EMAIL",
+                "text": "Please provide an email address",
+                "required": true
+              }
+            },
+            "answer": "TEST ANSWER FOR EMAIL"
+          },
+          {
+            "question": {
+              "code": "HOTEL",
+              "text": "Please provide the name of your hotel",
+              "required": true,
+              "raw": {
+                "code": "HOTEL",
+                "text": "Please provide the name of your hotel",
+                "required": true
+              }
+            },
+            "answer": "TEST ANSWER FOR HOTEL"
+          },
+          {
+            "question": {
+              "code": "MOBILE",
+              "text": "Please indicate your mobile number",
+              "required": true,
+              "raw": {
+                "code": "MOBILE",
+                "text": "Please indicate your mobile number",
+                "required": true
+              }
+            },
+            "answer": "TEST ANSWER FOR MOBILE"
+          }
+        ]
+      }
+    ],
+    "amount": 0,
+    "currency": "EUR"
+  },
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "status": "confirmed",
+      "bookingReference": "102-20736361",
+      "clientReference": "HA04780422037675",
+      "voucher": {
+        "supplier": "hotelbeds-activities",
+        "bookingReference": "102-20736361",
+        "clientReference": "HA04780422037675",
+        "confirmationDate": "2026-06-02T21:40:38.000Z",
+        "activityName": "Girona and Dali Museum in Figueres Tour with Hotel pick-up (FD)",
+        "dateFrom": "2026-07-07",
+        "dateTo": "2026-07-07",
+        "modalityName": "Private Tour spanish 08:30",
+        "holder": {
+          "title": "Mr",
+          "name": "TEST",
+          "surname": "CERTIFICATION",
+          "email": "certification-test@hotleno.com",
+          "country": "SA",
+          "telephones": [
+            "+966500000000"
+          ]
+        },
+        "paxes": [
+          {
+            "age": 30,
+            "name": "TEST",
+            "surname": "CERTIFICATION",
+            "type": "ADULT"
+          }
+        ],
+        "childrenAges": [],
+        "contractRemarks": [
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date.",
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date."
+        ],
+        "redeemInformation": [
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date."
+        ],
+        "supplierInfo": "HOTELBEDS SPAIN, S.L.U",
+        "cancellationPolicies": [],
+        "officialVouchers": [],
+        "raw": {
+          "operationId": "e3f80995470de8f9",
+          "auditData": {
+            "processTime": 1.169,
+            "time": "2026-06-02T19:40:39.312Z",
+            "serverId": "blank",
+            "environment": "blank"
+          },
+          "booking": {
+            "reference": "102-20736361",
+            "status": "CONFIRMED",
+            "currency": "EUR",
+            "pendingAmount": 257.14,
+            "agency": {
+              "code": 99994,
+              "branch": 1,
+              "comments": "",
+              "sucursal": {
+                "name": "HOTELBEDS SPAIN - PRUEBAS",
+                "street": "PEREZ GALDOS 32",
+                "zip": "07006",
+                "city": "PALMA DE MALLORCA",
+                "phone": "971771700",
+                "region": "BALEARES"
+              }
+            },
+            "creationDate": "2026-06-02T21:40:38.000Z",
+            "paymentData": {
+              "paymentType": {
+                "code": "C"
+              },
+              "invoicingCompany": {
+                "code": "E14",
+                "name": "HOTELBEDS S.L.U.",
+                "registrationNumber": "ESB57218372"
+              }
+            },
+            "extraData": [
+              {
+                "id": "WEBIP",
+                "value": "5.110.180.34, 3.172.64.117, 10.214.142.109, 10.214.131.185"
+              }
+            ],
+            "clientReference": "HA04780422037675",
+            "holder": {
+              "name": "TEST",
+              "title": "",
+              "email": "certification-test@hotleno.com",
+              "mailing": false,
+              "surname": "CERTIFICATION",
+              "telephones": [
+                "+966500000000"
+              ]
+            },
+            "total": 257.14,
+            "totalNet": 257.14,
+            "activities": [
+              {
+                "status": "CONFIRMED",
+                "supplier": {
+                  "name": "[MaxDepth]",
+                  "vatNumber": "[MaxDepth]"
+                },
+                "comments": [
+                  "[MaxDepth]"
+                ],
+                "type": "TICKET",
+                "vouchers": [],
+                "activityReference": "102-20736361",
+                "code": "E-E10-A1AANO0485",
+                "name": "Girona and Dali Museum in Figueres Tour with Hotel pick-up (FD)",
+                "modality": {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "rates": "[MaxDepth]",
+                  "amountUnitType": "[MaxDepth]"
+                },
+                "dateFrom": "2026-07-07",
+                "dateTo": "2026-07-07",
+                "cancellationPolicies": [
+                  "[MaxDepth]"
+                ],
+                "paxes": [
+                  "[MaxDepth]"
+                ],
+                "questions": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "id": "102#O#1",
+                "agencyCommission": {
+                  "percentage": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "vatAmount": "[MaxDepth]"
+                },
+                "contactInfo": {
+                  "country": "[MaxDepth]"
+                },
+                "amountDetail": {
+                  "paxAmounts": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]"
+                },
+                "extraData": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "providerInformation": {
+                  "name": "[MaxDepth]"
+                },
+                "content": {
+                  "name": "[MaxDepth]",
+                  "detailedInfo": "[MaxDepth]",
+                  "featureGroups": "[MaxDepth]",
+                  "guidingOptions": "[MaxDepth]",
+                  "importantInfo": "[MaxDepth]",
+                  "location": "[MaxDepth]",
+                  "media": "[MaxDepth]",
+                  "redeemInfo": "[MaxDepth]",
+                  "scheduling": "[MaxDepth]",
+                  "segmentationGroups": "[MaxDepth]",
+                  "activityFactsheetType": "[MaxDepth]",
+                  "activityCode": "[MaxDepth]",
+                  "contentId": "[MaxDepth]",
+                  "description": "[MaxDepth]",
+                  "lastUpdate": "[MaxDepth]",
+                  "advancedTips": "[MaxDepth]",
+                  "countries": "[MaxDepth]",
+                  "highligths": "[MaxDepth]",
+                  "language": "[MaxDepth]"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "debug": {
+      "reason": "activities_booking_success",
+      "bookingReference": "102-20736361",
+      "status": "confirmed",
+      "hasOfficialVoucher": false
+    }
+  }
+}

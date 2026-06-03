@@ -14,15 +14,17 @@ import {
   ShieldUserIcon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
+import { isDevAdminBypassEnabled } from "@/lib/security/dev-flags";
 
 export default function AdminSettingsPage() {
   const [platformName, setPlatformName] = useState("HOTLENO");
   const [supportEmail, setSupportEmail] = useState("support@hotleno.com");
   const [defaultCurrency, setDefaultCurrency] = useState("USD");
   const [bookingPrefix, setBookingPrefix] = useState("HTL");
+  const devAdminBypassEnabled = isDevAdminBypassEnabled();
 
   const handleSave = () => {
-    toast.success("Settings saved locally");
+    toast.success("تم حفظ الإعدادات محليًا");
   };
 
   return (
@@ -31,7 +33,7 @@ export default function AdminSettingsPage() {
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div>
             <div className="mb-4 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-[#f4d58d]">
-              HOTLENO Platform Settings
+              إعدادات منصة HOTLENO
             </div>
 
             <h1 className="text-3xl font-black tracking-tight md:text-4xl">
@@ -44,9 +46,9 @@ export default function AdminSettingsPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <HeroMiniCard title="Platform" value="OTA" />
-            <HeroMiniCard title="Mode" value="Dev" />
-            <HeroMiniCard title="Status" value="Active" />
+            <HeroMiniCard title="المنصة" value="OTA" />
+            <HeroMiniCard title="الوضع" value="تطوير" />
+            <HeroMiniCard title="الحالة" value="نشط" />
           </div>
         </div>
       </section>
@@ -58,7 +60,7 @@ export default function AdminSettingsPage() {
           icon={Building02Icon}
         >
           <div className="space-y-4">
-            <Field label="Platform name">
+            <Field label="اسم المنصة">
               <Input
                 value={platformName}
                 onChange={(event) => setPlatformName(event.target.value)}
@@ -66,7 +68,7 @@ export default function AdminSettingsPage() {
               />
             </Field>
 
-            <Field label="Support email">
+            <Field label="بريد الدعم">
               <Input
                 value={supportEmail}
                 onChange={(event) => setSupportEmail(event.target.value)}
@@ -74,7 +76,7 @@ export default function AdminSettingsPage() {
               />
             </Field>
 
-            <Field label="Booking reference prefix">
+            <Field label="بادئة رقم الحجز">
               <Input
                 value={bookingPrefix}
                 onChange={(event) => setBookingPrefix(event.target.value)}
@@ -90,7 +92,7 @@ export default function AdminSettingsPage() {
           icon={Money01Icon}
         >
           <div className="space-y-4">
-            <Field label="Default currency">
+            <Field label="العملة الافتراضية">
               <Input
                 value={defaultCurrency}
                 onChange={(event) => setDefaultCurrency(event.target.value)}
@@ -101,13 +103,13 @@ export default function AdminSettingsPage() {
             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-black text-slate-950">Stripe payments</p>
+                  <p className="font-black text-slate-950">مدفوعات Stripe</p>
                   <p className="mt-1 text-sm font-medium text-slate-500">
                     حالة بوابة الدفع في المنصة
                   </p>
                 </div>
                 <Badge className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 hover:bg-emerald-50">
-                  Ready
+                  جاهز
                 </Badge>
               </div>
             </div>
@@ -120,9 +122,12 @@ export default function AdminSettingsPage() {
           icon={ShieldUserIcon}
         >
           <div className="space-y-3">
-            <InfoRow label="Development admin bypass" value="Enabled" />
-            <InfoRow label="Admin protection" value="Restore before production" />
-            <InfoRow label="Role control" value="Available from Users page" />
+            <InfoRow
+              label="تجاوز أدمن التطوير"
+              value={devAdminBypassEnabled ? "مفعل من البيئة" : "معطل"}
+            />
+            <InfoRow label="سلوك الإنتاج" value="التجاوز مقفول إجباريًا" />
+            <InfoRow label="إدارة الأدوار" value="متاحة من صفحة المستخدمين" />
           </div>
         </SettingsCard>
 
@@ -132,9 +137,9 @@ export default function AdminSettingsPage() {
           icon={Notification01Icon}
         >
           <div className="space-y-3">
-            <InfoRow label="Payment alerts" value="Enabled" />
-            <InfoRow label="Booking failure alerts" value="Enabled" />
-            <InfoRow label="Supplier API alerts" value="Enabled" />
+            <InfoRow label="تنبيهات الدفع" value="مفعلة" />
+            <InfoRow label="تنبيهات فشل الحجز" value="مفعلة" />
+            <InfoRow label="تنبيهات API الموردين" value="مفعلة" />
           </div>
         </SettingsCard>
       </section>

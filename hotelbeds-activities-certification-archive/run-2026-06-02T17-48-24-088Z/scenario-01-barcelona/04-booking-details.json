@@ -1,0 +1,196 @@
+{
+  "scenario": "Test Case 1 - Barcelona basic booking funnel",
+  "bookingReference": "102-20736359",
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "status": "confirmed",
+      "bookingReference": "102-20736359",
+      "clientReference": "HA01780422023273",
+      "voucher": {
+        "supplier": "hotelbeds-activities",
+        "bookingReference": "102-20736359",
+        "clientReference": "HA01780422023273",
+        "confirmationDate": "2026-06-02T21:40:24.000Z",
+        "activityName": "Full-Day Barcelona Tour: Park Güell & Sagrada Familia with Hotel pick-up (FD)",
+        "dateFrom": "2026-07-07",
+        "dateTo": "2026-07-07",
+        "modalityName": "Tour english 09:00",
+        "holder": {
+          "name": "TEST",
+          "title": "",
+          "email": "certification-test@hotleno.com",
+          "mailing": false,
+          "surname": "CERTIFICATION",
+          "telephones": [
+            "+966500000000"
+          ]
+        },
+        "paxes": [
+          {
+            "name": "TEST",
+            "mailing": false,
+            "surname": "CERTIFICATION",
+            "customerId": "1",
+            "age": 30,
+            "paxType": "AD",
+            "passport": ""
+          }
+        ],
+        "childrenAges": [],
+        "contractRemarks": [
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 4:30pm // End point: Same as the starting point // Duration: 8 hours // Inclusions: Tickets with audio guide to Sagrada Familia. Tickets to Park Güell. Bilingual guide. Old Town Walking tour. Complete visit to Barcelona’s highlights. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle // Exclusions: Gratuities (optional). Food or beverages // Mandatory instructions: Tour operates Daily (dependant on Sagrada Familia and Park Güell availability). Children must be accompanied by an adult. Please let us know your children’s age to arrange the proper child seat (if applies). We will pick you up from your hotel or apartment in Barcelona. Please make sure to let us know the exact address of your accommodation in Barcelona. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please note that if full names of all participants are not provided during the booking process, In Out Barcelona Tours can cancel the tour. Please provide a phone number. You must present your ID card or passport at the entrance to the Sagrada Familia. We require the full names of all passengers. Name changes are not permitted // Recommendations: Remember to bring the voucher and valid photo ID with you // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Voucher validity: Service date // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000.",
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 4:30pm // End point: Same as the starting point // Duration: 8 hours // Inclusions: Tickets with audio guide to Sagrada Familia. Tickets to Park Güell. Bilingual guide. Old Town Walking tour. Complete visit to Barcelona’s highlights. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle // Exclusions: Gratuities (optional). Food or beverages // Mandatory instructions: Tour operates Daily (dependant on Sagrada Familia and Park Güell availability). Children must be accompanied by an adult. Please let us know your children’s age to arrange the proper child seat (if applies). We will pick you up from your hotel or apartment in Barcelona. Please make sure to let us know the exact address of your accommodation in Barcelona. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please note that if full names of all participants are not provided during the booking process, In Out Barcelona Tours can cancel the tour. Please provide a phone number. You must present your ID card or passport at the entrance to the Sagrada Familia. We require the full names of all passengers. Name changes are not permitted // Recommendations: Remember to bring the voucher and valid photo ID with you // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Voucher validity: Service date // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000."
+        ],
+        "redeemInformation": [
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 4:30pm // End point: Same as the starting point // Duration: 8 hours // Inclusions: Tickets with audio guide to Sagrada Familia. Tickets to Park Güell. Bilingual guide. Old Town Walking tour. Complete visit to Barcelona’s highlights. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle // Exclusions: Gratuities (optional). Food or beverages // Mandatory instructions: Tour operates Daily (dependant on Sagrada Familia and Park Güell availability). Children must be accompanied by an adult. Please let us know your children’s age to arrange the proper child seat (if applies). We will pick you up from your hotel or apartment in Barcelona. Please make sure to let us know the exact address of your accommodation in Barcelona. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please note that if full names of all participants are not provided during the booking process, In Out Barcelona Tours can cancel the tour. Please provide a phone number. You must present your ID card or passport at the entrance to the Sagrada Familia. We require the full names of all passengers. Name changes are not permitted // Recommendations: Remember to bring the voucher and valid photo ID with you // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Voucher validity: Service date // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000."
+        ],
+        "supplierInfo": "HOTELBEDS SPAIN, S.L.U",
+        "cancellationPolicies": [],
+        "officialVouchers": [],
+        "raw": {
+          "operationId": "ce7165269c4ef3b7",
+          "auditData": {
+            "processTime": 0.258,
+            "time": "2026-06-02T19:40:25.872Z",
+            "serverId": "blank",
+            "environment": "blank"
+          },
+          "booking": {
+            "reference": "102-20736359",
+            "status": "CONFIRMED",
+            "currency": "EUR",
+            "pendingAmount": 516.94,
+            "agency": {
+              "code": 99994,
+              "branch": 1,
+              "comments": "",
+              "sucursal": {
+                "name": "HOTELBEDS SPAIN - PRUEBAS",
+                "street": "PEREZ GALDOS 32",
+                "zip": "07006",
+                "city": "PALMA DE MALLORCA",
+                "phone": "971771700",
+                "region": "BALEARES"
+              }
+            },
+            "creationDate": "2026-06-02T21:40:24.000Z",
+            "paymentData": {
+              "paymentType": {
+                "code": "C"
+              },
+              "invoicingCompany": {
+                "code": "E14",
+                "name": "HOTELBEDS S.L.U.",
+                "registrationNumber": "ESB57218372"
+              }
+            },
+            "extraData": [
+              {
+                "id": "WEBIP",
+                "value": "5.110.180.34, 3.172.64.112, 10.214.142.109, 10.214.139.206"
+              }
+            ],
+            "clientReference": "HA01780422023273",
+            "holder": {
+              "name": "TEST",
+              "title": "",
+              "email": "certification-test@hotleno.com",
+              "mailing": false,
+              "surname": "CERTIFICATION",
+              "telephones": [
+                "+966500000000"
+              ]
+            },
+            "total": 516.94,
+            "totalNet": 516.94,
+            "activities": [
+              {
+                "status": "CONFIRMED",
+                "supplier": {
+                  "name": "[MaxDepth]",
+                  "vatNumber": "[MaxDepth]"
+                },
+                "comments": [
+                  "[MaxDepth]"
+                ],
+                "type": "TICKET",
+                "vouchers": [],
+                "activityReference": "102-20736359",
+                "code": "E-E10-A1AANO0488",
+                "name": "Full-Day Barcelona Tour: Park Güell & Sagrada Familia with Hotel pick-up (FD)",
+                "modality": {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "rates": "[MaxDepth]",
+                  "amountUnitType": "[MaxDepth]"
+                },
+                "dateFrom": "2026-07-07",
+                "dateTo": "2026-07-07",
+                "cancellationPolicies": [
+                  "[MaxDepth]"
+                ],
+                "paxes": [
+                  "[MaxDepth]"
+                ],
+                "questions": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "id": "102#O#1",
+                "agencyCommission": {
+                  "percentage": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "vatAmount": "[MaxDepth]"
+                },
+                "contactInfo": {
+                  "country": "[MaxDepth]"
+                },
+                "amountDetail": {
+                  "paxAmounts": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]"
+                },
+                "extraData": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "providerInformation": {
+                  "name": "[MaxDepth]"
+                },
+                "content": {
+                  "name": "[MaxDepth]",
+                  "detailedInfo": "[MaxDepth]",
+                  "featureGroups": "[MaxDepth]",
+                  "location": "[MaxDepth]",
+                  "media": "[MaxDepth]",
+                  "segmentationGroups": "[MaxDepth]",
+                  "activityFactsheetType": "[MaxDepth]",
+                  "activityCode": "[MaxDepth]",
+                  "modalityCode": "[MaxDepth]",
+                  "contentId": "[MaxDepth]",
+                  "description": "[MaxDepth]",
+                  "countries": "[MaxDepth]"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "debug": {
+      "reason": "activities_booking_details_success",
+      "bookingReference": "102-20736359",
+      "status": "confirmed",
+      "hasOfficialVoucher": false
+    }
+  }
+}

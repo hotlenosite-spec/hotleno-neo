@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   HOTEL_OWNER_LOCAL_KEYS,
   LocalHotelProperty,
+  LocalHotelReviewStatus,
   LocalHotelRoom,
   createLocalId,
   readLocalItems,
@@ -30,6 +31,7 @@ const emptyRoom = {
   mealPlan: "",
   cancellationPolicy: "",
   amenities: "",
+  status: "draft" as LocalHotelReviewStatus,
 };
 
 export default function HotelOwnerRoomsPage() {
@@ -71,37 +73,37 @@ export default function HotelOwnerRoomsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Rooms</h2>
+          <h2 className="text-3xl font-bold">الغرف</h2>
           <p className="text-muted-foreground">
-            Build local room drafts for hotel partner testing.
+            أنشئ مسودات غرف محلية لاختبار شريك الفندق.
           </p>
         </div>
         <Button onClick={() => setShowForm((value) => !value)}>
-          {showForm ? "Close form" : "Add Room"}
+          {showForm ? "إغلاق النموذج" : "إضافة غرفة"}
         </Button>
       </div>
 
       <Card className="border-dashed">
         <CardContent className="flex flex-wrap items-center gap-3 p-4 text-sm text-muted-foreground">
-          <Badge variant="secondary">Local only</Badge>
-          <span>Rooms are saved only in this browser and never exposed to booking or search.</span>
+          <Badge variant="secondary">محلي فقط</Badge>
+          <span>يتم حفظ الغرف في هذا المتصفح فقط ولا تظهر في الحجز أو البحث.</span>
         </CardContent>
       </Card>
 
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Add Room</CardTitle>
+            <CardTitle>إضافة غرفة</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-              <Field label="Property">
+              <Field label="المنشأة">
                 <select
                   value={form.propertyId}
                   onChange={(event) => updateField("propertyId", event.target.value)}
                   className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="">No property selected</option>
+                  <option value="">لم يتم اختيار منشأة</option>
                   {properties.map((property) => (
                     <option key={property.id} value={property.id}>
                       {property.name}
@@ -109,26 +111,26 @@ export default function HotelOwnerRoomsPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="Room name" required>
+              <Field label="اسم الغرفة" required>
                 <Input
                   value={form.name}
                   onChange={(event) => updateField("name", event.target.value)}
                   required
                 />
               </Field>
-              <Field label="Room type">
+              <Field label="نوع الغرفة">
                 <Input
                   value={form.roomType}
                   onChange={(event) => updateField("roomType", event.target.value)}
                 />
               </Field>
-              <Field label="Bed type">
+              <Field label="نوع السرير">
                 <Input
                   value={form.bedType}
                   onChange={(event) => updateField("bedType", event.target.value)}
                 />
               </Field>
-              <Field label="Max adults">
+              <Field label="الحد الأقصى للبالغين">
                 <Input
                   type="number"
                   min="0"
@@ -136,7 +138,7 @@ export default function HotelOwnerRoomsPage() {
                   onChange={(event) => updateField("maxAdults", event.target.value)}
                 />
               </Field>
-              <Field label="Max children">
+              <Field label="الحد الأقصى للأطفال">
                 <Input
                   type="number"
                   min="0"
@@ -144,7 +146,7 @@ export default function HotelOwnerRoomsPage() {
                   onChange={(event) => updateField("maxChildren", event.target.value)}
                 />
               </Field>
-              <Field label="Max occupancy">
+              <Field label="الحد الأقصى للإشغال">
                 <Input
                   type="number"
                   min="0"
@@ -152,7 +154,7 @@ export default function HotelOwnerRoomsPage() {
                   onChange={(event) => updateField("maxOccupancy", event.target.value)}
                 />
               </Field>
-              <Field label="Base price">
+              <Field label="السعر الأساسي">
                 <Input
                   type="number"
                   min="0"
@@ -160,39 +162,56 @@ export default function HotelOwnerRoomsPage() {
                   onChange={(event) => updateField("basePrice", event.target.value)}
                 />
               </Field>
-              <Field label="Currency">
+              <Field label="العملة">
                 <Input
                   value={form.currency}
                   onChange={(event) => updateField("currency", event.target.value.toUpperCase())}
                   maxLength={3}
                 />
               </Field>
-              <Field label="Meal plan">
+              <Field label="خطة الوجبات">
                 <Input
                   value={form.mealPlan}
                   onChange={(event) => updateField("mealPlan", event.target.value)}
                 />
               </Field>
-              <Field label="Cancellation policy">
+              <Field label="سياسة الإلغاء">
                 <Textarea
                   value={form.cancellationPolicy}
                   onChange={(event) => updateField("cancellationPolicy", event.target.value)}
                 />
               </Field>
-              <Field label="Amenities">
+              <Field label="المرافق">
                 <Textarea
                   value={form.amenities}
                   onChange={(event) => updateField("amenities", event.target.value)}
                 />
               </Field>
-              <Field label="Description" className="md:col-span-2">
+              <Field label="الحالة">
+                <select
+                  value={form.status}
+                  onChange={(event) =>
+                    updateField(
+                      "status",
+                      event.target.value as LocalHotelReviewStatus,
+                    )
+                  }
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="draft">مسودة</option>
+                  <option value="pending_review">بانتظار المراجعة</option>
+                  <option value="approved">معتمد محليًا</option>
+                  <option value="rejected">مرفوض محليًا</option>
+                </select>
+              </Field>
+              <Field label="الوصف" className="md:col-span-2">
                 <Textarea
                   value={form.description}
                   onChange={(event) => updateField("description", event.target.value)}
                 />
               </Field>
               <div className="md:col-span-2">
-                <Button type="submit">Save local room</Button>
+                <Button type="submit">حفظ الغرفة محليًا</Button>
               </div>
             </form>
           </CardContent>
@@ -202,10 +221,10 @@ export default function HotelOwnerRoomsPage() {
       {rooms.length === 0 ? (
         <Card>
           <CardContent className="space-y-3 p-8 text-center">
-            <Badge variant="secondary">Empty state</Badge>
-            <h3 className="text-xl font-semibold">No local rooms yet</h3>
+            <Badge variant="secondary">حالة فارغة</Badge>
+            <h3 className="text-xl font-semibold">لا توجد غرف محلية بعد</h3>
             <p className="text-sm text-muted-foreground">
-              Add a room to continue testing the local setup flow.
+              أضف غرفة لمتابعة اختبار مسار الإعداد المحلي.
             </p>
           </CardContent>
         </Card>
@@ -216,14 +235,14 @@ export default function HotelOwnerRoomsPage() {
               <CardContent className="p-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-lg font-semibold">{room.name}</h3>
-                  <Badge variant="outline">Local draft</Badge>
+                  <Badge variant="outline">{formatStatus(room.status)}</Badge>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {room.roomType || "Room type not set"}
+                  {room.roomType || "لم يتم تحديد نوع الغرفة"}
                 </p>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Occupancy: {room.maxOccupancy || "not set"} | Price:{" "}
-                  {room.basePrice || "not set"} {room.currency || ""}
+                  الإشغال: {room.maxOccupancy || "غير محدد"} | السعر:{" "}
+                  {room.basePrice || "غير محدد"} {room.currency || ""}
                 </p>
               </CardContent>
             </Card>
@@ -232,6 +251,13 @@ export default function HotelOwnerRoomsPage() {
       )}
     </div>
   );
+}
+
+function formatStatus(status?: LocalHotelReviewStatus) {
+  if (status === "pending_review") return "بانتظار المراجعة";
+  if (status === "approved") return "معتمد محليًا";
+  if (status === "rejected") return "مرفوض محليًا";
+  return "مسودة";
 }
 
 function Field({

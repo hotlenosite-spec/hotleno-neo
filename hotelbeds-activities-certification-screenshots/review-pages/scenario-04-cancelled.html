@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Test Case 4 - Barcelona questions - Cancellation</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 1280px;
+      height: 900px;
+      background: #f8fafc;
+      color: #0f172a;
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 48px;
+    }
+    .card {
+      height: 804px;
+      border: 1px solid #e5e7eb;
+      border-radius: 28px;
+      background: #ffffff;
+      box-shadow: 0 30px 80px rgba(15,23,42,0.12);
+      padding: 42px;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+    .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .badge {
+      display: inline-flex;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #f97316;
+      padding: 10px 16px;
+      font-weight: 800;
+      font-size: 18px;
+    }
+    h1 { margin: 18px 0 0; font-size: 42px; line-height: 1.08; letter-spacing: 0; }
+    h2 { margin: 0; font-size: 28px; color: #334155; }
+    .status {
+      border-radius: 22px;
+      padding: 18px 22px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 26px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .field { border: 1px solid #e2e8f0; border-radius: 18px; padding: 18px; background: #f8fafc; min-height: 92px; }
+    .label { font-size: 15px; text-transform: uppercase; color: #64748b; font-weight: 900; margin-bottom: 10px; }
+    .value { font-size: 23px; font-weight: 900; line-height: 1.25; }
+    .wide { grid-column: span 2; }
+    ul { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+    li { font-size: 18px; line-height: 1.35; }
+    li span { display: block; color: #475569; }
+    li em { display: block; color: #047857; font-style: normal; font-weight: 800; }
+    .footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb; padding-top: 22px; color: #64748b; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <section class="card">
+    <div class="top">
+      <div>
+        <span class="badge">Supplier: Hotelbeds Activities</span>
+        <h1>Test Case 4 - Barcelona questions</h1>
+        <h2>Cancellation</h2>
+      </div>
+      <div class="status">Cancelled</div>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <div class="label">Booking Reference</div>
+        <div class="value">102-20736361</div>
+      </div>
+      <div class="field">
+        <div class="label">Destination</div>
+        <div class="value">Barcelona / BCN</div>
+      </div>
+      <div class="field wide">
+        <div class="label">Activity</div>
+        <div class="value">Girona and Dali Museum in Figueres - Tour with Transfers</div>
+      </div>
+      <div class="field">
+        <div class="label">Activity Code</div>
+        <div class="value">A1AANO0485</div>
+      </div>
+      <div class="field">
+        <div class="label">Service Date</div>
+        <div class="value">2026-07-07</div>
+      </div>
+      <div class="field">
+        <div class="label">Modality</div>
+        <div class="value">Private Tour spanish 08:30</div>
+      </div>
+      <div class="field">
+        <div class="label">Voucher</div>
+        <div class="value">Voucher generated</div>
+      </div>
+      <div class="field">
+        <div class="label">Cancellation</div>
+        <div class="value">Cancelled</div>
+      </div>
+      <div class="field">
+        <div class="label">Session / Language</div>
+        <div class="value">Not required</div>
+      </div>
+      <div class="field">
+        <div class="label">Questions / Answers</div>
+        <div class="value">Displayed and answered</div>
+      </div>
+      <div class="field wide"><div class="label">Question Evidence</div><ul>
+        <li>
+          <strong>EMAIL</strong>
+          <span>Please provide an email address</span>
+          <em>Answered with test value: Yes</em>
+        </li>
+        <li>
+          <strong>HOTEL</strong>
+          <span>Please provide the name of your hotel</span>
+          <em>Answered with test value: Yes</em>
+        </li>
+        <li>
+          <strong>MOBILE</strong>
+          <span>Please indicate your mobile number</span>
+          <em>Answered with test value: Yes</em>
+        </li></ul></div>
+    </div>
+
+    <div class="footer">
+      <span>Based on final certification logs only</span>
+      <span>No booking or cancellation executed during screenshot capture</span>
+    </div>
+  </section>
+</body>
+</html>

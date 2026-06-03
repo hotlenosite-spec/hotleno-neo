@@ -1,0 +1,566 @@
+{
+  "savedAt": "2026-06-02T21:06:30.712Z",
+  "note": "Working file only. Contains full rateKeys. Do not include in final ZIP.",
+  "request": {
+    "stay": {
+      "checkIn": "2026-07-07",
+      "checkOut": "2026-07-08"
+    },
+    "occupancies": [
+      {
+        "rooms": 1,
+        "adults": 2,
+        "children": 0,
+        "paxes": [
+          {
+            "type": "AD",
+            "age": 30
+          },
+          {
+            "type": "AD",
+            "age": 30
+          }
+        ]
+      }
+    ],
+    "hotels": {
+      "hotel": [
+        1
+      ]
+    }
+  },
+  "response": {
+    "auditData": {
+      "processTime": "37",
+      "timestamp": "2026-06-02 21:06:30.957",
+      "requestHost": "",
+      "serverId": "",
+      "environment": "",
+      "release": "",
+      "token": "4ED2B18088C441BE9A339F1D21905125",
+      "internal": "0|22BFE1C2006A4D7178043439092005|UK|05|1|12||||||||||||36||1~1~2~0|0|0||0|37eb72d6a4495ae8dd9bf052af324182||||"
+    },
+    "hotels": {
+      "hotels": [
+        {
+          "code": 646942,
+          "name": "Portaventura Colorado Creek+ Ticket Included",
+          "categoryCode": "4EST",
+          "categoryName": "4 STARS",
+          "destinationCode": "SAL",
+          "destinationName": "Salou Area / Costa Dorada",
+          "zoneCode": 37,
+          "zoneName": "Port Aventura",
+          "latitude": "41.09336727336004500000",
+          "longitude": "1.15680005291744700000",
+          "rooms": [
+            {
+              "code": "DBT.SU",
+              "name": "SUPERIOR 2 ADULTS",
+              "rates": [
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.SU|BARADS|BB||1~2~0||N@07~~20013b~-2115511512~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK00010000000005207107",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "263.07",
+                  "allotment": 47,
+                  "rateCommentsId": "52|117532|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "BB",
+                  "boardName": "BED AND BREAKFAST",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "263.07",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0
+                },
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.SU|BARMPS|HB||1~2~0||N@07~~220148~-241525592~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK00010000000005215112",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "274.21",
+                  "allotment": 47,
+                  "rateCommentsId": "52|117533|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "HB",
+                  "boardName": "HALF BOARD",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "274.21",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0,
+                  "offers": [
+                    {
+                      "code": "9009",
+                      "name": "Special discount",
+                      "amount": "-30.46"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "code": "DBT.DX",
+              "name": "DELUXE 2 ADULTS",
+              "rates": [
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.DX|BARADS|BB||1~2~0||N@07~~20014b~1094298765~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK0001000000000522c114",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "276.44",
+                  "allotment": 127,
+                  "rateCommentsId": "52|117532|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "BB",
+                  "boardName": "BED AND BREAKFAST",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "276.44",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0
+                },
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.DX|BARMPS|HB||1~2~0||N@07~~248156~-659890123~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK0001000000000521611e",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "286.22",
+                  "allotment": 123,
+                  "rateCommentsId": "52|117533|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "HB",
+                  "boardName": "HALF BOARD",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "286.22",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0,
+                  "offers": [
+                    {
+                      "code": "9009",
+                      "name": "Special discount",
+                      "amount": "-31.81"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "code": "DBT.SU-3",
+              "name": "SUPERIOR 3 ADULTS",
+              "rates": [
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.SU-3|BARADS|BB||1~2~0||N@07~~2191a9~1614534475~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK00010000000005210163",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "355.16",
+                  "allotment": 47,
+                  "rateCommentsId": "52|117532|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "BB",
+                  "boardName": "BED AND BREAKFAST",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "355.16",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0
+                },
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.SU-3|BARMPS|HB||1~2~0||N@07~~25f1c1~-1555279095~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK0001000000000524e177",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "375.78",
+                  "allotment": 47,
+                  "rateCommentsId": "52|117533|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "HB",
+                  "boardName": "HALF BOARD",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "375.78",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0,
+                  "offers": [
+                    {
+                      "code": "9009",
+                      "name": "Special discount",
+                      "amount": "-41.76"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "code": "DBT.DX-4",
+              "name": "DELUXE 3 ADULTS",
+              "rates": [
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.DX-4|BARADS|BB||1~2~0||N@07~~24e1c8~-1913137220~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK0001000000000523017d",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "381.48",
+                  "allotment": 127,
+                  "rateCommentsId": "52|117532|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "BB",
+                  "boardName": "BED AND BREAKFAST",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "381.48",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0
+                },
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.DX-4|BARMPS|HB||1~2~0||N@07~~2211de~733086809~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK0001000000000523018f",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "399.48",
+                  "allotment": 123,
+                  "rateCommentsId": "52|117533|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "HB",
+                  "boardName": "HALF BOARD",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "399.48",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0,
+                  "offers": [
+                    {
+                      "code": "9009",
+                      "name": "Special discount",
+                      "amount": "-44.39"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "code": "DBT.SU-5",
+              "name": "SUPERIOR 4 ADULTS",
+              "rates": [
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.SU-5|BARADS|BB||1~2~0||N@07~~232217~737869845~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK000100000000052171bf",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "447.23",
+                  "allotment": 47,
+                  "rateCommentsId": "52|117532|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "BB",
+                  "boardName": "BED AND BREAKFAST",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "447.23",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0
+                },
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.SU-5|BARMPS|HB||1~2~0||N@07~~23b23b~-2034133323~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK000100000000052251dd",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "477.37",
+                  "allotment": 47,
+                  "rateCommentsId": "52|117533|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "HB",
+                  "boardName": "HALF BOARD",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "477.37",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0,
+                  "offers": [
+                    {
+                      "code": "9009",
+                      "name": "Special discount",
+                      "amount": "-53.04"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "code": "DBT.DX-6",
+              "name": "DELUXE 4 ADULTS",
+              "rates": [
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.DX-6|BARADS|BB||1~2~0||N@07~~238246~-1195695005~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK000100000000052351e6",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "486.53",
+                  "allotment": 127,
+                  "rateCommentsId": "52|117532|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "BB",
+                  "boardName": "BED AND BREAKFAST",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "486.53",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0
+                },
+                {
+                  "rateKey": "20260707|20260708|W|52|646942|DBT.DX-6|BARMPS|HB||1~2~0||N@07~~25e265~1899450000~N~~~NOR~~22BFE1C2006A4D7178043439092005AAUK0001000000000524a200",
+                  "rateClass": "NOR",
+                  "rateType": "BOOKABLE",
+                  "net": "512.74",
+                  "allotment": 123,
+                  "rateCommentsId": "52|117533|0",
+                  "paymentType": "AT_WEB",
+                  "packaging": false,
+                  "boardCode": "HB",
+                  "boardName": "HALF BOARD",
+                  "cancellationPolicies": [
+                    {
+                      "amount": "512.74",
+                      "from": "2026-06-29T23:59:00+02:00"
+                    }
+                  ],
+                  "taxes": {
+                    "taxes": [
+                      {
+                        "included": false,
+                        "amount": "3.96",
+                        "currency": "EUR",
+                        "type": "TAX",
+                        "clientAmount": "3.96",
+                        "clientCurrency": "EUR",
+                        "subType": "City Tax"
+                      }
+                    ],
+                    "allIncluded": false
+                  },
+                  "rooms": 1,
+                  "adults": 2,
+                  "children": 0,
+                  "offers": [
+                    {
+                      "code": "9009",
+                      "name": "Special discount",
+                      "amount": "-56.97"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "minRate": "263.07",
+          "maxRate": "512.74",
+          "currency": "EUR"
+        }
+      ],
+      "checkIn": "2026-07-07",
+      "total": 1,
+      "checkOut": "2026-07-08"
+    }
+  }
+}

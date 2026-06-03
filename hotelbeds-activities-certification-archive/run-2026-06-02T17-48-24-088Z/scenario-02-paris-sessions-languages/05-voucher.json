@@ -1,0 +1,300 @@
+{
+  "supplier": "hotelbeds-activities",
+  "bookingReference": "197-14372763",
+  "activityName": "Tour Privado por París",
+  "officialHotelbedsPdfVoucherReturned": false,
+  "officialVouchers": [],
+  "internalVoucherGenerated": true,
+  "internalVoucher": {
+    "supplier": "hotelbeds-activities",
+    "bookingReference": "197-14372763",
+    "clientReference": "HA02780422028789",
+    "confirmationDate": "2026-06-02T21:40:30.000Z",
+    "activityName": "Tour Privado por París",
+    "dateFrom": "2026-07-07",
+    "dateTo": "2026-07-07",
+    "modalityName": "6h tour spanish 16:00",
+    "holder": {
+      "name": "TEST",
+      "title": "",
+      "email": "certification-test@hotleno.com",
+      "mailing": false,
+      "surname": "CERTIFICATION",
+      "telephones": [
+        "+966500000000"
+      ]
+    },
+    "paxes": [
+      {
+        "name": "TEST",
+        "mailing": false,
+        "surname": "CERTIFICATION",
+        "customerId": "1",
+        "age": 30,
+        "paxType": "AD",
+        "passport": ""
+      }
+    ],
+    "childrenAges": [],
+    "contractRemarks": [
+      "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes.",
+      "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes."
+    ],
+    "redeemInformation": [
+      "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes."
+    ],
+    "supplierInfo": "HOTELBEDS SPAIN, S.L.U",
+    "cancellationPolicies": [],
+    "officialVouchers": [],
+    "raw": {
+      "operationId": "05687515ff874a71",
+      "auditData": {
+        "processTime": 0.197,
+        "time": "2026-06-02T19:40:31.222Z",
+        "serverId": "blank",
+        "environment": "blank"
+      },
+      "booking": {
+        "reference": "197-14372763",
+        "status": "CONFIRMED",
+        "currency": "EUR",
+        "pendingAmount": 220.91,
+        "agency": {
+          "code": 99994,
+          "branch": 1,
+          "comments": "",
+          "sucursal": {
+            "name": "HOTELBEDS SPAIN - PRUEBAS",
+            "street": "PEREZ GALDOS 32",
+            "zip": "07006",
+            "city": "PALMA DE MALLORCA",
+            "phone": "971771700",
+            "region": "BALEARES"
+          }
+        },
+        "creationDate": "2026-06-02T21:40:30.000Z",
+        "paymentData": {
+          "paymentType": {
+            "code": "C"
+          },
+          "invoicingCompany": {
+            "code": "E14",
+            "name": "HOTELBEDS S.L.U.",
+            "registrationNumber": "ESB57218372"
+          }
+        },
+        "extraData": [
+          {
+            "id": "WEBIP",
+            "value": "5.110.180.34, 3.172.64.105, 10.214.142.109, 10.214.131.185"
+          }
+        ],
+        "clientReference": "HA02780422028789",
+        "holder": {
+          "name": "TEST",
+          "title": "",
+          "email": "certification-test@hotleno.com",
+          "mailing": false,
+          "surname": "CERTIFICATION",
+          "telephones": [
+            "+966500000000"
+          ]
+        },
+        "total": 220.91,
+        "totalNet": 220.91,
+        "activities": [
+          {
+            "status": "CONFIRMED",
+            "supplier": {
+              "name": "HOTELBEDS SPAIN, S.L.U",
+              "vatNumber": "ESB28916765"
+            },
+            "comments": [
+              {
+                "type": "CONTRACT_REMARKS",
+                "text": "Meeting point: Place Louis Lépine // Meeting point instructions: Exit metro Cité (Line 4).Please ensure you arrive at the meeting point at least 15 minutes in advance // End point: Same as the meeting point // Duration: 3 or 6 hours, according to the selected option // Inclusions: Guide. Wheelchair access // Exclusions: Transportation between sites. Transfers. Food. Beverages. Tickets for the monuments // Mandatory instructions: Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of service // Supplier name: Paseando por Europa // Supplier emergency phone: +34 621 027 592 or +44 770 732 51 37 // Voucher type: Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity // Recommendations: As this tour involves a fair amount of walking, please wear comfortable shoes.\n"
+              }
+            ],
+            "type": "TICKET",
+            "vouchers": [],
+            "activityReference": "197-14372763",
+            "code": "E-E10-A1IMNO0580",
+            "name": "Tour Privado por París",
+            "modality": {
+              "code": "6TOUR@STANDARD|CAS|16:00",
+              "name": "6h tour spanish 16:00",
+              "rates": [
+                {
+                  "freeCancellation": "[MaxDepth]",
+                  "rateDetails": "[MaxDepth]"
+                }
+              ],
+              "amountUnitType": "SERVICE"
+            },
+            "dateFrom": "2026-07-07",
+            "dateTo": "2026-07-07",
+            "cancellationPolicies": [
+              {
+                "dateFrom": "2026-07-06T00:00:00.000Z",
+                "amount": 220.91
+              }
+            ],
+            "paxes": [
+              {
+                "name": "TEST",
+                "mailing": false,
+                "surname": "CERTIFICATION",
+                "customerId": "1",
+                "age": 30,
+                "paxType": "AD",
+                "passport": ""
+              }
+            ],
+            "questions": [
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "certification-test@hotleno.com"
+              },
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "TEST ANSWER FOR HOTEL"
+              },
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "TEST ANSWER FOR PHONENUMBER"
+              },
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "+966500000000"
+              }
+            ],
+            "id": "197#O#1",
+            "agencyCommission": {
+              "percentage": 0,
+              "amount": 0,
+              "vatAmount": 0
+            },
+            "contactInfo": {
+              "address": "Place Louis Lépine",
+              "postalCode": "75004",
+              "city": "Paris",
+              "country": {}
+            },
+            "amountDetail": {
+              "paxAmounts": [
+                {
+                  "paxType": "[MaxDepth]",
+                  "amount": "[MaxDepth]"
+                }
+              ],
+              "totalAmount": {
+                "amount": 220.91
+              }
+            },
+            "extraData": [
+              {
+                "id": "INFO_TTOO_BEARING_AMOUNT",
+                "value": "220.910"
+              },
+              {
+                "id": "INFO_TTOO_BEARING_AMOUNT_CURRENCY",
+                "value": "EUR"
+              },
+              {
+                "id": "INFO_TTOO_SERVICE_AMOUNT",
+                "value": "0.00"
+              }
+            ],
+            "providerInformation": {
+              "name": "PASEANDO POR EUROPA S.L."
+            },
+            "content": {
+              "name": "Tour Privado por París",
+              "detailedInfo": [
+                ""
+              ],
+              "featureGroups": [
+                {
+                  "groupCode": "[MaxDepth]",
+                  "excluded": "[MaxDepth]"
+                },
+                {
+                  "groupCode": "[MaxDepth]",
+                  "excluded": "[MaxDepth]"
+                },
+                {
+                  "groupCode": "[MaxDepth]",
+                  "excluded": "[MaxDepth]"
+                }
+              ],
+              "location": {
+                "startingPoints": [
+                  "[MaxDepth]"
+                ]
+              },
+              "media": {
+                "images": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              },
+              "segmentationGroups": [
+                {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "segments": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "segments": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "segments": "[MaxDepth]"
+                }
+              ],
+              "geolocation": {
+                "latitude": 48.85517720000001,
+                "longitude": 2.3468866
+              },
+              "activityFactsheetType": "TOURS",
+              "activityCode": "E-E10-A1IMNO0580",
+              "modalityCode": "6TOUR@STANDARD|CAS|16:00",
+              "contentId": "61394",
+              "description": "If you want<strong> to get to know Paris in the most comfortable and personal way,</strong> with a guide at your complete disposal, come with us to discover the most interesting corners of the city.<br />\nThe guide will make <strong>an itinerary based on your tastes and preferences.</strong><br />\n<br />\nWe will <strong>discover Paris quietly</strong>, with time to take photos, buy souvenirs and have lunch in a restaurant of your choice. It will be a unique tour in which our guide will also tell you details and curiosities about local Parisian life.<br />\n<br />\nIn our standard itinerary we will see the most important monuments and attractions of Paris: Notre Dame Cathedral, Latin Quarter, Seine River, Pont Neuf, Pont des Arts, Louvre Museum pyramid, Opéra Garnier, Tuileries Garden, Champs Elysées, Arc de Triomphe, Pont Alexandre III, Eiffel Tower, Île de la Cité, Place Vendôme, Montmartre, Sacré-Coeur Basilica, Moulin Rouge...<br />\n<quillbot-extension-portal></quillbot-extension-portal><quillbot-extension-portal></quillbot-extension-portal><br /><br />\\n<strong>Redeem information</strong><br /><u>Voucher type</u>: Printed and e-Voucher<br />Printed voucher or E-voucher. Print and bring the voucher or show the voucher on your mobile device to enjoy the activity. <br /><br /><strong>Location</strong><br /><u>Start point:</u> <br />Exit metro Cité (Line 4), Place Louis Lépine<br />Please ensure you arrive at the meeting point at least 15 minutes before the scheduled departure time. <br /><br /><u>End point</u>: Same as the starting point<br /><br /><strong>Guide options</strong><br />Guide type: Guide<br /><br /><strong>Requirements</strong><br />Please make sure you answer all the mandatory questions during the booking process.<br /><br /><strong>Recommendations</strong><br />As this tour involves a fair amount of walking, please wear comfortable shoes.\\n",
+              "countries": [
+                {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "destinations": "[MaxDepth]"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

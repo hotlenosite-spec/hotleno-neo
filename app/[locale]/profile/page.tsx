@@ -96,6 +96,10 @@ import {
   formatBookingStatus,
   type BookingStatus,
 } from "@/lib/booking-status";
+import {
+  isDevPreviewAllPagesEnabled,
+  warnDevPreviewAllPagesEnabled,
+} from "@/lib/security/dev-flags";
 
 interface Booking {
   _id: string;
@@ -138,6 +142,7 @@ export default function ProfilePage() {
     isAuthenticated,
     isLoading: authLoading,
   } = useAuth();
+  const isDevPreviewAllPages = isDevPreviewAllPagesEnabled();
   const { setTheme, resolvedTheme: _resolvedTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -185,7 +190,17 @@ export default function ProfilePage() {
 
   // Fetch profile data
   useEffect(() => {
+    if (isDevPreviewAllPages) {
+      warnDevPreviewAllPagesEnabled();
+    }
+
     if (!authLoading && !isAuthenticated) {
+      if (isDevPreviewAllPages) {
+        setIsLoadingProfile(false);
+        setIsLoadingBookings(false);
+        return;
+      }
+
       router.push("/");
       return;
     }
@@ -195,7 +210,7 @@ export default function ProfilePage() {
       fetchBookings();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, isDevPreviewAllPages, router]);
 
   // Sync theme with preferences
   useEffect(() => {
@@ -207,7 +222,10 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        setIsLoadingProfile(false);
+        return;
+      }
 
       const response = await fetch("/api/user/profile", {
         headers: {
@@ -248,7 +266,10 @@ export default function ProfilePage() {
   const fetchBookings = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        setIsLoadingBookings(false);
+        return;
+      }
 
       const response = await fetch("/api/user/bookings", {
         headers: {
@@ -282,6 +303,7 @@ export default function ProfilePage() {
         return <Badge className="bg-green-500">{formatBookingStatus(status)}</Badge>;
       case "pending_payment":
       case "payment_succeeded":
+      case "supplier_booking_processing":
       case "supplier_booking_pending":
         return (
           <Badge variant="outline" className="text-amber-600 border-amber-600">
@@ -291,7 +313,9 @@ export default function ProfilePage() {
       case "cancelled":
         return <Badge variant="destructive">{t("cancelled")}</Badge>;
       case "supplier_booking_failed":
+      case "manual_review_required":
       case "refund_required":
+      case "refunded":
         return <Badge variant="destructive">{formatBookingStatus(status)}</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
@@ -532,6 +556,27 @@ export default function ProfilePage() {
           <Skeleton className="h-96 w-full" />
           <Skeleton className="h-96 w-full md:col-span-2" />
         </div>
+      </div>
+    );
+  }
+
+  if (isDevPreviewAllPages && (!isAuthenticated || !profile)) {
+    return (
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <Card className="border-dashed">
+          <CardContent className="space-y-4 p-8 text-center">
+            <Badge variant="secondary">معاينة المطور</Badge>
+            <h1 className="text-2xl font-bold">الملف الشخصي يحتاج بيانات مستخدم حقيقية</h1>
+            <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+              هذه الصفحة مفتوحة لأن `NEXT_PUBLIC_DEV_PREVIEW_ALL_PAGES` مفعل
+              في التطوير المحلي. لا يتم حقن مستخدم تجريبي أو بيانات ملف شخصي
+              مضللة. سجّل الدخول بحساب محلي لمعاينة الحالة المعبأة.
+            </p>
+            <Button variant="outline" onClick={() => router.push("/")}>
+              العودة للموقع
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -1044,14 +1089,14 @@ export default function ProfilePage() {
                     }
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select currency" />
+                      <SelectValue placeholder="اختر العملة" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectItem value="USD">USD - US Dollar</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                        <SelectItem value="AED">AED - UAE Dirham</SelectItem>
+                        <SelectItem value="USD">USD - الدولار الأمريكي</SelectItem>
+                        <SelectItem value="EUR">EUR - اليورو</SelectItem>
+                        <SelectItem value="GBP">GBP - الجنيه الإسترليني</SelectItem>
+                        <SelectItem value="AED">AED - الدرهم الإماراتي</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -1067,12 +1112,12 @@ export default function ProfilePage() {
                     }
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select language" />
+                      <SelectValue placeholder="اختر اللغة" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="ar">العربية (Arabic)</SelectItem>
+                        <SelectItem value="en">الإنجليزية</SelectItem>
+                        <SelectItem value="ar">العربية</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -1183,7 +1228,7 @@ export default function ProfilePage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Status</p>
+                  <p className="font-medium">الحالة</p>
                   <p className="text-sm text-muted-foreground">
                     {t("notEnabled")}
                   </p>
@@ -1232,7 +1277,7 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center gap-4 py-4">
             {previewAvatar && (
               <Avatar className="h-32 w-32">
-                <AvatarImage src={previewAvatar} alt="Preview" />
+                <AvatarImage src={previewAvatar} alt="معاينة" />
                 <AvatarFallback>{getInitials(profile.name)}</AvatarFallback>
               </Avatar>
             )}
@@ -1279,7 +1324,7 @@ export default function ProfilePage() {
           <DialogHeader>
             <DialogTitle>{t("changePassword")}</DialogTitle>
             <DialogDescription>
-              Enter your current password and a new password
+              أدخل كلمة المرور الحالية وكلمة مرور جديدة
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

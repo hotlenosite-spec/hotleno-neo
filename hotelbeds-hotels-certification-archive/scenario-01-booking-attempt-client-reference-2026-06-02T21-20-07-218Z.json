@@ -1,0 +1,7 @@
+{
+  "status": "booking_not_confirmed",
+  "safeError": "clientReference size must be between 1 and 20",
+  "bookingCreated": false,
+  "bookingReference": "",
+  "supplier": "Hotelbeds Accommodation"
+}

@@ -16,6 +16,9 @@ const eslintConfig = defineConfig([
     "public/sw.js",
     "public/workbox-*.js",
     "public/workbox-*.js.map",
+    // Local supplier certification artifacts are not application source.
+    ".tmp/**",
+    "integrations/hotelbeds/certification/**",
   ]),
   {
     rules: {

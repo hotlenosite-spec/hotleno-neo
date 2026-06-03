@@ -10,30 +10,30 @@
       "Rooms": [
         {
           "Name": [
-            "Luxury Room, 2 Twin Beds",
-            "Luxury Room, 2 Twin Beds"
+            "Luxury Room, 1 King Bed",
+            "Luxury Room, 1 King Bed"
           ],
-          "BookingCode": "1120548!TB!1!TB!4d6d1949-5508-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "BookingCode": "1120548!TB!1!TB!f8a0c43f-5927-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
           "Inclusion": "Free self parking",
           "DayRates": [
             [
               {
-                "BasePrice": 84.51
+                "BasePrice": 84.34
               },
               {
-                "BasePrice": 84.51
+                "BasePrice": 84.34
               }
             ],
             [
               {
-                "BasePrice": 84.51
+                "BasePrice": 84.34
               },
               {
-                "BasePrice": 84.51
+                "BasePrice": 84.34
               }
             ]
           ],
-          "TotalFare": 428.04,
+          "TotalFare": 427.38,
           "TotalTax": 90.02,
           "RoomPromotion": [
             "Book now and save",
@@ -41,14 +41,14 @@
           ],
           "CancelPolicies": [
             {
-              "FromDate": "20-05-2026 00:00:00",
+              "FromDate": "25-05-2026 00:00:00",
               "ChargeType": "Fixed",
               "CancellationCharge": 0
             },
             {
-              "FromDate": "19-06-2026 00:00:00",
+              "FromDate": "28-06-2026 00:00:00",
               "ChargeType": "Fixed",
-              "CancellationCharge": 214.01999999999998
+              "CancellationCharge": 213.69
             }
           ],
           "MealType": "Room_Only",

@@ -6,10 +6,10 @@
   "BookingDetail": {
     "BookingStatus": "Confirmed",
     "VoucherStatus": false,
-    "ConfirmationNumber": "VS7EAC",
-    "CheckIn": "2026-06-20T00:00:00",
-    "CheckOut": "2026-06-22T00:00:00",
-    "BookingDate": "2026-05-21T00:00:00",
+    "ConfirmationNumber": "5EWC3M",
+    "CheckIn": "2026-06-29T00:00:00",
+    "CheckOut": "2026-07-01T00:00:00",
+    "BookingDate": "2026-05-26T00:00:00",
     "NoOfRooms": 2,
     "HotelDetails": {
       "HotelName": "Sofitel Dubai Downtown",
@@ -24,22 +24,22 @@
         "Currency": "USD",
         "Status": "Not Cancelled",
         "Name": [
-          "Luxury Room, 2 Twin Beds"
+          "Luxury Room, 1 King Bed"
         ],
         "Inclusion": "Free self parking",
-        "TotalFare": 214.02,
+        "TotalFare": 213.69,
         "TotalTax": 45.01,
         "RoomPromotion": "Book now and save",
         "CancelPolicies": [
           {
-            "FromDate": "20-05-2026 00:00:00",
+            "FromDate": "25-05-2026 00:00:00",
             "ChargeType": "Fixed",
             "CancellationCharge": 0
           },
           {
-            "FromDate": "19-06-2026 00:00:00",
+            "FromDate": "28-06-2026 00:00:00",
             "ChargeType": "Fixed",
-            "CancellationCharge": 214.02
+            "CancellationCharge": 213.69
           }
         ],
         "MealType": "Room_Only",
@@ -72,22 +72,22 @@
         "Currency": "USD",
         "Status": "Not Cancelled",
         "Name": [
-          "Luxury Room, 2 Twin Beds"
+          "Luxury Room, 1 King Bed"
         ],
         "Inclusion": "Free self parking",
-        "TotalFare": 214.02,
+        "TotalFare": 213.69,
         "TotalTax": 45.01,
         "RoomPromotion": "Book now and save",
         "CancelPolicies": [
           {
-            "FromDate": "20-05-2026 00:00:00",
+            "FromDate": "25-05-2026 00:00:00",
             "ChargeType": "Fixed",
             "CancellationCharge": 0
           },
           {
-            "FromDate": "19-06-2026 00:00:00",
+            "FromDate": "28-06-2026 00:00:00",
             "ChargeType": "Fixed",
-            "CancellationCharge": 214.02
+            "CancellationCharge": 213.69
           }
         ],
         "MealType": "Room_Only",

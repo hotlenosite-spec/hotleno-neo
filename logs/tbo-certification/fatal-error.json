@@ -1,0 +1,4 @@
+{
+  "message": "Missing TBO environment variables: TBO_BASE_URL, TBO_USERNAME, TBO_PASSWORD, TBO_ENV",
+  "stack": "Error: Missing TBO environment variables: TBO_BASE_URL, TBO_USERNAME, TBO_PASSWORD, TBO_ENV\n    at requireConfig (file:///C:/development/hotleno-main/scripts/tbo-certification.mjs:102:11)\n    at main (file:///C:/development/hotleno-main/scripts/tbo-certification.mjs:609:18)"
+}

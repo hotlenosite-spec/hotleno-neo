@@ -1,0 +1,232 @@
+{
+  "scenario": "Test Case 3 - Madrid direct integration PDF voucher",
+  "bookingReference": "102-20736360",
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "status": "confirmed",
+      "bookingReference": "102-20736360",
+      "clientReference": "HA03780422033118",
+      "voucher": {
+        "supplier": "hotelbeds-activities",
+        "bookingReference": "102-20736360",
+        "clientReference": "HA03780422033118",
+        "confirmationDate": "2026-06-02T21:40:34.000Z",
+        "activityName": "TEST Madrid City Tour",
+        "dateFrom": "2026-07-07",
+        "dateTo": "2026-07-07",
+        "modalityName": "1 day duration",
+        "holder": {
+          "name": "TEST",
+          "title": "",
+          "email": "certification-test@hotleno.com",
+          "mailing": false,
+          "surname": "CERTIFICATION",
+          "telephones": [
+            "+966500000000"
+          ]
+        },
+        "paxes": [
+          {
+            "name": "TEST",
+            "mailing": false,
+            "surname": "CERTIFICATION",
+            "customerId": "1",
+            "age": 30,
+            "paxType": "AD",
+            "passport": ""
+          }
+        ],
+        "childrenAges": [],
+        "contractRemarks": [
+          "TEST",
+          "TEST"
+        ],
+        "redeemInformation": [
+          "TEST"
+        ],
+        "supplierInfo": "HOTELBEDS SPAIN, S.L.U",
+        "cancellationPolicies": [],
+        "officialVouchers": [
+          {
+            "code": "XeLJgNoIoOfrHaW",
+            "language": "CAS",
+            "url": "https://voucher-service.int.hotelbeds.com/vouser/rest/voucher/get/XeLJgNoIoOfrHaW",
+            "mimeType": "text/html",
+            "dateFrom": "2026-07-07",
+            "dateTo": "2026-07-07"
+          },
+          {
+            "code": "qWi1UE5R0xfgU5x",
+            "language": "CAS",
+            "url": "https://voucher-service.int.hotelbeds.com/vouser/rest/voucher/get/qWi1UE5R0xfgU5x",
+            "mimeType": "application/pdf",
+            "dateFrom": "2026-07-07",
+            "dateTo": "2026-07-07"
+          },
+          {
+            "code": "efKWOypUo12GIu7",
+            "language": "ENG",
+            "url": "https://voucher-service.int.hotelbeds.com/vouser/rest/voucher/get/efKWOypUo12GIu7",
+            "mimeType": "text/html",
+            "dateFrom": "2026-07-07",
+            "dateTo": "2026-07-07"
+          },
+          {
+            "code": "QtPzea9XGL3PvF4",
+            "language": "ENG",
+            "url": "https://voucher-service.int.hotelbeds.com/vouser/rest/voucher/get/QtPzea9XGL3PvF4",
+            "mimeType": "application/pdf",
+            "dateFrom": "2026-07-07",
+            "dateTo": "2026-07-07"
+          }
+        ],
+        "raw": {
+          "operationId": "8d91d2f68e6b5a16",
+          "auditData": {
+            "processTime": 0.196,
+            "time": "2026-06-02T19:40:35.538Z",
+            "serverId": "blank",
+            "environment": "blank"
+          },
+          "booking": {
+            "reference": "102-20736360",
+            "status": "CONFIRMED",
+            "currency": "EUR",
+            "pendingAmount": 25.75,
+            "agency": {
+              "code": 99994,
+              "branch": 1,
+              "comments": "",
+              "sucursal": {
+                "name": "HOTELBEDS SPAIN - PRUEBAS",
+                "street": "PEREZ GALDOS 32",
+                "zip": "07006",
+                "city": "PALMA DE MALLORCA",
+                "phone": "971771700",
+                "region": "BALEARES"
+              }
+            },
+            "creationDate": "2026-06-02T21:40:34.000Z",
+            "paymentData": {
+              "paymentType": {
+                "code": "C"
+              },
+              "invoicingCompany": {
+                "code": "E14",
+                "name": "HOTELBEDS S.L.U.",
+                "registrationNumber": "ESB57218372"
+              }
+            },
+            "extraData": [
+              {
+                "id": "WEBIP",
+                "value": "5.110.180.34, 3.172.64.116, 10.214.140.115, 10.214.131.185"
+              }
+            ],
+            "clientReference": "HA03780422033118",
+            "holder": {
+              "name": "TEST",
+              "title": "",
+              "email": "certification-test@hotleno.com",
+              "mailing": false,
+              "surname": "CERTIFICATION",
+              "telephones": [
+                "+966500000000"
+              ]
+            },
+            "total": 25.75,
+            "totalNet": 25.75,
+            "activities": [
+              {
+                "status": "CONFIRMED",
+                "supplier": {
+                  "name": "[MaxDepth]",
+                  "vatNumber": "[MaxDepth]"
+                },
+                "comments": [
+                  "[MaxDepth]"
+                ],
+                "type": "TICKET",
+                "vouchers": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "activityReference": "102-20736360",
+                "code": "E-E10-MADTEST",
+                "name": "TEST Madrid City Tour",
+                "modality": {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "amountUnitType": "[MaxDepth]"
+                },
+                "dateFrom": "2026-07-07",
+                "dateTo": "2026-07-07",
+                "cancellationPolicies": [
+                  "[MaxDepth]"
+                ],
+                "paxes": [
+                  "[MaxDepth]"
+                ],
+                "questions": [
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "id": "102#O#1",
+                "agencyCommission": {
+                  "percentage": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "vatAmount": "[MaxDepth]"
+                },
+                "contactInfo": {
+                  "address": "[MaxDepth]",
+                  "postalCode": "[MaxDepth]",
+                  "city": "[MaxDepth]",
+                  "country": "[MaxDepth]"
+                },
+                "amountDetail": {
+                  "paxAmounts": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]"
+                },
+                "extraData": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "providerInformation": {
+                  "name": "[MaxDepth]"
+                },
+                "content": {
+                  "name": "[MaxDepth]",
+                  "detailedInfo": "[MaxDepth]",
+                  "featureGroups": "[MaxDepth]",
+                  "location": "[MaxDepth]",
+                  "media": "[MaxDepth]",
+                  "routes": "[MaxDepth]",
+                  "segmentationGroups": "[MaxDepth]",
+                  "geolocation": "[MaxDepth]",
+                  "activityFactsheetType": "[MaxDepth]",
+                  "activityCode": "[MaxDepth]",
+                  "modalityCode": "[MaxDepth]",
+                  "contentId": "[MaxDepth]",
+                  "description": "[MaxDepth]",
+                  "countries": "[MaxDepth]"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "debug": {
+      "reason": "activities_booking_details_success",
+      "bookingReference": "102-20736360",
+      "status": "confirmed",
+      "hasOfficialVoucher": true
+    }
+  }
+}

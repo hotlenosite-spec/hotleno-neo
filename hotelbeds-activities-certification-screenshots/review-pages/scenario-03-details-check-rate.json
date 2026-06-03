@@ -1,0 +1,61 @@
+{
+  "scenario": {
+    "scenario": "scenario-03-madrid-pdf-voucher",
+    "title": "Test Case 3 - Madrid PDF voucher",
+    "destination": "Madrid / MAD",
+    "status": "Completed successfully",
+    "supplier": "Hotelbeds Activities",
+    "bookingReference": "102-20736360",
+    "activityCode": "MADTEST",
+    "activityName": "TEST Madrid City Tour",
+    "dateFrom": "2026-07-07",
+    "dateTo": "2026-07-07",
+    "modality": "1 day duration",
+    "languageSessionSelected": false,
+    "session": "",
+    "language": "",
+    "holder": {
+      "name": "TEST CERTIFICATION",
+      "emailDomain": "hotleno.com",
+      "phonePresent": true
+    },
+    "search": {
+      "status": "Not required; activity code was used directly"
+    },
+    "details": {
+      "status": "Success",
+      "modalityCount": 1,
+      "questionCount": 0
+    },
+    "booking": {
+      "status": "Confirmed",
+      "bookingReference": "102-20736360"
+    },
+    "bookingDetails": {
+      "status": "Retrieved",
+      "supplierStatus": "confirmed"
+    },
+    "voucher": {
+      "generated": true,
+      "officialHotelbedsPdfVoucherReturned": true,
+      "officialVoucherCount": 4,
+      "mode": "Official Hotelbeds PDF voucher"
+    },
+    "cancellation": {
+      "status": "Cancelled",
+      "bookingReference": "102-20736360"
+    },
+    "questions": {
+      "displayed": false,
+      "answersSubmitted": false,
+      "items": []
+    },
+    "evidence": {
+      "cancellationConfirmed": true,
+      "bookingDetailsRetrieved": true,
+      "voucherCaptured": true
+    }
+  },
+  "stepName": "Details / Check Rate",
+  "status": "Success"
+}

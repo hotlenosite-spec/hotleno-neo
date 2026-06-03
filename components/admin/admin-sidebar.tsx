@@ -136,6 +136,7 @@ export function AdminSidebar() {
     { title: isAr ? "الفنادق" : "Hotels", href: "/admin/hotels", icon: BuildingIcon },
     { title: t("users"), href: "/admin/users", icon: UsersIcon },
     { title: isAr ? "الوكالات" : "Agencies", href: "/admin/agencies", icon: HandshakeIcon },
+    { title: isAr ? "الأفلييت" : "Affiliates", href: "/admin/affiliates", icon: HandshakeIcon },
     { title: isAr ? "المدفوعات" : "Payments", href: "/admin/payments", icon: CardIcon },
     { title: isAr ? "السجلات" : "Logs", href: "/admin/logs", icon: ChartIcon },
     { title: isAr ? "المدونة" : "Blog", href: "/admin/blog", icon: ChartIcon },

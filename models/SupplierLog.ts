@@ -4,7 +4,7 @@ export interface ISupplierLog extends Document {
   bookingId?: mongoose.Types.ObjectId;
   supplier?: string;
   type: string;
-  status: 'started' | 'pending' | 'success' | 'failed' | 'skipped';
+  status: 'started' | 'pending' | 'success' | 'failed' | 'timeout' | 'skipped';
   message: string;
   request?: unknown;
   response?: unknown;
@@ -32,7 +32,7 @@ const SupplierLogSchema: Schema<ISupplierLog> = new Schema(
     },
     status: {
       type: String,
-      enum: ['started', 'pending', 'success', 'failed', 'skipped'],
+      enum: ['started', 'pending', 'success', 'failed', 'timeout', 'skipped'],
       required: true,
     },
     message: {

@@ -1,0 +1,292 @@
+{
+  "supplier": "hotelbeds-activities",
+  "bookingReference": "102-20736361",
+  "activityName": "Girona and Dali Museum in Figueres Tour with Hotel pick-up (FD)",
+  "officialHotelbedsPdfVoucherReturned": false,
+  "officialVouchers": [],
+  "internalVoucherGenerated": true,
+  "internalVoucher": {
+    "supplier": "hotelbeds-activities",
+    "bookingReference": "102-20736361",
+    "clientReference": "HA04780422037675",
+    "confirmationDate": "2026-06-02T21:40:38.000Z",
+    "activityName": "Girona and Dali Museum in Figueres Tour with Hotel pick-up (FD)",
+    "dateFrom": "2026-07-07",
+    "dateTo": "2026-07-07",
+    "modalityName": "Private Tour spanish 08:30",
+    "holder": {
+      "name": "TEST",
+      "title": "",
+      "email": "certification-test@hotleno.com",
+      "mailing": false,
+      "surname": "CERTIFICATION",
+      "telephones": [
+        "+966500000000"
+      ]
+    },
+    "paxes": [
+      {
+        "name": "TEST",
+        "mailing": false,
+        "surname": "CERTIFICATION",
+        "customerId": "1",
+        "age": 30,
+        "paxType": "AD",
+        "passport": ""
+      }
+    ],
+    "childrenAges": [],
+    "contractRemarks": [
+      "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date.",
+      "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date."
+    ],
+    "redeemInformation": [
+      "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date."
+    ],
+    "supplierInfo": "HOTELBEDS SPAIN, S.L.U",
+    "cancellationPolicies": [],
+    "officialVouchers": [],
+    "raw": {
+      "operationId": "aca2ec2400460815",
+      "auditData": {
+        "processTime": 0.216,
+        "time": "2026-06-02T19:40:40.054Z",
+        "serverId": "blank",
+        "environment": "blank"
+      },
+      "booking": {
+        "reference": "102-20736361",
+        "status": "CONFIRMED",
+        "currency": "EUR",
+        "pendingAmount": 257.14,
+        "agency": {
+          "code": 99994,
+          "branch": 1,
+          "comments": "",
+          "sucursal": {
+            "name": "HOTELBEDS SPAIN - PRUEBAS",
+            "street": "PEREZ GALDOS 32",
+            "zip": "07006",
+            "city": "PALMA DE MALLORCA",
+            "phone": "971771700",
+            "region": "BALEARES"
+          }
+        },
+        "creationDate": "2026-06-02T21:40:38.000Z",
+        "paymentData": {
+          "paymentType": {
+            "code": "C"
+          },
+          "invoicingCompany": {
+            "code": "E14",
+            "name": "HOTELBEDS S.L.U.",
+            "registrationNumber": "ESB57218372"
+          }
+        },
+        "extraData": [
+          {
+            "id": "WEBIP",
+            "value": "5.110.180.34, 3.172.64.117, 10.214.142.109, 10.214.131.185"
+          }
+        ],
+        "clientReference": "HA04780422037675",
+        "holder": {
+          "name": "TEST",
+          "title": "",
+          "email": "certification-test@hotleno.com",
+          "mailing": false,
+          "surname": "CERTIFICATION",
+          "telephones": [
+            "+966500000000"
+          ]
+        },
+        "total": 257.14,
+        "totalNet": 257.14,
+        "activities": [
+          {
+            "status": "CONFIRMED",
+            "supplier": {
+              "name": "HOTELBEDS SPAIN, S.L.U",
+              "vatNumber": "ESB28916765"
+            },
+            "comments": [
+              {
+                "type": "CONTRACT_REMARKS",
+                "text": "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date."
+              }
+            ],
+            "type": "TICKET",
+            "vouchers": [],
+            "activityReference": "102-20736361",
+            "code": "E-E10-A1AANO0485",
+            "name": "Girona and Dali Museum in Figueres Tour with Hotel pick-up (FD)",
+            "modality": {
+              "code": "PVTOUR@STANDARD|CAS|08:30",
+              "name": "Private Tour spanish 08:30",
+              "rates": [
+                {
+                  "freeCancellation": "[MaxDepth]",
+                  "rateDetails": "[MaxDepth]"
+                }
+              ],
+              "amountUnitType": "PAX"
+            },
+            "dateFrom": "2026-07-07",
+            "dateTo": "2026-07-07",
+            "cancellationPolicies": [
+              {
+                "dateFrom": "2026-07-06T00:00:00.000Z",
+                "amount": 257.14
+              }
+            ],
+            "paxes": [
+              {
+                "name": "TEST",
+                "mailing": false,
+                "surname": "CERTIFICATION",
+                "customerId": "1",
+                "age": 30,
+                "paxType": "AD",
+                "passport": ""
+              }
+            ],
+            "questions": [
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "TEST ANSWER FOR EMAIL"
+              },
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "certification-test@hotleno.com"
+              },
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "TEST ANSWER FOR HOTEL"
+              },
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "TEST ANSWER FOR MOBILE"
+              },
+              {
+                "question": {
+                  "code": "[MaxDepth]",
+                  "text": "[MaxDepth]",
+                  "required": "[MaxDepth]"
+                },
+                "answer": "+966500000000"
+              }
+            ],
+            "id": "102#O#1",
+            "agencyCommission": {
+              "percentage": 0,
+              "amount": 0,
+              "vatAmount": 0
+            },
+            "contactInfo": {
+              "country": {}
+            },
+            "amountDetail": {
+              "paxAmounts": [
+                {
+                  "paxType": "[MaxDepth]",
+                  "amount": "[MaxDepth]"
+                }
+              ],
+              "totalAmount": {
+                "amount": 257.14
+              }
+            },
+            "extraData": [
+              {
+                "id": "INFO_TTOO_BEARING_AMOUNT",
+                "value": "257.140"
+              },
+              {
+                "id": "INFO_TTOO_BEARING_AMOUNT_CURRENCY",
+                "value": "EUR"
+              },
+              {
+                "id": "INFO_TTOO_SERVICE_AMOUNT",
+                "value": "0.00"
+              }
+            ],
+            "providerInformation": {
+              "name": "INSIDETRAVEL BARCELONA S.L."
+            },
+            "content": {
+              "name": "Girona and Dali Museum in Figueres Tour with Hotel pick-up (FD)",
+              "detailedInfo": [
+                ""
+              ],
+              "featureGroups": [
+                {
+                  "groupCode": "[MaxDepth]",
+                  "included": "[MaxDepth]"
+                }
+              ],
+              "location": {
+                "startingPoints": [
+                  "[MaxDepth]"
+                ]
+              },
+              "media": {
+                "images": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              },
+              "segmentationGroups": [
+                {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "segments": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "segments": "[MaxDepth]"
+                },
+                {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "segments": "[MaxDepth]"
+                }
+              ],
+              "activityFactsheetType": "TOURS",
+              "activityCode": "E-E10-A1AANO0485",
+              "modalityCode": "PVTOUR@STANDARD|CAS|08:30",
+              "contentId": "58116",
+              "description": "Leave the hustle and bustle of Barcelona behind and travel back in time to discover the medieval city of Girona. Walk through the defensive walls of the city to enjoy great bird’s eye views of the surrounding area. Visit the best-preserved Jewish Quarter of Europe and marvel at the Gothic Cathedral, famous for having the world’s widest Gothic nave. Continue to Dali’s hometown, travel to Figueres to visit the Dali Theatre Museum, the largest surrealist object in the world and a present that Dali himself wanted to leave to his city.<br />\n<br />\n<strong>Highlights</strong><br />\n• Marvel at the medieval architecture of Girona, while exploring the city's Jewish Quarter<br />\n• Soak up Girona's unique atmosphere by walking through its winding streets<br />\n• Visit a 19th-century iron bridge designed by Gustave Eiffel<br />\n• Explore Figueres, the artist's birthplace and current home of the Dalí Museum<br />\n• Tour the Dalí Museum in Figueres, dedicated to the city's most famous creative genius<br />\n• Get an inside look at the life of Salvador Dalí during a guided tour of his former residence<br />\n• Learn about the formative experiences that inspired and shaped Dali’s work<br />\n<br />\nAfter morning pickup at your Barcelona accommodation, travel with your guide for about 1 hour to reach the colorful city of Girona. During the drive, learn about Girona’s long and rich history, from its ancient Roman roots through a thriving medieval era and evolution into a hip, modern Spanish city.<br />\n<br />\nWhen you arrive, explore Old Town on a walking tour that takes you through past landmarks like the Girona Cathedral and an iron bridge designed by famous French engineer Gustave Eiffel.<br />\n<br />\nGet a sense of life in medieval Spain while wandering through the city’s labyrinthine Jewish quarter, and rest your feet over a cup of coffee in a charming Old Town cafe. With your expert guide continue your tour to the small town of Figueres, located near the French border. Best known as the birthplace of surrealist artist Salvador Dalí, Figueres honors the legacy of its famous former resident with the Dalí Museum — designed by the artist himself and considered the world’s largest surrealist object.<br />\n<br />\nExplore Dalí’s life and work through the museum’s collection of his dimension-bending paintings and other original artifacts.<br />\n<br />\nRelax on the return drive through the countryside to Barcelona, where the 10-hour tour concludes with drop-off at your original departure point in the evening.<br /><br />\\n<strong>Redeem information</strong><br /><u>Voucher type</u>: Not needed<br />Voucherless. You don’t need to bring any voucher (digital or printed)!<br /><br /><strong>Location</strong><br /><u>Start point:</u> <br />Pick-up available from Hotels in Barcelona. </br> Please ensure you arrive at the meeting point at least 15 minutes before the scheduled departure time. </br> The supplier will contact you with your pick-up instructions 24 hours before the tour.<br /><br /><u>End point</u>: Same as the starting point<br /><br /><strong>Schedule</strong><br /><u>Duration</u>: 10 Hours<br /><br /><strong>Guide options</strong><br />Guide type: Guide<br />Tips type: Included<br /><br /><strong>Requirements</strong><br />Children must be accompanied by an adult. </br> Please make sure you answer all the mandatory questions during the booking process.<br />\\n",
+              "countries": [
+                {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "destinations": "[MaxDepth]"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

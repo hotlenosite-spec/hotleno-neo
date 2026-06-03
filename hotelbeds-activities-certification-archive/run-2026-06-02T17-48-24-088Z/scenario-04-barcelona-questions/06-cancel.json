@@ -1,0 +1,174 @@
+{
+  "scenario": "Test Case 4 - Barcelona required questions",
+  "bookingReference": "102-20736361",
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "status": "cancelled",
+      "bookingReference": "102-20736361",
+      "clientReference": "HA04780422037675",
+      "voucher": {
+        "supplier": "hotelbeds-activities",
+        "bookingReference": "102-20736361",
+        "clientReference": "HA04780422037675",
+        "confirmationDate": "2026-06-02T21:40:38.000Z",
+        "activityName": "Girona and Dali Museum in Figueres Tour with Hotel pick-up (FD)",
+        "dateFrom": "2026-07-07",
+        "dateTo": "2026-07-07",
+        "modalityName": "Private Tour spanish 08:30",
+        "holder": {
+          "name": "TEST",
+          "title": "",
+          "email": "certification-test@hotleno.com",
+          "mailing": false,
+          "surname": "CERTIFICATION",
+          "telephones": [
+            "+966500000000"
+          ]
+        },
+        "paxes": [
+          {
+            "name": "TEST",
+            "mailing": false,
+            "surname": "CERTIFICATION",
+            "customerId": "1",
+            "age": 30,
+            "paxType": "AD",
+            "passport": ""
+          }
+        ],
+        "childrenAges": [],
+        "contractRemarks": [
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date.",
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date."
+        ],
+        "redeemInformation": [
+          "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date."
+        ],
+        "supplierInfo": "HOTELBEDS SPAIN, S.L.U",
+        "cancellationPolicies": [],
+        "officialVouchers": [],
+        "raw": {
+          "operationId": "027d0d234b9fb7c3",
+          "auditData": {
+            "processTime": 1.295,
+            "time": "2026-06-02T19:40:42.046Z",
+            "serverId": "blank",
+            "environment": "blank"
+          },
+          "booking": {
+            "reference": "102-20736361",
+            "status": "CANCELLED",
+            "currency": "EUR",
+            "pendingAmount": 0,
+            "agency": {
+              "code": 99994,
+              "branch": 1,
+              "comments": "",
+              "sucursal": {
+                "name": "HOTELBEDS SPAIN - PRUEBAS",
+                "street": "PEREZ GALDOS 32",
+                "zip": "07006",
+                "city": "PALMA DE MALLORCA",
+                "phone": "971771700",
+                "region": "BALEARES"
+              }
+            },
+            "creationDate": "2026-06-02T21:40:38.000Z",
+            "cancellationDate": "2026-06-02T02:00:00.000Z",
+            "paymentData": {
+              "paymentType": {
+                "code": "C"
+              },
+              "invoicingCompany": {
+                "code": "E14",
+                "name": "HOTELBEDS S.L.U.",
+                "registrationNumber": "ESB57218372"
+              }
+            },
+            "cancelValuationAmount": 0,
+            "extraData": [
+              {
+                "id": "WEBIP",
+                "value": "5.110.180.34, 3.172.64.117, 10.214.142.109, 10.214.131.185"
+              }
+            ],
+            "clientReference": "HA04780422037675",
+            "holder": {
+              "name": "TEST",
+              "title": "",
+              "email": "certification-test@hotleno.com",
+              "mailing": false,
+              "surname": "CERTIFICATION",
+              "telephones": [
+                "+966500000000"
+              ]
+            },
+            "total": 0,
+            "totalNet": 0,
+            "activities": [
+              {
+                "status": "CANCELLED",
+                "supplier": {
+                  "name": "[MaxDepth]",
+                  "vatNumber": "[MaxDepth]"
+                },
+                "comments": [
+                  "[MaxDepth]"
+                ],
+                "type": "TICKET",
+                "activityReference": "102-20736361",
+                "code": "E-E10-A1AANO0485",
+                "name": "Girona and Dali Museum in Figueres Tour with Hotel pick-up (FD)",
+                "modality": {
+                  "code": "[MaxDepth]",
+                  "name": "[MaxDepth]",
+                  "rates": "[MaxDepth]",
+                  "amountUnitType": "[MaxDepth]"
+                },
+                "dateFrom": "2026-07-07",
+                "dateTo": "2026-07-07",
+                "cancellationPolicies": [
+                  "[MaxDepth]"
+                ],
+                "paxes": [
+                  "[MaxDepth]"
+                ],
+                "questions": [
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ],
+                "id": "102#O#1",
+                "agencyCommission": {
+                  "percentage": "[MaxDepth]",
+                  "amount": "[MaxDepth]",
+                  "vatAmount": "[MaxDepth]"
+                },
+                "contactInfo": {
+                  "country": "[MaxDepth]"
+                },
+                "amountDetail": {
+                  "paxAmounts": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]"
+                },
+                "providerInformation": {
+                  "name": "[MaxDepth]"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "debug": {
+      "reason": "activities_cancel_success",
+      "bookingReference": "102-20736361",
+      "status": "cancelled"
+    }
+  }
+}

@@ -1,5 +1,25 @@
 "use client";
 
+export type LocalHotelReviewStatus =
+  | "draft"
+  | "pending_review"
+  | "approved"
+  | "rejected";
+
+export interface LocalHotelPartnerDraft {
+  id: string;
+  companyName: string;
+  legalName: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  country: string;
+  city: string;
+  notes: string;
+  status: LocalHotelReviewStatus;
+  createdAt: string;
+}
+
 export interface LocalHotelProperty {
   id: string;
   name: string;
@@ -14,6 +34,7 @@ export interface LocalHotelProperty {
   checkOutTime: string;
   amenities: string;
   policies: string;
+  status?: LocalHotelReviewStatus;
   createdAt: string;
 }
 
@@ -32,6 +53,22 @@ export interface LocalHotelRoom {
   mealPlan: string;
   cancellationPolicy: string;
   amenities: string;
+  status?: LocalHotelReviewStatus;
+  createdAt: string;
+}
+
+export interface LocalHotelPricing {
+  id: string;
+  propertyId: string;
+  roomId: string;
+  ratePlanName: string;
+  price: string;
+  currency: string;
+  mealPlan: string;
+  cancellationPolicy: string;
+  minNights: string;
+  maxNights: string;
+  status: LocalHotelReviewStatus;
   createdAt: string;
 }
 
@@ -45,13 +82,28 @@ export interface LocalHotelAvailability {
   stopSell: boolean;
   minNights: string;
   maxNights: string;
+  status?: LocalHotelReviewStatus;
+  createdAt: string;
+}
+
+export interface LocalHotelImage {
+  id: string;
+  propertyId: string;
+  roomId: string;
+  imageUrl: string;
+  fileName: string;
+  caption: string;
+  status: LocalHotelReviewStatus;
   createdAt: string;
 }
 
 export const HOTEL_OWNER_LOCAL_KEYS = {
+  registrations: "hotleno.hotelOwner.local.registrations",
   properties: "hotleno.hotelOwner.local.properties",
   rooms: "hotleno.hotelOwner.local.rooms",
+  pricing: "hotleno.hotelOwner.local.pricing",
   availability: "hotleno.hotelOwner.local.availability",
+  images: "hotleno.hotelOwner.local.images",
 };
 
 export function createLocalId(prefix: string) {

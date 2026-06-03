@@ -1,0 +1,283 @@
+{
+  "scenario": "Test Case 4 - Barcelona required questions",
+  "activityCode": "A1AANO0485",
+  "name": "Girona and Dali Museum in Figueres - Tour with Transfers",
+  "modalityCount": 1,
+  "questionCount": 3,
+  "sessionCount": 0,
+  "languages": [
+    "Spanish",
+    "English"
+  ],
+  "requiredQuestions": [
+    {
+      "code": "EMAIL",
+      "text": "Please provide an email address",
+      "required": true
+    },
+    {
+      "code": "HOTEL",
+      "text": "Please provide the name of your hotel",
+      "required": true
+    },
+    {
+      "code": "MOBILE",
+      "text": "Please indicate your mobile number",
+      "required": true
+    }
+  ],
+  "response": {
+    "success": true,
+    "data": {
+      "supplier": "hotelbeds-activities",
+      "enabled": true,
+      "activityCode": "A1AANO0485",
+      "name": "Girona and Dali Museum in Figueres - Tour with Transfers",
+      "description": "Leave the hustle and bustle of Barcelona behind and travel back in time to discover the medieval city of Girona. Walk through the defensive walls of the city to enjoy great bird’s eye views of the surrounding area. Visit the best-preserved Jewish Quarter of Europe and marvel at the Gothic Cathedral, famous for having the world’s widest Gothic nave. Continue to Dali’s hometown, travel to Figueres to visit the Dali Theatre Museum, the largest surrealist object in the world and a present that Dali himself wanted to leave to his city.<br />\n<br />\n<strong>Highlights</strong><br />\n• Marvel at the medieval architecture of Girona, while exploring the city's Jewish Quarter<br />\n• Soak up Girona's unique atmosphere by walking through its winding streets<br />\n• Visit a 19th-century iron bridge designed by Gustave Eiffel<br />\n• Explore Figueres, the artist's birthplace and current home of the Dalí Museum<br />\n• Tour the Dalí Museum in Figueres, dedicated to the city's most famous creative genius<br />\n• Get an inside look at the life of Salvador Dalí during a guided tour of his former residence<br />\n• Learn about the formative experiences that inspired and shaped Dali’s work<br />\n<br />\nAfter morning pickup at your Barcelona accommodation, travel with your guide for about 1 hour to reach the colorful city of Girona. During the drive, learn about Girona’s long and rich history, from its ancient Roman roots through a thriving medieval era and evolution into a hip, modern Spanish city.<br />\n<br />\nWhen you arrive, explore Old Town on a walking tour that takes you through past landmarks like the Girona Cathedral and an iron bridge designed by famous French engineer Gustave Eiffel.<br />\n<br />\nGet a sense of life in medieval Spain while wandering through the city’s labyrinthine Jewish quarter, and rest your feet over a cup of coffee in a charming Old Town cafe. With your expert guide continue your tour to the small town of Figueres, located near the French border. Best known as the birthplace of surrealist artist Salvador Dalí, Figueres honors the legacy of its famous former resident with the Dalí Museum — designed by the artist himself and considered the world’s largest surrealist object.<br />\n<br />\nExplore Dalí’s life and work through the museum’s collection of his dimension-bending paintings and other original artifacts.<br />\n<br />\nRelax on the return drive through the countryside to Barcelona, where the 10-hour tour concludes with drop-off at your original departure point in the evening.",
+      "images": [
+        "https://media.activitiesbank.com/58116/ENG/XL/01%20%2828%29.jpg"
+      ],
+      "destinationName": "Barcelona",
+      "countryName": "Spain",
+      "features": [],
+      "operationDates": [],
+      "modalities": [
+        {
+          "code": "1460286532#PVTOUR",
+          "name": "Private Tour",
+          "rates": [
+            {
+              "rateCode": "STANDARD",
+              "rateClass": "NOR",
+              "freeCancellation": false,
+              "rateDetails": [
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                },
+                {
+                  "rateKey": "[MaxDepth]",
+                  "operationDates": "[MaxDepth]",
+                  "languages": "[MaxDepth]",
+                  "sessions": "[MaxDepth]",
+                  "minimumDuration": "[MaxDepth]",
+                  "maximumDuration": "[MaxDepth]",
+                  "totalAmount": "[MaxDepth]",
+                  "paxAmounts": "[MaxDepth]",
+                  "agencyCommission": "[MaxDepth]"
+                }
+              ]
+            }
+          ],
+          "sessions": [],
+          "languages": [
+            "Spanish",
+            "English"
+          ],
+          "questions": [
+            {
+              "code": "EMAIL",
+              "text": "Please provide an email address",
+              "required": true,
+              "raw": {
+                "code": "EMAIL",
+                "text": "Please provide an email address",
+                "required": true
+              }
+            },
+            {
+              "code": "HOTEL",
+              "text": "Please provide the name of your hotel",
+              "required": true,
+              "raw": {
+                "code": "HOTEL",
+                "text": "Please provide the name of your hotel",
+                "required": true
+              }
+            },
+            {
+              "code": "MOBILE",
+              "text": "Please indicate your mobile number",
+              "required": true,
+              "raw": {
+                "code": "MOBILE",
+                "text": "Please indicate your mobile number",
+                "required": true
+              }
+            }
+          ],
+          "cancellationPolicies": [
+            {
+              "from": "2026-07-06T00:00:00.000Z",
+              "amount": 257.14,
+              "raw": {
+                "dateFrom": "2026-07-06T00:00:00.000Z",
+                "amount": 257.14
+              }
+            },
+            {
+              "from": "2026-07-06T00:00:00.000Z",
+              "amount": 257.14,
+              "raw": {
+                "dateFrom": "2026-07-06T00:00:00.000Z",
+                "amount": 257.14
+              }
+            }
+          ],
+          "price": {
+            "amount": 0,
+            "currency": ""
+          },
+          "raw": {
+            "code": "1460286532#PVTOUR",
+            "name": "Private Tour",
+            "duration": {
+              "value": 1,
+              "metric": "DAYS"
+            },
+            "questions": [
+              {
+                "code": "EMAIL",
+                "text": "Please provide an email address",
+                "required": true
+              },
+              {
+                "code": "HOTEL",
+                "text": "Please provide the name of your hotel",
+                "required": true
+              },
+              {
+                "code": "MOBILE",
+                "text": "Please indicate your mobile number",
+                "required": true
+              }
+            ],
+            "comments": [
+              {
+                "type": "CONTRACT_REMARKS",
+                "text": "Meeting point: Hotel pick-up // Meeting point instructions: Please ensure you arrive at the meeting point at least 15 minutes prior to the pick up time // Start/Opening time: 8:30am // End/Closing time: 6:30pm // End point: Same as the starting point // Duration: 10 hours // Inclusions: Private or small group Tour. Tickets to Dali Theatre - Museum. Bilingual Guide. Walking tour of Girona Old Town. Walking tour of Figueres. Hotel or apartment pickup and drop-off (in Barcelona city). Transport by private vehicle //Exclusions: Food or beverages // Mandatory instructions: Children must be accompanied by an adult. You will receive your specific pickup time confirmation 2 days prior to the tour date. Please ensure you have answered the mandatory questions during the booking process to ensure the correct provision of the service // Supplier name: In Out Barcelona Tours // Supplier emergency phone: +34 676 707 000 // Voucher type: Voucherless. You don’t need to bring any voucher (digital or printed)! // Voucher validity: Service date."
+              }
+            ],
+            "supplierInformation": {
+              "name": "HOTELBEDS SPAIN, S.L.U",
+              "vatNumber": "ESB28916765"
+            },
+            "providerInformation": {
+              "name": "INSIDETRAVEL BARCELONA S.L."
+            },
+            "destinationCode": "BCN",
+            "contract": {
+              "incomingOffice": 102,
+              "code": 16585,
+              "name": "BCNOT02PR Y25/6"
+            },
+            "languages": [],
+            "amountsFrom": [
+              {
+                "paxType": "CHILD",
+                "ageFrom": 0,
+                "ageTo": 11,
+                "amount": 0,
+                "boxOfficeAmount": 0,
+                "mandatoryApplyAmount": true
+              },
+              {
+                "paxType": "ADULT",
+                "ageFrom": 12,
+                "ageTo": 999,
+                "amount": 257.14,
+                "boxOfficeAmount": 291,
+                "mandatoryApplyAmount": true
+              }
+            ],
+            "rates": [
+              {
+                "rateCode": "STANDARD",
+                "rateClass": "NOR",
+                "freeCancellation": false,
+                "rateDetails": [
+                  "[MaxDepth]",
+                  "[MaxDepth]"
+                ]
+              }
+            ],
+            "amountUnitType": "PAX",
+            "uniqueIdentifier": "1460286532"
+          }
+        }
+      ],
+      "totalAmount": 0,
+      "currency": "EUR",
+      "cancellationPolicies": [
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 257.14,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 257.14
+          }
+        },
+        {
+          "from": "2026-07-06T00:00:00.000Z",
+          "amount": 257.14,
+          "raw": {
+            "dateFrom": "2026-07-06T00:00:00.000Z",
+            "amount": 257.14
+          }
+        }
+      ],
+      "questions": [
+        {
+          "code": "EMAIL",
+          "text": "Please provide an email address",
+          "required": true,
+          "raw": {
+            "code": "EMAIL",
+            "text": "Please provide an email address",
+            "required": true
+          }
+        },
+        {
+          "code": "HOTEL",
+          "text": "Please provide the name of your hotel",
+          "required": true,
+          "raw": {
+            "code": "HOTEL",
+            "text": "Please provide the name of your hotel",
+            "required": true
+          }
+        },
+        {
+          "code": "MOBILE",
+          "text": "Please indicate your mobile number",
+          "required": true,
+          "raw": {
+            "code": "MOBILE",
+            "text": "Please indicate your mobile number",
+            "required": true
+          }
+        }
+      ],
+      "sessions": [],
+      "languages": [
+        "Spanish",
+        "English"
+      ],
+      "contractRemarks": [],
+      "routes": []
+    },
+    "debug": {
+      "reason": "activities_details_success",
+      "activityCode": "A1AANO0485",
+      "modalityCount": 1,
+      "questionCount": 3
+    }
+  }
+}

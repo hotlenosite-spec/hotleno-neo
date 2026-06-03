@@ -1,20 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import dbConnect from "@/lib/mongodb";
 import { checkRateLimit } from "@/lib/rate-limit";
+import {
+  normalizeSupplierHotels,
+  toLegacyHotelResult,
+} from "@/lib/hotels/normalize-hotels";
 import {
   createSupplierProvider,
   getConfiguredSupplierProvider,
   type SupplierGuestOccupancy,
-  type SupplierHotelResult,
   type SupplierProvider,
   type SupplierProviderName,
+  type SupplierSearchHotelsRequest,
+  type SupplierSearchHotelsResponse,
 } from "@/lib/suppliers";
-import type {
-  HotelSearchResponse,
-  HotelSearchResult,
-  HotelOption,
-} from "@/types/travellanda";
+import { enrichHotelbedsHotelsWithContent } from "@/lib/suppliers/hotelbeds-content-enrichment";
+import {
+  getStoredHotelCodesForCountry,
+  getStoredHotelCodesForZone,
+} from "@/lib/suppliers/hotelbeds-content-store";
+import SupplierLog from "@/models/SupplierLog";
+import type { HotelSearchResponse } from "@/types/travellanda";
 
 export const runtime = "nodejs";
+const DEFAULT_SUPPLIER_SEARCH_TIMEOUT_MS = 8000;
 
 const SUPPLIER_NAMES: SupplierProviderName[] = [
   "mock",
@@ -27,7 +36,19 @@ function isSupplierProviderName(value: string): value is SupplierProviderName {
   return SUPPLIER_NAMES.includes(value as SupplierProviderName);
 }
 
-function getSearchProviders(): SupplierProvider[] {
+function getSearchProviders(providerOverride?: string): SupplierProvider[] {
+  if (providerOverride) {
+    if (!isSupplierProviderName(providerOverride)) {
+      throw new Error(`Unsupported supplier provider: ${providerOverride}`);
+    }
+
+    if (providerOverride === "mock" && process.env.NODE_ENV === "production") {
+      throw new Error("Mock supplier provider cannot be used in production");
+    }
+
+    return [createSupplierProvider(providerOverride)];
+  }
+
   const configuredProviders = process.env.SUPPLIER_PROVIDERS;
 
   if (!configuredProviders) {
@@ -91,58 +112,99 @@ function toSupplierRooms(rooms: unknown): SupplierGuestOccupancy[] {
   });
 }
 
-function stableNumericId(value: string) {
-  let hash = 0;
+function getSupplierSearchTimeoutMs() {
+  const configuredTimeout = Number(process.env.SUPPLIER_SEARCH_TIMEOUT_MS);
 
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) % 900000;
-  }
-
-  return 100000 + hash;
+  return Number.isFinite(configuredTimeout) && configuredTimeout > 0
+    ? configuredTimeout
+    : DEFAULT_SUPPLIER_SEARCH_TIMEOUT_MS;
 }
 
-function toLegacyHotelResult(hotel: SupplierHotelResult): HotelSearchResult {
-  const hotelId =
-    typeof hotel.metadata?.legacyHotelId === "number"
-      ? hotel.metadata.legacyHotelId
-      : stableNumericId(`${hotel.supplier}:${hotel.supplierHotelId}`);
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Unknown supplier search error";
+}
 
-  const options: HotelOption[] = hotel.rates.map((rate, index) => ({
-    OptionId: stableNumericId(`${hotel.supplier}:${rate.rateKey}:${index}`),
-    OnRequest: 0,
-    BoardType: rate.boardName || "Room Only",
-    BoardName: rate.boardName,
-    RoomType: rate.roomName,
-    RoomName: rate.roomName,
-    Rooms: [
-      {
-        RoomId: index + 1,
-        RoomName: rate.roomName,
-        NumAdults: 2,
-        NumChildren: 0,
-        RoomPrice: rate.price,
+function createTimeoutError(providerName: string, timeoutMs: number) {
+  return new Error(
+    `Supplier ${providerName} search timed out after ${timeoutMs}ms`,
+  );
+}
+
+async function logSupplierSearch(params: {
+  supplier: string;
+  status: "success" | "failed" | "timeout" | "skipped";
+  message: string;
+  request?: unknown;
+  response?: unknown;
+  error?: unknown;
+}) {
+  try {
+    await dbConnect();
+    await SupplierLog.create({
+      supplier: params.supplier,
+      type: "supplier_hotel_search",
+      status: params.status,
+      message: params.message,
+      request: params.request ?? null,
+      response: params.response ?? null,
+      error: params.error ?? null,
+    });
+  } catch {
+    // Search results must not depend on logging availability.
+  }
+}
+
+async function searchProviderSafely({
+  provider,
+  request,
+  timeoutMs,
+}: {
+  provider: SupplierProvider;
+  request: SupplierSearchHotelsRequest;
+  timeoutMs: number;
+}): Promise<SupplierSearchHotelsResponse | null> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    const response = await Promise.race([
+      provider.searchHotels(request),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(createTimeoutError(provider.name, timeoutMs)),
+          timeoutMs,
+        );
+      }),
+    ]);
+
+    await logSupplierSearch({
+      supplier: provider.name,
+      status: "success",
+      message: `Supplier ${provider.name} search completed`,
+      request,
+      response: {
+        hotelCount: response.hotels.length,
+        supplier: response.supplier,
       },
-    ],
-    Adults: 2,
-    Children: 0,
-    Price: rate.price,
-    TotalPrice: rate.price,
-    Taxes: 0,
-    Currency: rate.currency,
-    IsNonRefundable: !rate.refundable,
-  }));
+    });
 
-  return {
-    HotelId: hotelId,
-    HotelName: hotel.hotelName,
-    StarRating: hotel.stars ?? 0,
-    Address: hotel.address ?? "",
-    CityName: hotel.cityName ?? "",
-    CountryName: hotel.countryName ?? "",
-    Images: [],
-    Facilities: [],
-    Options: options,
-  };
+    return response;
+  } catch (error) {
+    const isTimeout = getErrorMessage(error).includes("timed out after");
+
+    await logSupplierSearch({
+      supplier: provider.name,
+      status: isTimeout ? "timeout" : "failed",
+      message: getErrorMessage(error),
+      request,
+      error: {
+        message: getErrorMessage(error),
+      },
+    });
+
+    return null;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -160,7 +222,24 @@ export async function POST(req: NextRequest) {
     const checkOut = body.checkOutDate ?? body.CheckOutDate ?? body.checkOut;
     const currency = body.currency ?? body.Currency ?? "USD";
     const rooms = toSupplierRooms(body.rooms ?? body.Rooms);
-    const providers = getSearchProviders();
+    const providers = getSearchProviders(body.provider ?? body.supplierProvider);
+    const timeoutMs = getSupplierSearchTimeoutMs();
+    const explicitHotelIds = [
+      ...(body.hotelCode ? [body.hotelCode] : []),
+      ...(Array.isArray(body.hotelIds) ? body.hotelIds : []),
+      ...(Array.isArray(body.HotelIds) ? body.HotelIds : []),
+    ]
+      .map(String)
+      .filter(Boolean);
+    const storedHotelIds =
+      explicitHotelIds.length > 0 || body.destinationCode
+        ? []
+        : body.zoneCode
+          ? await getStoredHotelCodesForZone(String(body.zoneCode))
+          : body.countryCode
+            ? await getStoredHotelCodesForCountry(String(body.countryCode))
+            : [];
+    const hotelIds = explicitHotelIds.length > 0 ? explicitHotelIds : storedHotelIds;
 
     if (!checkIn || !checkOut) {
       return NextResponse.json(
@@ -169,31 +248,72 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const supplierResponses = await Promise.all(
-      providers.map((provider) =>
-        provider.searchHotels({
-          destinationCode:
-            body.destinationCode ??
-            body.cityId?.toString() ??
-            body.CityIds?.[0]?.toString(),
-          cityName: body.cityName,
-          countryCode: body.countryCode,
-          checkIn,
-          checkOut,
-          rooms,
-          nationality: body.nationality ?? body.Nationality,
-          currency,
-          metadata: {
-            cityId: body.cityId ?? body.CityIds?.[0],
-            hotelIds: body.hotelIds ?? body.HotelIds,
-          },
-        }),
-      ),
+    if (providers.length === 0) {
+      await logSupplierSearch({
+        supplier: "none",
+        status: "skipped",
+        message: "Hotel search skipped because no supplier providers are configured",
+      });
+    }
+
+    const supplierRequest: SupplierSearchHotelsRequest = {
+      destinationCode:
+        body.destinationCode ??
+        body.hotelbedsDestinationCode ??
+        undefined,
+      cityName: body.cityName ?? body.destination,
+      countryCode: body.countryCode,
+      checkIn,
+      checkOut,
+      rooms,
+      nationality: body.nationality ?? body.Nationality,
+      currency,
+      metadata: {
+        cityId: body.cityId ?? body.CityIds?.[0],
+        hotelIds,
+        hotelCode: body.hotelCode,
+        countryCode: body.countryCode,
+        zoneCode: body.zoneCode,
+      },
+    };
+
+    if (
+      providers.some((provider) => provider.name === "hotelbeds") &&
+      !supplierRequest.destinationCode &&
+      hotelIds.length === 0
+    ) {
+      return NextResponse.json({
+        ServerTime: new Date().toISOString(),
+        ServerType: "hotleno-supplier-layer",
+        ExecutionTime: "0",
+        ResponseType: "HotelSearch",
+        Currency: currency,
+        CheckInDate: checkIn,
+        CheckOutDate: checkOut,
+        HotelsReturned: 0,
+        Hotels: [],
+      } satisfies HotelSearchResponse);
+    }
+
+    const supplierResponses = (
+      await Promise.all(
+        providers.map((provider) =>
+          searchProviderSafely({
+            provider,
+            request: supplierRequest,
+            timeoutMs,
+          }),
+        ),
+      )
+    ).filter(
+      (response): response is SupplierSearchHotelsResponse => Boolean(response),
     );
 
-    const hotels = supplierResponses.flatMap((response) =>
-      response.hotels.map(toLegacyHotelResult),
+    const enrichedSupplierHotels = await enrichHotelbedsHotelsWithContent(
+      supplierResponses.flatMap((response) => response.hotels),
     );
+    const unifiedHotels = normalizeSupplierHotels(enrichedSupplierHotels, currency);
+    const hotels = unifiedHotels.map(toLegacyHotelResult);
 
     const response: HotelSearchResponse = {
       ServerTime: new Date().toISOString(),

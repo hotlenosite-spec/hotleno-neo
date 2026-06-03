@@ -38,7 +38,7 @@ interface HotelDetailsData {
   Address?: string;
   CityName?: string;
   CountryName?: string;
-  Images?: Array<{ Url: string }>;
+  Images?: Array<{ Url: string; Description?: string }>;
   Facilities?: string[];
   Description?: string;
   Phone?: string;
@@ -87,6 +87,7 @@ interface HotelDetailsData {
               CountryName: parsedHotel.CountryName,
               Images: parsedHotel.Images || [],
               Facilities: parsedHotel.Facilities || [],
+              Description: parsedHotel.Description,
             });
             setLoading(false);
             return;
@@ -280,7 +281,7 @@ interface HotelDetailsData {
     CityName: hotel.CityName || hotelDetails?.CityName,
     Images: validImages,
     Facilities: hotelDetails?.Facilities || hotel.Facilities || [],
-    Description: hotelDetails?.Description || 'No description available.',
+    Description: hotelDetails?.Description || hotel.Description || 'No description available.',
   };
 
   return (

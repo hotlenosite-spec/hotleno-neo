@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { DestinationSearch } from "./destination-search";
 import { GuestSelector } from "./guest-selector";
 import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Select,
   SelectContent,
@@ -29,6 +37,7 @@ import {
   Search01Icon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
+import type { HotelbedsSearchSuggestion } from "@/types/hotelbeds-content";
 
 const NATIONALITIES = [
   { code: "US", name: "United States" },
@@ -44,11 +53,238 @@ const CURRENCIES = [
   { code: "GBP", name: "British Pound" },
 ];
 
-interface DestinationValue {
-  CountryCode?: string;
-  CountryName?: string;
-  CityId?: number;
-  CityName?: string;
+type UnknownRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function getString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getNumberAsString(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return getString(value);
+}
+
+function getNestedRecord(source: UnknownRecord, key: string): UnknownRecord | null {
+  const value = source[key];
+  return isRecord(value) ? value : null;
+}
+
+function buildSuggestionLabel(record: UnknownRecord): string {
+  const name =
+    getString(record.label) ||
+    getString(record.name) ||
+    getString(record.description) ||
+    getString(record.destinationName) ||
+    getString(record.countryName) ||
+    getString(record.zoneName) ||
+    getString(record.hotelName) ||
+    getString(record.contentName);
+
+  const code =
+    getNumberAsString(record.code) ||
+    getString(record.destinationCode) ||
+    getString(record.countryCode) ||
+    getString(record.zoneCode) ||
+    getString(record.hotelCode);
+
+  return name || code;
+}
+
+function inferSuggestionType(record: UnknownRecord): HotelbedsSearchSuggestion["type"] {
+  const rawType = getString(record.type).toLowerCase();
+
+  if (rawType === "hotel") return "hotel";
+  if (rawType === "country") return "country";
+  if (rawType === "zone") return "zone";
+  if (rawType === "destination" || rawType === "city") return "destination";
+
+  if (record.hotelCode || record.hotel || record.hotelName) return "hotel";
+  if (record.zoneCode || record.zoneName) return "zone";
+  if (record.countryCode || record.countryName) return "country";
+
+  return "destination";
+}
+
+function normalizeSuggestion(item: unknown): HotelbedsSearchSuggestion | null {
+  if (!isRecord(item)) return null;
+
+  const hotel = getNestedRecord(item, "hotel");
+  const destination = getNestedRecord(item, "destination");
+  const country = getNestedRecord(item, "country");
+  const zone = getNestedRecord(item, "zone");
+
+  const merged: UnknownRecord = {
+    ...item,
+    ...(hotel || {}),
+    ...(destination || {}),
+    ...(country || {}),
+    ...(zone || {}),
+  };
+
+  const label = buildSuggestionLabel(merged);
+
+  if (!label) return null;
+
+  const type = inferSuggestionType(merged);
+
+  const hotelCode =
+    getNumberAsString(merged.hotelCode) ||
+    (type === "hotel" ? getNumberAsString(merged.code) : undefined);
+
+  const destinationCode =
+    getString(merged.destinationCode) ||
+    getString(merged.destination) ||
+    (type === "destination" ? getString(merged.code) : undefined);
+
+  const countryCode =
+    getString(merged.countryCode) ||
+    (type === "country" ? getString(merged.code) : undefined);
+
+  const zoneCode =
+    getNumberAsString(merged.zoneCode) ||
+    (type === "zone" ? getNumberAsString(merged.code) : undefined);
+
+  const suggestionValue =
+    getString(merged.value) ||
+    hotelCode ||
+    destinationCode ||
+    countryCode ||
+    zoneCode ||
+    label;
+
+  return {
+    type,
+    label,
+    value: suggestionValue,
+    hotelCode,
+    destinationCode,
+    countryCode,
+    zoneCode,
+  };
+}
+
+function uniqueSuggestions(
+  suggestions: HotelbedsSearchSuggestion[],
+): HotelbedsSearchSuggestion[] {
+  const seen = new Set<string>();
+  const unique: HotelbedsSearchSuggestion[] = [];
+
+  for (const suggestion of suggestions) {
+    const key = [
+      suggestion.type,
+      suggestion.value,
+      suggestion.label.toLowerCase(),
+      suggestion.hotelCode || "",
+      suggestion.destinationCode || "",
+      suggestion.countryCode || "",
+      suggestion.zoneCode || "",
+    ].join(":");
+
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    unique.push(suggestion);
+  }
+
+  return unique;
+}
+
+function getSuggestionPriority(type: HotelbedsSearchSuggestion["type"]) {
+  if (type === "destination") return 1;
+  if (type === "zone") return 2;
+  if (type === "country") return 3;
+  if (type === "hotel") return 4;
+  return 5;
+}
+
+function sortSuggestions(
+  suggestions: HotelbedsSearchSuggestion[],
+): HotelbedsSearchSuggestion[] {
+  return [...suggestions].sort((a, b) => {
+    const priority = getSuggestionPriority(a.type) - getSuggestionPriority(b.type);
+
+    if (priority !== 0) return priority;
+
+    return a.label.localeCompare(b.label);
+  });
+}
+
+function extractSuggestions(payload: unknown): HotelbedsSearchSuggestion[] {
+  if (!isRecord(payload)) return [];
+
+  const data = isRecord(payload.data) ? payload.data : null;
+
+  const possibleArrays = [
+    payload.suggestions,
+    data?.suggestions,
+    payload.locations,
+    data?.locations,
+    payload.results,
+    data?.results,
+    payload.items,
+    data?.items,
+    payload.destinations,
+    data?.destinations,
+    payload.hotels,
+    data?.hotels,
+    payload.countries,
+    data?.countries,
+    payload.zones,
+    data?.zones,
+  ];
+
+  const normalized = possibleArrays
+    .flatMap((value) => asArray(value))
+    .map(normalizeSuggestion)
+    .filter((item): item is HotelbedsSearchSuggestion => Boolean(item));
+
+  return sortSuggestions(uniqueSuggestions(normalized));
+}
+
+async function fetchHotelbedsSuggestions(
+  term: string,
+  signal: AbortSignal,
+): Promise<HotelbedsSearchSuggestion[]> {
+  const endpoint = `/api/integrations/hotelbeds/content/search?query=${encodeURIComponent(
+    term,
+  )}&limit=20`;
+
+  try {
+    const response = await fetch(endpoint, { signal });
+    const payload = (await response.json().catch(() => null)) as unknown;
+
+    if (!response.ok) {
+      const message =
+        isRecord(payload) && getString(payload.error)
+          ? getString(payload.error)
+          : `HTTP ${response.status}`;
+
+      console.warn("Hotelbeds destination autocomplete failed:", message);
+      return [];
+    }
+
+    return extractSuggestions(payload);
+  } catch (error) {
+    if (signal.aborted) throw error;
+
+    console.warn(
+      "Hotelbeds destination autocomplete request failed:",
+      error instanceof Error ? error.message : "Unknown request error",
+    );
+
+    return [];
+  }
 }
 
 export default function SearchForm() {
@@ -58,13 +294,8 @@ export default function SearchForm() {
   const t = useTranslations();
   const isAr = lang === "ar";
 
-  const [destination, setDestination] = useState<{
-    type: "country" | "city";
-    code: string;
-    id?: number;
-    name: string;
-    countryName?: string;
-  } | null>(null);
+  const [destination, setDestination] =
+    useState<HotelbedsSearchSuggestion | null>(null);
 
   const [dates, setDates] = useState({
     checkIn: new Date(),
@@ -86,33 +317,15 @@ export default function SearchForm() {
     hotels: isAr ? "الفنادق" : "Hotels",
     flights: isAr ? "الطيران" : "Flights",
     services: isAr ? "الخدمات" : "Services",
-    destination: isAr ? "وجهتك" : "Destination",
+    destination: isAr ? "إلى أين تريد السفر؟" : "Where do you want to go?",
+    destinationPlaceholder: isAr
+      ? "اكتب المدينة أو الدولة أو اسم الفندق"
+      : "Type a city, country, or hotel name",
     checkIn: isAr ? "تاريخ الدخول" : "Check-in",
     checkOut: isAr ? "تاريخ المغادرة" : "Check-out",
     guests: isAr ? "الغرف والنزلاء" : "Rooms and guests",
     search: isAr ? "ابحث الآن" : "Search now",
     cancellation: isAr ? "إلغاء مجاني" : "Free cancellation",
-  };
-
-  const handleDestinationSelect = (
-    type: "country" | "city",
-    value: DestinationValue,
-  ) => {
-    if (type === "country") {
-      setDestination({
-        type: "country",
-        code: value.CountryCode || "",
-        name: value.CountryName || "",
-      });
-    } else {
-      setDestination({
-        type: "city",
-        code: value.CountryCode || destination?.code || "",
-        id: value.CityId,
-        name: value.CityName || "",
-        countryName: value.CountryName,
-      });
-    }
   };
 
   const handleSearch = async () => {
@@ -133,7 +346,27 @@ export default function SearchForm() {
       };
 
       localStorage.setItem("hotelSearch", JSON.stringify(searchParams));
-      router.push(`/${lang}/results`);
+
+      const query = new URLSearchParams({
+        destination: destination.label,
+        type: destination.type,
+        checkIn: format(dates.checkIn, "yyyy-MM-dd"),
+        checkOut: format(dates.checkOut, "yyyy-MM-dd"),
+        adults: String(guests.adults),
+        children: String(guests.children),
+        rooms: String(guests.rooms),
+        nationality,
+        currency,
+      });
+
+      if (destination.hotelCode) query.set("hotelCode", destination.hotelCode);
+      if (destination.destinationCode) {
+        query.set("destinationCode", destination.destinationCode);
+      }
+      if (destination.countryCode) query.set("countryCode", destination.countryCode);
+      if (destination.zoneCode) query.set("zoneCode", destination.zoneCode);
+
+      router.push(`/${lang}/search?${query.toString()}`);
     } catch (error) {
       console.error("Search error:", error);
     } finally {
@@ -162,16 +395,12 @@ export default function SearchForm() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(260px,1.35fr)_1fr_1fr_minmax(230px,1fr)_180px]">
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(300px,1.65fr)_1fr_1fr_minmax(230px,1fr)_180px]">
         <SearchField label={copy.destination}>
-          <DestinationSearch
-            selectedCountry={destination?.code}
-            selectedCity={destination?.id}
-            selectedCountryName={
-              destination?.countryName ||
-              (destination?.type === "country" ? destination.name : undefined)
-            }
-            onSelect={handleDestinationSelect}
+          <HotelbedsDestinationAutocomplete
+            value={destination}
+            placeholder={copy.destinationPlaceholder}
+            onChange={setDestination}
           />
         </SearchField>
 
@@ -251,6 +480,174 @@ export default function SearchForm() {
   );
 }
 
+function getSuggestionTypeLabel(type: HotelbedsSearchSuggestion["type"]) {
+  const labels = {
+    hotel: "فندق",
+    destination: "وجهة",
+    country: "دولة",
+    zone: "منطقة",
+  };
+
+  return labels[type];
+}
+
+function HotelbedsDestinationAutocomplete({
+  value,
+  placeholder,
+  onChange,
+}: {
+  value: HotelbedsSearchSuggestion | null;
+  placeholder: string;
+  onChange: (value: HotelbedsSearchSuggestion | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value?.label || "");
+  const [loading, setLoading] = useState(false);
+  const [searchCompleted, setSearchCompleted] = useState(false);
+  const [error, setError] = useState("");
+  const [suggestions, setSuggestions] = useState<HotelbedsSearchSuggestion[]>([]);
+
+  const selectedLabel = useMemo(() => value?.label || "", [value?.label]);
+
+  useEffect(() => {
+    if (query.trim() === selectedLabel) return;
+    onChange(null);
+  }, [onChange, query, selectedLabel]);
+
+  useEffect(() => {
+    const term = query.trim();
+
+    if (term.length < 2) {
+      setSuggestions([]);
+      setLoading(false);
+      setSearchCompleted(false);
+      setError("");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      setLoading(true);
+      setSearchCompleted(false);
+      setError("");
+
+      try {
+        const nextSuggestions = await fetchHotelbedsSuggestions(
+          term,
+          controller.signal,
+        );
+
+        if (controller.signal.aborted) return;
+
+        setSuggestions(nextSuggestions);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setSuggestions([]);
+          setError(err instanceof Error ? err.message : "فشل جلب الوجهات");
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setSearchCompleted(true);
+        }
+      }
+    }, 500);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [query]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setOpen(true)}
+          className="h-11 w-full justify-start rounded-xl bg-transparent px-1 text-base font-black text-[#0F172A] hover:bg-transparent"
+        >
+          <span className={cn("truncate", !value && "text-muted-foreground")}>
+            {value?.label || placeholder}
+          </span>
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        className="w-[min(520px,calc(100vw-2rem))] rounded-2xl border-[#E5E7EB] p-0 shadow-xl"
+        align="start"
+      >
+        <Command shouldFilter={false}>
+          <CommandInput
+            value={query}
+            onValueChange={(nextValue) => {
+              setQuery(nextValue);
+              setOpen(true);
+            }}
+            placeholder={placeholder}
+          />
+          <CommandList>
+            {loading && (
+              <div className="px-4 py-3 text-sm text-muted-foreground">
+                جاري جلب الاقتراحات...
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="px-4 py-3 text-sm text-red-600">{error}</div>
+            )}
+
+            {!loading &&
+              !error &&
+              searchCompleted &&
+              query.trim().length >= 2 &&
+              suggestions.length === 0 && (
+                <CommandEmpty>لا توجد نتائج مطابقة</CommandEmpty>
+              )}
+
+            {suggestions.length > 0 && (
+              <CommandGroup heading="نتائج Hotelbeds">
+                {suggestions.map((suggestion) => (
+                  <CommandItem
+                    key={[
+                      suggestion.type,
+                      suggestion.value,
+                      suggestion.hotelCode,
+                      suggestion.destinationCode,
+                      suggestion.countryCode,
+                      suggestion.zoneCode,
+                      suggestion.label,
+                    ]
+                      .filter(Boolean)
+                      .join(":")}
+                    value={suggestion.value}
+                    onSelect={() => {
+                      onChange(suggestion);
+                      setQuery(suggestion.label);
+                      setOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex w-full items-center justify-between gap-3">
+                      <span className="truncate font-semibold">
+                        {suggestion.label}
+                      </span>
+                      <span className="shrink-0 rounded-full bg-orange-50 px-2 py-1 text-xs font-bold text-[#F97316]">
+                        {getSuggestionTypeLabel(suggestion.type)}
+                      </span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function TabButton({
   active,
   icon,
@@ -281,7 +678,7 @@ function SearchField({
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-3">

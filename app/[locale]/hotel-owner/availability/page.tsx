@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   HOTEL_OWNER_LOCAL_KEYS,
   LocalHotelAvailability,
+  LocalHotelReviewStatus,
   LocalHotelRoom,
   createLocalId,
   readLocalItems,
@@ -25,6 +26,7 @@ const emptyAvailability = {
   stopSell: true,
   minNights: "1",
   maxNights: "",
+  status: "draft" as LocalHotelReviewStatus,
 };
 
 export default function HotelOwnerAvailabilityPage() {
@@ -65,32 +67,32 @@ export default function HotelOwnerAvailabilityPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold">Availability</h2>
+        <h2 className="text-3xl font-bold">التوفر</h2>
         <p className="text-muted-foreground">
-          Add local room availability and prices without connecting search or booking.
+          أضف توفر الغرف وأسعارها محليًا بدون ربط البحث أو الحجز.
         </p>
       </div>
 
       <Card className="border-dashed">
         <CardContent className="flex flex-wrap items-center gap-3 p-4 text-sm text-muted-foreground">
-          <Badge variant="secondary">Local only</Badge>
-          <span>No availability or price here is applied to customer search or checkout.</span>
+          <Badge variant="secondary">محلي فقط</Badge>
+          <span>لا يتم تطبيق أي توفر أو سعر هنا على بحث العملاء أو الدفع.</span>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Add Availability and Rate</CardTitle>
+          <CardTitle>إضافة توفر وسعر</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Field label="Room">
+            <Field label="الغرفة">
               <select
                 value={form.roomId}
                 onChange={(event) => updateField("roomId", event.target.value)}
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">No room selected</option>
+                <option value="">لم يتم اختيار غرفة</option>
                 {rooms.map((room) => (
                   <option key={room.id} value={room.id}>
                     {room.name}
@@ -98,14 +100,14 @@ export default function HotelOwnerAvailabilityPage() {
                 ))}
               </select>
             </Field>
-            <Field label="Date">
+            <Field label="التاريخ">
               <Input
                 type="date"
                 value={form.date}
                 onChange={(event) => updateField("date", event.target.value)}
               />
             </Field>
-            <Field label="Available rooms">
+            <Field label="الغرف المتاحة">
               <Input
                 type="number"
                 min="0"
@@ -113,7 +115,7 @@ export default function HotelOwnerAvailabilityPage() {
                 onChange={(event) => updateField("availableRooms", event.target.value)}
               />
             </Field>
-            <Field label="Price">
+            <Field label="السعر">
               <Input
                 type="number"
                 min="0"
@@ -121,14 +123,14 @@ export default function HotelOwnerAvailabilityPage() {
                 onChange={(event) => updateField("price", event.target.value)}
               />
             </Field>
-            <Field label="Currency">
+            <Field label="العملة">
               <Input
                 value={form.currency}
                 onChange={(event) => updateField("currency", event.target.value.toUpperCase())}
                 maxLength={3}
               />
             </Field>
-            <Field label="Min nights">
+            <Field label="الحد الأدنى لليالي">
               <Input
                 type="number"
                 min="1"
@@ -136,7 +138,7 @@ export default function HotelOwnerAvailabilityPage() {
                 onChange={(event) => updateField("minNights", event.target.value)}
               />
             </Field>
-            <Field label="Max nights">
+            <Field label="الحد الأقصى لليالي">
               <Input
                 type="number"
                 min="0"
@@ -145,19 +147,36 @@ export default function HotelOwnerAvailabilityPage() {
               />
             </Field>
             <div className="space-y-2">
-              <Label>Stop sell</Label>
+              <Label>إيقاف البيع</Label>
               <div className="flex h-10 items-center gap-3">
                 <Switch
                   checked={form.stopSell}
                   onCheckedChange={(checked) => updateField("stopSell", checked)}
                 />
                 <span className="text-sm text-muted-foreground">
-                  {form.stopSell ? "Closed" : "Open locally"}
+                  {form.stopSell ? "مغلق" : "مفتوح محليًا"}
                 </span>
               </div>
             </div>
+            <Field label="الحالة">
+              <select
+                value={form.status}
+                onChange={(event) =>
+                  updateField(
+                    "status",
+                    event.target.value as LocalHotelReviewStatus,
+                  )
+                }
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="draft">مسودة</option>
+                <option value="pending_review">بانتظار المراجعة</option>
+                <option value="approved">معتمد محليًا</option>
+                <option value="rejected">مرفوض محليًا</option>
+              </select>
+            </Field>
             <div className="lg:col-span-4">
-              <Button type="submit">Save local availability</Button>
+              <Button type="submit">حفظ التوفر محليًا</Button>
             </div>
           </form>
         </CardContent>
@@ -166,10 +185,10 @@ export default function HotelOwnerAvailabilityPage() {
       {items.length === 0 ? (
         <Card>
           <CardContent className="space-y-3 p-8 text-center">
-            <Badge variant="secondary">Empty state</Badge>
-            <h3 className="text-xl font-semibold">No local availability yet</h3>
+            <Badge variant="secondary">حالة فارغة</Badge>
+            <h3 className="text-xl font-semibold">لا يوجد توفر محلي بعد</h3>
             <p className="text-sm text-muted-foreground">
-              Add a local date entry to test the calendar workflow.
+              أضف تاريخًا محليًا لاختبار مسار التقويم.
             </p>
           </CardContent>
         </Card>
@@ -182,17 +201,17 @@ export default function HotelOwnerAvailabilityPage() {
                 <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-semibold">{room?.name || "Unassigned room"}</h3>
-                      <Badge variant="outline">Local only</Badge>
-                      {item.stopSell && <Badge variant="secondary">Stop sell</Badge>}
+                      <h3 className="font-semibold">{room?.name || "غرفة غير مخصصة"}</h3>
+                      <Badge variant="outline">{formatStatus(item.status)}</Badge>
+                      {item.stopSell && <Badge variant="secondary">إيقاف البيع</Badge>}
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      {item.date || "No date"} | {item.availableRooms || "0"} rooms |{" "}
+                      {item.date || "لا يوجد تاريخ"} | {item.availableRooms || "0"} غرفة |{" "}
                       {item.price || "0"} {item.currency}
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Not connected to booking
+                    غير متصل بالحجز
                   </p>
                 </CardContent>
               </Card>
@@ -202,6 +221,13 @@ export default function HotelOwnerAvailabilityPage() {
       )}
     </div>
   );
+}
+
+function formatStatus(status?: LocalHotelReviewStatus) {
+  if (status === "pending_review") return "بانتظار المراجعة";
+  if (status === "approved") return "معتمد محليًا";
+  if (status === "rejected") return "مرفوض محليًا";
+  return "مسودة";
 }
 
 function Field({

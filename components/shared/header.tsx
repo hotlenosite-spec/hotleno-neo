@@ -38,6 +38,7 @@ export const HeroHeader = () => {
     { label: isAr ? "الفنادق" : "Hotels", href: `/${locale}/hotels` },
     { label: isAr ? "الطيران" : "Flights", href: `/${locale}/flights` },
     { label: isAr ? "الخدمات" : "Services", href: `/${locale}/services` },
+    { label: isAr ? "الأنشطة" : "Activities", href: `/${locale}/activities` },
     { label: isAr ? "المدونة" : "Blog", href: `/${locale}/blog` },
     { label: isAr ? "عروض اليوم" : "Today deals", href: `/${locale}` },
   ];

@@ -22,6 +22,10 @@ export interface IAgency extends Document {
   creditLimit: number;
   balance: number;
   currency: string;
+  apiKeyHash?: string;
+  apiKeyPrefix?: string;
+  apiEnabled: boolean;
+  apiKeyLastUsedAt?: Date;
   notes?: string;
   metadata?: Record<string, unknown>;
   createdAt: Date;
@@ -96,6 +100,26 @@ const AgencySchema: Schema<IAgency> = new Schema(
       default: 'USD',
       minlength: 3,
       maxlength: 3,
+    },
+    apiKeyHash: {
+      type: String,
+      default: '',
+      select: false,
+      index: true,
+    },
+    apiKeyPrefix: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    apiEnabled: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    apiKeyLastUsedAt: {
+      type: Date,
+      default: null,
     },
     notes: {
       type: String,

@@ -29,6 +29,10 @@ import {
 } from "@hugeicons/core-free-icons";
 import { formatCurrency } from "@/hooks/use-hotels-enhanced";
 import type { BookingRoom } from "@/types/travellanda";
+import {
+  isDevPreviewAllPagesEnabled,
+  warnDevPreviewAllPagesEnabled,
+} from "@/lib/security/dev-flags";
 
 type Title = "Mr" | "Mrs" | "Miss" | "Ms" | "Dr";
 
@@ -88,6 +92,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const locale = useLocale();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const isDevPreviewAllPages = isDevPreviewAllPagesEnabled();
   const isStripeCheckoutEnabled =
     process.env.NEXT_PUBLIC_ENABLE_STRIPE_CHECKOUT === "true";
   const [loading, setLoading] = useState(true);
@@ -103,8 +108,17 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
+    if (isDevPreviewAllPages) {
+      warnDevPreviewAllPagesEnabled();
+    }
+
     const data = localStorage.getItem("bookingData");
     if (!data) {
+      if (isDevPreviewAllPages) {
+        setLoading(false);
+        return;
+      }
+
       router.push("/");
       return;
     }
@@ -160,7 +174,7 @@ export default function CheckoutPage() {
     }
 
     setLoading(false);
-  }, [router, user]);
+  }, [isDevPreviewAllPages, router, user]);
 
   const updateTraveler = (
     index: number,
@@ -404,7 +418,32 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (isDevPreviewAllPages && !bookingData) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="border-dashed">
+          <CardContent className="space-y-4 py-12 text-center">
+            <Badge variant="secondary">Developer Preview</Badge>
+            <HugeiconsIcon
+              icon={AlertCircleIcon}
+              className="mx-auto h-12 w-12 text-amber-500"
+            />
+            <h2 className="text-2xl font-bold">Checkout needs booking data</h2>
+            <p className="mx-auto max-w-2xl text-muted-foreground">
+              This protected page is open for local preview only. No fake checkout
+              data is injected; the real page expects `bookingData` in localStorage
+              from the hotel review flow.
+            </p>
+            <Button variant="outline" onClick={() => router.push("/")}>
+              Back to site
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isDevPreviewAllPages && !isAuthenticated) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>

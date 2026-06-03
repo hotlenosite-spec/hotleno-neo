@@ -14,6 +14,8 @@ export type {
   SupplierBookingStatus,
   SupplierCancelBookingRequest,
   SupplierCancelBookingResponse,
+  SupplierCheckAvailabilityRequest,
+  SupplierCheckAvailabilityResponse,
   SupplierGuestOccupancy,
   SupplierHotelRate,
   SupplierHotelResult,

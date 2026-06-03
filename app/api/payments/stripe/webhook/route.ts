@@ -4,14 +4,12 @@ import dbConnect from "@/lib/mongodb";
 import Booking from "@/models/Booking";
 import PaymentLog from "@/models/PaymentLog";
 import SupplierLog from "@/models/SupplierLog";
+import { PAID_BOOKING_STATUSES, getNextBookingStatus } from "@/lib/booking-status";
+import { runBookingAfterPayment } from "@/lib/booking/booking-orchestrator";
 
 export const runtime = "nodejs";
 
-const paidBookingStatuses = new Set([
-  "payment_succeeded",
-  "supplier_booking_pending",
-  "supplier_booking_confirmed",
-]);
+const paidBookingStatuses = new Set(PAID_BOOKING_STATUSES);
 
 function getStripeClient() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -132,6 +130,68 @@ async function alreadyHandled(eventId: string) {
   return PaymentLog.exists({ stripeEventId: eventId });
 }
 
+async function runBookingOrchestratorSafely(
+  event: Stripe.Event,
+  bookingId: string,
+) {
+  try {
+    return await runBookingAfterPayment(bookingId);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Booking orchestrator failed after payment";
+
+    const booking = await Booking.findById(bookingId);
+
+    if (booking) {
+      try {
+        booking.status = getNextBookingStatus(
+          booking.status,
+          "manual_review_required",
+        );
+      } catch {
+        booking.status = "manual_review_required";
+      }
+
+      booking.supplierStatus = "failed";
+      booking.failureReason = message;
+      booking.metadata = {
+        ...(booking.metadata ?? {}),
+        orchestratorFailedAt: new Date().toISOString(),
+        orchestratorFailureEventId: event.id,
+      };
+      await booking.save();
+
+      await SupplierLog.create({
+        bookingId: booking._id,
+        supplier: booking.supplier || "none",
+        type: "booking_orchestrator_failed",
+        status: "failed",
+        message,
+        request: {
+          bookingId,
+          stripeEventId: event.id,
+          stripeEventType: event.type,
+        },
+        response: {
+          bookingStatus: booking.status,
+          supplierStatus: booking.supplierStatus,
+        },
+        error,
+      });
+    }
+
+    return {
+      bookingId,
+      status: "manual_review_required" as const,
+      supplierStatus: "failed" as const,
+      providerCalled: false,
+      message,
+    };
+  }
+}
+
 async function handlePaymentSucceeded(event: Stripe.Event) {
   const data = getSucceededPaymentData(event);
 
@@ -185,9 +245,12 @@ async function handlePaymentSucceeded(event: Stripe.Event) {
     return { handled: true, alreadyPaid: true };
   }
 
-  booking.status = "supplier_booking_pending";
+  const paymentSucceededStatus = getNextBookingStatus(
+    booking.status,
+    "payment_succeeded",
+  );
+  booking.status = paymentSucceededStatus;
   booking.paymentStatus = "paid";
-  booking.supplierStatus = "pending";
   if (data.stripeSessionId) {
     booking.stripeSessionId = data.stripeSessionId;
     booking.stripeCheckoutSessionId = data.stripeSessionId;
@@ -198,7 +261,7 @@ async function handlePaymentSucceeded(event: Stripe.Event) {
   booking.metadata = {
     ...(booking.metadata ?? {}),
     paymentSucceededAt: new Date().toISOString(),
-    supplierBookingMode: "pending_without_real_supplier",
+    supplierBookingMode: "booking_orchestrator",
   };
 
   await booking.save();
@@ -212,58 +275,10 @@ async function handlePaymentSucceeded(event: Stripe.Event) {
     amount: data.amount,
     currency: data.currency,
     message:
-      "Payment succeeded; supplier booking is pending and no real supplier was called",
+      "Payment succeeded; booking orchestrator will handle supplier booking",
   });
 
-  await SupplierLog.create({
-    bookingId: booking._id,
-    supplier: booking.supplier || "none",
-    type: "supplier_booking_start",
-    status: "pending",
-    message:
-      "Supplier booking marked pending after payment; no real supplier was called",
-    request: {
-      supplier: booking.supplier || "none",
-      supplierHotelId: booking.supplierHotelId || "",
-      supplierRateKey: booking.supplierRateKey || "",
-      mode: "placeholder",
-    },
-    response: {
-      bookingStatus: booking.status,
-      supplierStatus: booking.supplierStatus,
-    },
-  });
-
-  if (
-    process.env.MOCK_SUPPLIER_BOOKING_ENABLED === "true" &&
-    process.env.NODE_ENV !== "production"
-  ) {
-    booking.status = "supplier_booking_confirmed";
-    booking.supplierStatus = "confirmed";
-    booking.supplierBookingReference = `MOCK-SUP-${booking._id.toString()}`;
-    booking.metadata = {
-      ...(booking.metadata ?? {}),
-      mockSupplierBookingSucceededAt: new Date().toISOString(),
-    };
-    await booking.save();
-
-    await SupplierLog.create({
-      bookingId: booking._id,
-      supplier: "mock",
-      type: "supplier_booking_success",
-      status: "success",
-      message: "Mock supplier booking completed for local development",
-      request: {
-        supplier: "mock",
-        mode: "local_development_only",
-      },
-      response: {
-        supplierBookingReference: booking.supplierBookingReference,
-        bookingStatus: booking.status,
-        supplierStatus: booking.supplierStatus,
-      },
-    });
-  }
+  await runBookingOrchestratorSafely(event, data.bookingId);
 
   return { handled: true, processed: true };
 }

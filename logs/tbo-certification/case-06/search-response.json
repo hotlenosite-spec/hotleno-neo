@@ -13,27 +13,27 @@
             "Luxury Room, 1 King Bed",
             "Luxury Room, 1 King Bed"
           ],
-          "BookingCode": "1120548!TB!1!TB!6322dbfe-5508-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "BookingCode": "1120548!TB!1!TB!0c6d6cf6-5928-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
           "Inclusion": "Free self parking",
           "DayRates": [
             [
               {
-                "BasePrice": 84.51
+                "BasePrice": 84.08
               },
               {
-                "BasePrice": 84.51
+                "BasePrice": 84.08
               }
             ],
             [
               {
-                "BasePrice": 84.41
+                "BasePrice": 84.21
               },
               {
-                "BasePrice": 84.41
+                "BasePrice": 84.21
               }
             ]
           ],
-          "TotalFare": 427.84000000000003,
+          "TotalFare": 426.6,
           "TotalTax": 90.02,
           "RoomPromotion": [
             "Book now and save",
@@ -41,14 +41,14 @@
           ],
           "CancelPolicies": [
             {
-              "FromDate": "20-05-2026 00:00:00",
+              "FromDate": "25-05-2026 00:00:00",
               "ChargeType": "Fixed",
               "CancellationCharge": 0
             },
             {
-              "FromDate": "19-06-2026 00:00:00",
+              "FromDate": "30-06-2026 00:00:00",
               "ChargeType": "Fixed",
-              "CancellationCharge": 214.019
+              "CancellationCharge": 213.17000000000002
             }
           ],
           "MealType": "Room_Only",
@@ -80,27 +80,27 @@
             "Luxury Room, 1 King Bed",
             "Luxury Room, 1 King Bed"
           ],
-          "BookingCode": "1120548!TB!2!TB!6322dbfe-5508-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "BookingCode": "1120548!TB!2!TB!0c6d6cf6-5928-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
           "Inclusion": "Free breakfast,Free self parking",
           "DayRates": [
             [
               {
-                "BasePrice": 93.66
+                "BasePrice": 93.19
               },
               {
-                "BasePrice": 93.66
+                "BasePrice": 93.19
               }
             ],
             [
               {
-                "BasePrice": 102.72
+                "BasePrice": 102.44
               },
               {
-                "BasePrice": 102.72
+                "BasePrice": 102.44
               }
             ]
           ],
-          "TotalFare": 497.42,
+          "TotalFare": 495.92,
           "TotalTax": 104.67,
           "RoomPromotion": [
             "Book now and save",
@@ -108,81 +108,14 @@
           ],
           "CancelPolicies": [
             {
-              "FromDate": "20-05-2026 00:00:00",
+              "FromDate": "25-05-2026 00:00:00",
               "ChargeType": "Fixed",
               "CancellationCharge": 0
             },
             {
-              "FromDate": "19-06-2026 00:00:00",
+              "FromDate": "30-06-2026 00:00:00",
               "ChargeType": "Fixed",
-              "CancellationCharge": 237.19500000000002
-            }
-          ],
-          "MealType": "BreakFast",
-          "IsRefundable": true,
-          "Supplements": [
-            [
-              {
-                "Index": 1,
-                "Type": "AtProperty",
-                "Description": "mandatory_tax",
-                "Price": 40,
-                "Currency": "AED"
-              }
-            ],
-            [
-              {
-                "Index": 2,
-                "Type": "AtProperty",
-                "Description": "mandatory_tax",
-                "Price": 40,
-                "Currency": "AED"
-              }
-            ]
-          ],
-          "WithTransfers": false
-        },
-        {
-          "Name": [
-            "Luxury Room, 1 King Bed (Coastline View)",
-            "Luxury Room, 1 King Bed (Coastline View)"
-          ],
-          "BookingCode": "1120548!TB!3!TB!6322dbfe-5508-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
-          "Inclusion": "Free breakfast,Free self parking",
-          "DayRates": [
-            [
-              {
-                "BasePrice": 97.11
-              },
-              {
-                "BasePrice": 97.11
-              }
-            ],
-            [
-              {
-                "BasePrice": 106.17
-              },
-              {
-                "BasePrice": 106.17
-              }
-            ]
-          ],
-          "TotalFare": 514.89,
-          "TotalTax": 108.35,
-          "RoomPromotion": [
-            "Book now and save",
-            "Book now and save"
-          ],
-          "CancelPolicies": [
-            {
-              "FromDate": "20-05-2026 00:00:00",
-              "ChargeType": "Fixed",
-              "CancellationCharge": 0
-            },
-            {
-              "FromDate": "19-06-2026 00:00:00",
-              "ChargeType": "Fixed",
-              "CancellationCharge": 245.944
+              "CancellationCharge": 236.255
             }
           ],
           "MealType": "BreakFast",
@@ -214,42 +147,42 @@
             "Luxury Room, 1 King Bed",
             "Luxury Room, 1 King Bed"
           ],
-          "BookingCode": "1120548!TB!4!TB!6322dbfe-5508-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "BookingCode": "1120548!TB!3!TB!0c6d6cf6-5928-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
           "Inclusion": "Half board",
           "DayRates": [
             [
               {
-                "BasePrice": 99.65
+                "BasePrice": 104.23
               },
               {
-                "BasePrice": 104.88
+                "BasePrice": 99.1
               }
             ],
             [
               {
-                "BasePrice": 113.09
+                "BasePrice": 118.11
               },
               {
-                "BasePrice": 119.04
+                "BasePrice": 112.29
               }
             ]
           ],
-          "TotalFare": 550.06,
-          "TotalTax": 113.4,
+          "TotalFare": 541.89,
+          "TotalTax": 108.17,
           "RoomPromotion": [
             "Book now and save",
             "Book now and save"
           ],
           "CancelPolicies": [
             {
-              "FromDate": "20-05-2026 00:00:00",
+              "FromDate": "25-05-2026 00:00:00",
               "ChargeType": "Fixed",
               "CancellationCharge": 0
             },
             {
-              "FromDate": "19-06-2026 00:00:00",
+              "FromDate": "30-06-2026 00:00:00",
               "ChargeType": "Fixed",
-              "CancellationCharge": 257.71
+              "CancellationCharge": 254.04000000000002
             }
           ],
           "MealType": "Half_Board",
@@ -281,45 +214,112 @@
             "Luxury Room, 1 King Bed (Coastline View)",
             "Luxury Room, 1 King Bed (Coastline View)"
           ],
-          "BookingCode": "1120548!TB!5!TB!6322dbfe-5508-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
-          "Inclusion": "Half board",
+          "BookingCode": "1120548!TB!4!TB!0c6d6cf6-5928-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "Inclusion": "Free breakfast,Free self parking",
           "DayRates": [
             [
               {
-                "BasePrice": 103.18
+                "BasePrice": 105.84
               },
               {
-                "BasePrice": 108.59
+                "BasePrice": 120.91
               }
             ],
             [
               {
-                "BasePrice": 116.63
+                "BasePrice": 115.15
               },
               {
-                "BasePrice": 122.76
+                "BasePrice": 130.3
               }
             ]
           ],
-          "TotalFare": 568.3199999999999,
-          "TotalTax": 117.15,
+          "TotalFare": 598.5699999999999,
+          "TotalTax": 126.37,
           "RoomPromotion": [
             "Book now and save",
             "Book now and save"
           ],
           "CancelPolicies": [
             {
-              "FromDate": "20-05-2026 00:00:00",
+              "FromDate": "25-05-2026 00:00:00",
               "ChargeType": "Fixed",
               "CancellationCharge": 0
             },
             {
-              "FromDate": "19-06-2026 00:00:00",
+              "FromDate": "30-06-2026 00:00:00",
               "ChargeType": "Fixed",
-              "CancellationCharge": 266.825
+              "CancellationCharge": 287.51
             }
           ],
-          "MealType": "Half_Board",
+          "MealType": "BreakFast",
+          "IsRefundable": true,
+          "Supplements": [
+            [
+              {
+                "Index": 1,
+                "Type": "AtProperty",
+                "Description": "mandatory_tax",
+                "Price": 40,
+                "Currency": "AED"
+              }
+            ],
+            [
+              {
+                "Index": 2,
+                "Type": "AtProperty",
+                "Description": "mandatory_tax",
+                "Price": 40,
+                "Currency": "AED"
+              }
+            ]
+          ],
+          "WithTransfers": false
+        },
+        {
+          "Name": [
+            "Luxury Kids/Family Room, 1 King Bed and 2 Bunk Beds,1 King Bed and 2 Twin Bunk Beds",
+            "Luxury Kids/Family Room, 1 King Bed and 2 Bunk Beds,1 King Bed and 2 Twin Bunk Beds"
+          ],
+          "BookingCode": "1120548!TB!5!TB!0c6d6cf6-5928-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "Inclusion": "Free breakfast,Free self parking",
+          "DayRates": [
+            [
+              {
+                "BasePrice": 120.3
+              },
+              {
+                "BasePrice": 121.61
+              }
+            ],
+            [
+              {
+                "BasePrice": 129.52
+              },
+              {
+                "BasePrice": 130.85
+              }
+            ]
+          ],
+          "TotalFare": 637,
+          "TotalTax": 134.72,
+          "RoomPromotion": [
+            "Book now and save",
+            "Book now and save"
+          ],
+          "CancelPolicies": [
+            {
+              "FromDate": "25-05-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 0
+            },
+            {
+              "FromDate": "30-06-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 306.82399999999996
+            }
+          ],
+          "MealType": "BreakFast",
           "IsRefundable": true,
           "Supplements": [
             [

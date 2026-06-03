@@ -5,12 +5,21 @@ import type {
   SupplierBookingDetailsResponse,
   SupplierCancelBookingRequest,
   SupplierCancelBookingResponse,
+  SupplierCheckAvailabilityRequest,
+  SupplierCheckAvailabilityResponse,
   SupplierPreBookRequest,
   SupplierPreBookResponse,
   SupplierProvider,
   SupplierSearchHotelsRequest,
   SupplierSearchHotelsResponse,
 } from "./types";
+import {
+  buildMockBookResponse,
+  buildMockBookingDetailsResponse,
+  buildMockCancelBookingResponse,
+  buildMockPreBookResponse,
+  buildMockSearchHotelsResponse,
+} from "./mock-utils";
 
 function assertLocalDevelopment() {
   if (process.env.NODE_ENV === "production") {
@@ -26,65 +35,29 @@ export class MockSupplierProvider implements SupplierProvider {
   ): Promise<SupplierSearchHotelsResponse> {
     assertLocalDevelopment();
 
-    const currency = request.currency || "USD";
+    return buildMockSearchHotelsResponse(this.name, request);
+  }
 
-    return {
-      supplier: this.name,
-      hotels: [
-        {
-          supplier: this.name,
-          supplierHotelId: "mock-hotel-001",
-          hotelName: "Hotleno Mock Hotel",
-          cityName: request.cityName || "Development City",
-          countryName: request.countryCode || "DEV",
-          address: "123 Local Development Street",
-          stars: 4,
-          rates: [
-            {
-              rateKey: "mock-rate-refundable",
-              roomName: "Deluxe Mock Room",
-              boardName: "Room Only",
-              price: 120,
-              currency,
-              refundable: true,
-              cancellationPolicies: [],
-              metadata: { safeForLocalDevelopment: true },
-            },
-          ],
-          metadata: { safeForLocalDevelopment: true },
-        },
-      ],
-      rawSupplierRequest: request,
-      rawSupplierResponse: { provider: this.name, mocked: true },
-    };
+  async checkAvailability(
+    request: SupplierCheckAvailabilityRequest,
+  ): Promise<SupplierCheckAvailabilityResponse> {
+    return this.preBook(request);
+  }
+
+  async checkRates(request: SupplierPreBookRequest): Promise<SupplierPreBookResponse> {
+    return this.preBook(request);
   }
 
   async preBook(request: SupplierPreBookRequest): Promise<SupplierPreBookResponse> {
     assertLocalDevelopment();
 
-    return {
-      supplier: this.name,
-      supplierHotelId: request.supplierHotelId,
-      supplierRateKey: request.supplierRateKey,
-      price: 120,
-      currency: request.currency || "USD",
-      available: true,
-      cancellationPolicies: [],
-      rawSupplierRequest: request,
-      rawSupplierResponse: { provider: this.name, mocked: true },
-    };
+    return buildMockPreBookResponse(this.name, request);
   }
 
   async book(request: SupplierBookRequest): Promise<SupplierBookResponse> {
     assertLocalDevelopment();
 
-    return {
-      supplier: this.name,
-      supplierBookingReference: `MOCK-${request.idempotencyKey}`,
-      status: "confirmed",
-      rawSupplierRequest: request,
-      rawSupplierResponse: { provider: this.name, mocked: true },
-    };
+    return buildMockBookResponse(this.name, request);
   }
 
   async getBookingDetails(
@@ -92,13 +65,7 @@ export class MockSupplierProvider implements SupplierProvider {
   ): Promise<SupplierBookingDetailsResponse> {
     assertLocalDevelopment();
 
-    return {
-      supplier: this.name,
-      supplierBookingReference: request.supplierBookingReference,
-      status: "confirmed",
-      rawSupplierRequest: request,
-      rawSupplierResponse: { provider: this.name, mocked: true },
-    };
+    return buildMockBookingDetailsResponse(this.name, request);
   }
 
   async cancelBooking(
@@ -106,12 +73,6 @@ export class MockSupplierProvider implements SupplierProvider {
   ): Promise<SupplierCancelBookingResponse> {
     assertLocalDevelopment();
 
-    return {
-      supplier: this.name,
-      supplierBookingReference: request.supplierBookingReference,
-      status: "cancelled",
-      rawSupplierRequest: request,
-      rawSupplierResponse: { provider: this.name, mocked: true },
-    };
+    return buildMockCancelBookingResponse(this.name, request);
   }
 }

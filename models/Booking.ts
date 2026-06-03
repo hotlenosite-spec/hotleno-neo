@@ -54,7 +54,7 @@ export interface IBooking extends Document {
   agencyBalanceAfter: number;
   creditLimitUsed: number;
   status: BookingStatus;
-  paymentStatus: 'pending' | 'paid' | 'succeeded' | 'failed' | 'cancelled' | 'refund_required' | 'refunded';
+  paymentStatus: 'pending' | 'paid' | 'succeeded' | 'failed' | 'cancelled' | 'refund_required' | 'refund_pending' | 'refunded';
   supplierStatus: 'not_started' | 'pending' | 'confirmed' | 'failed' | 'cancelled';
   stripeSessionId?: string;
   stripeCheckoutSessionId?: string;
@@ -63,6 +63,10 @@ export interface IBooking extends Document {
   rawSupplierRequest?: unknown;
   rawSupplierResponse?: unknown;
   idempotencyKey?: string;
+  retryCount: number;
+  maxRetryCount: number;
+  lastRetryAt?: Date;
+  lastFailureReason?: string;
   metadata?: Record<string, unknown>;
   specialRequests?: string;
   cancellationPolicies?: unknown[];
@@ -303,7 +307,7 @@ const BookingSchema: Schema<IBooking> = new Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'succeeded', 'failed', 'cancelled', 'refund_required', 'refunded'],
+      enum: ['pending', 'paid', 'succeeded', 'failed', 'cancelled', 'refund_required', 'refund_pending', 'refunded'],
       default: 'pending',
     },
     supplierStatus: {
@@ -340,6 +344,26 @@ const BookingSchema: Schema<IBooking> = new Schema(
       default: '',
       trim: true,
     },
+    retryCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    maxRetryCount: {
+      type: Number,
+      default: 3,
+      min: 0,
+      max: 10,
+    },
+    lastRetryAt: {
+      type: Date,
+      default: null,
+    },
+    lastFailureReason: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     metadata: {
       type: Schema.Types.Mixed,
       default: {},
@@ -365,6 +389,19 @@ const BookingSchema: Schema<IBooking> = new Schema(
     timestamps: true,
   }
 );
+
+BookingSchema.pre('validate', function ensureIdempotencyKey(next) {
+  if (!this.idempotencyKey) {
+    const randomPart =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    this.idempotencyKey = `booking-${this._id?.toString() || randomPart}`;
+  }
+
+  next();
+});
 
 // Index for faster queries
 BookingSchema.index({ userId: 1, createdAt: -1 });
