@@ -29,12 +29,21 @@ function calculateNights(checkIn: string, checkOut: string) {
   return Math.max(nights, 1);
 }
 
+function parseChildrenAges(value: string | null, children: number) {
+  return (value || "")
+    .split(",")
+    .map((age) => Number.parseInt(age.trim(), 10))
+    .filter((age) => Number.isFinite(age) && age >= 0)
+    .slice(0, children);
+}
+
 function buildSavedSearch(params: URLSearchParams): SavedSearch {
   const destination = params.get("destination") || "";
   const checkIn = params.get("checkIn") || "";
   const checkOut = params.get("checkOut") || "";
   const adults = toNumber(params.get("adults"), 2);
   const children = toNumber(params.get("children"), 0);
+  const childrenAges = parseChildrenAges(params.get("childrenAges"), children);
   const rooms = toNumber(params.get("rooms"), 1);
 
   return {
@@ -55,7 +64,7 @@ function buildSavedSearch(params: URLSearchParams): SavedSearch {
       rooms,
       adults,
       children,
-      childrenAges: [],
+      childrenAges,
       nights: calculateNights(checkIn, checkOut),
     },
     nationality: params.get("nationality") || "US",
@@ -78,6 +87,7 @@ export default function SearchPage() {
     const checkOut = params.get("checkOut");
     const adults = toNumber(params.get("adults"), 2);
     const children = toNumber(params.get("children"), 0);
+    const childrenAges = parseChildrenAges(params.get("childrenAges"), children);
     const rooms = toNumber(params.get("rooms"), 1);
     const hotelCode = params.get("hotelCode") || undefined;
     const hotelIds = params
@@ -93,6 +103,7 @@ export default function SearchPage() {
       checkOut,
       adults,
       children,
+      childrenAges,
       rooms,
       nationality: params.get("nationality") || "US",
       currency: params.get("currency") || "USD",
@@ -145,7 +156,9 @@ export default function SearchPage() {
                 NumAdults: request.adults,
                 Children:
                   request.children > 0
-                    ? Array.from({ length: request.children }, () => 8)
+                    ? request.childrenAges.length > 0
+                      ? request.childrenAges
+                      : Array.from({ length: request.children }, () => 8)
                     : undefined,
               },
             ],

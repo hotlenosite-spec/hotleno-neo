@@ -176,6 +176,10 @@ function buildTboBookRequest(booking: BookingDocument): SupplierBookRequest {
         firstName: String(traveler.firstName || "Guest"),
         lastName: String(traveler.lastName || "Hotleno"),
         type: traveler.travelerType === "child" ? "child" : "adult",
+        age:
+          traveler.travelerType === "child"
+            ? toNumber(traveler.age)
+            : undefined,
       })),
     metadata: {
       bookingId: booking._id,

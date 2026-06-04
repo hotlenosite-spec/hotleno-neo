@@ -203,9 +203,10 @@ export function GuestSelector({ guests, onChange }: GuestSelectorProps) {
                       <Label className="text-xs">{t('child')} {index + 1}</Label>
 
                       <Select
-                                                // className="w-full border rounded-md px-3 py-2 text-sm"
-                        // defaultValue={guests.childrenAges[index]) || 12}
-                        // onChange={(e) => updateChildAge(index, parseInt(e.target.value))}
+                        value={`${guests.childrenAges[index] ?? 12}`}
+                        onValueChange={(value) =>
+                          _updateChildAge(index, Number.parseInt(value, 10))
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={t('age')} />

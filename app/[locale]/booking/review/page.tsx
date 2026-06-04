@@ -200,6 +200,7 @@ interface SearchParamsData {
   guests: {
     adults: number;
     children: number;
+    childrenAges?: number[];
     rooms: number;
     nights?: number;
   };
@@ -337,7 +338,15 @@ interface SearchParamsData {
     calculateNights(searchParams?.dates.checkIn, searchParams?.dates.checkOut);
   const nightlyPrice = hotel?.Price || 0;
   const taxes = hotel?.Taxes || 0;
-  const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
+const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
+  const guestRooms = Math.max(searchParams?.guests.rooms || 1, 1);
+  const childAges = (searchParams?.guests.childrenAges || [])
+    .map((age) => Number(age))
+    .filter((age) => Number.isFinite(age) && age >= 0);
+  const formatChildAges = (ages: number[]) =>
+    ages.length > 0
+      ? ages.map((age) => `${age} ${age === 1 ? "year" : "years"}`).join(", ")
+      : "-";
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -401,6 +410,28 @@ interface SearchParamsData {
                     `, ${searchParams.guests.rooms} ${t('search.rooms')}`
                   }
                 </p>
+                <div className="mt-3 space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
+                  {Array.from({ length: guestRooms }).map((_, roomIndex) => {
+                    const roomChildAges = childAges.slice(
+                      roomIndex * (searchParams?.guests.children || 0),
+                      (roomIndex + 1) * (searchParams?.guests.children || 0),
+                    );
+
+                    return (
+                      <div key={roomIndex} className="text-slate-700">
+                        <p className="font-bold">Room {roomIndex + 1}</p>
+                        <p>
+                          Adults: {searchParams?.guests.adults || 0}
+                          {", "}
+                          Children: {searchParams?.guests.children || 0}
+                        </p>
+                        {(searchParams?.guests.children || 0) > 0 ? (
+                          <p>Child ages: {formatChildAges(roomChildAges)}</p>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </CardContent>
           </Card>

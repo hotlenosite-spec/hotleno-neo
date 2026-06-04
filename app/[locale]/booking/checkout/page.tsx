@@ -46,6 +46,7 @@ interface Traveler {
   lastName: string;
   gender?: string;
   dateOfBirth?: string;
+  age?: number;
   nationality?: string;
   documentType?: "passport" | "national_id" | "iqama";
   documentNumber?: string;
@@ -204,6 +205,7 @@ export default function CheckoutPage() {
 
       // Add children
       for (let i = 0; i < searchParams.guests.children; i++) {
+        const childAge = Number(searchParams.guests.childrenAges?.[i]);
         travelersList.push({
           roomIndex,
           travelerType: "child",
@@ -213,6 +215,7 @@ export default function CheckoutPage() {
           lastName: "",
           gender: "",
           dateOfBirth: "",
+          age: Number.isFinite(childAge) ? childAge : undefined,
           nationality: "",
           documentType: "passport",
           documentNumber: "",
@@ -250,9 +253,15 @@ export default function CheckoutPage() {
     value: string,
   ) => {
     const updatedTravelers = [...travelers];
+    const nextValue =
+      field === "age"
+        ? Number.isFinite(Number(value))
+          ? Number(value)
+          : undefined
+        : value;
     updatedTravelers[index] = {
       ...updatedTravelers[index],
-      [field]: value,
+      [field]: nextValue,
     };
     setTravelers(updatedTravelers);
   };
@@ -280,13 +289,19 @@ export default function CheckoutPage() {
   };
 
   const validateForm = (): boolean => {
-    // Check all adults have required fields
     for (const traveler of travelers) {
-      if (traveler.travelerType === "adult") {
-        if (!traveler.firstName.trim() || !traveler.lastName.trim()) {
-          setError("Please fill in all traveler names");
-          return false;
-        }
+      if (!traveler.firstName.trim() || !traveler.lastName.trim()) {
+        setError("Please fill in all traveler names");
+        return false;
+      }
+
+      if (
+        traveler.travelerType === "child" &&
+        traveler.age === undefined &&
+        !traveler.dateOfBirth
+      ) {
+        setError("Please provide each child age or date of birth");
+        return false;
       }
     }
 
@@ -399,6 +414,7 @@ export default function CheckoutPage() {
         lastName: traveler.lastName.trim(),
         gender: traveler.gender || "",
         dateOfBirth: traveler.dateOfBirth || "",
+        age: traveler.age,
         nationality: traveler.nationality || "",
         documentType: traveler.documentType || "",
         documentNumber: traveler.documentNumber || "",
@@ -441,7 +457,7 @@ export default function CheckoutPage() {
         location: `${bookingData.hotel.CityName}, ${bookingData.hotel.CountryName}`,
         checkInDate: bookingData.searchParams.dates.checkIn,
         checkOutDate: bookingData.searchParams.dates.checkOut,
-        rooms: Array.from(roomsMap.values()).map((room) => ({
+        rooms: Array.from(roomsMap.values()).map((room, roomIndex) => ({
           roomId: room.RoomId,
           roomName:
             bookingData.hotel.selectedOption.Rooms.find(
@@ -450,6 +466,14 @@ export default function CheckoutPage() {
             )?.RoomName || "Room",
           adults: room.AdultNames.length,
           children: room.ChildNames?.length || 0,
+          childrenAges: travelers
+            .filter(
+              (traveler) =>
+                traveler.roomIndex === roomIndex &&
+                traveler.travelerType === "child" &&
+                traveler.age !== undefined,
+            )
+            .map((traveler) => Number(traveler.age)),
         })),
         travelers: bookingTravelers,
         leadGuest: leadGuest
@@ -917,7 +941,7 @@ export default function CheckoutPage() {
                             )}
                           </p>
                           {renderSavedTravelerPicker(travelerIndex)}
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                             <div>
                               <Label
                                 htmlFor={`child-firstName-${travelerIndex}`}
@@ -956,6 +980,30 @@ export default function CheckoutPage() {
                                   )
                                 }
                                 placeholder="Last name"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`child-age-${travelerIndex}`}>
+                                Age <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id={`child-age-${travelerIndex}`}
+                                type="number"
+                                min={0}
+                                max={17}
+                                value={
+                                  travelers[travelerIndex]?.age !== undefined
+                                    ? String(travelers[travelerIndex].age)
+                                    : ""
+                                }
+                                onChange={(e) =>
+                                  updateTraveler(
+                                    travelerIndex,
+                                    "age",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Age"
                               />
                             </div>
                           </div>

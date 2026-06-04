@@ -444,6 +444,7 @@ export default function SearchForm() {
         checkOut: format(dates.checkOut, "yyyy-MM-dd"),
         adults: String(guests.adults),
         children: String(guests.children),
+        childrenAges: guests.childrenAges.slice(0, guests.children).join(","),
         rooms: String(guests.rooms),
         nationality,
         currency,

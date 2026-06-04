@@ -909,6 +909,9 @@ export class TboSupplierProvider implements SupplierProvider {
             FirstName: guest.firstName || "Guest",
             LastName: guest.lastName || "Hotleno",
             Type: toTboCustomerType(guest.type),
+            ...(guest.type === "child" && guest.age !== undefined
+              ? { Age: Math.min(Math.max(Number(guest.age) || 0, 0), 18) }
+              : {}),
           })),
         },
       ],
