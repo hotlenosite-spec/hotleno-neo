@@ -28,7 +28,9 @@ export default function Navbar({ locale }: NavbarProps) {
   const router = useRouter();
   const currentLocale = useLocale();
   const t = useTranslations();
+  const accountT = useTranslations("account");
   const { user, isAuthenticated, isLoading } = useAuth();
+  const dashboardHref = user?.role === "admin" ? `/${locale}/admin` : `/${locale}/account`;
 
   const switchLocale = (newLocale: string) => {
     const segments = pathname.split("/");
@@ -109,9 +111,51 @@ export default function Navbar({ locale }: NavbarProps) {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href={`/${locale}/profile`}>
+                    <Link href={dashboardHref}>
+                      <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
+                      {user.role === "admin" ? accountT("nav.adminDashboard") : accountT("nav.dashboard")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${locale}/account`}>
+                      <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
+                      {t("navigation.myAccount")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${locale}/account/bookings`}>
+                      <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
+                      {accountT("nav.bookings")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${locale}/account/wallet`}>
+                      <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
+                      {accountT("nav.wallet")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${locale}/account/travelers`}>
+                      <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
+                      {accountT("nav.travelers")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${locale}/account/profile`}>
                       <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
                       {t("navigation.profile")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${locale}/account/settings`}>
+                      <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
+                      {accountT("nav.settings")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${locale}/support`}>
+                      <HugeiconsIcon icon={UserIcon} className="mr-2 h-4 w-4" />
+                      {accountT("nav.support")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

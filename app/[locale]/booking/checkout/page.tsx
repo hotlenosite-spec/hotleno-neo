@@ -34,15 +34,42 @@ import {
   warnDevPreviewAllPagesEnabled,
 } from "@/lib/security/dev-flags";
 
-type Title = "Mr" | "Mrs" | "Miss" | "Ms" | "Dr";
+type Title = "Mr" | "Mrs" | "Miss" | "Ms" | "Dr" | "Child";
 
 interface Traveler {
+  savedTravelerId?: string;
   roomIndex: number;
   travelerType: "adult" | "child";
   index: number;
   title?: Title;
   firstName: string;
   lastName: string;
+  gender?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  documentType?: "passport" | "national_id" | "iqama";
+  documentNumber?: string;
+  passportExpiryDate?: string;
+  phone?: string;
+  email?: string;
+}
+
+interface SavedTraveler {
+  _id: string;
+  title?: Title;
+  firstName?: string;
+  lastName?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  birthDate?: string;
+  nationality?: string;
+  documentType?: "passport" | "national_id" | "iqama";
+  documentNumber?: string;
+  passportNumber?: string;
+  nationalId?: string;
+  passportExpiryDate?: string;
+  phone?: string;
+  email?: string;
 }
 
 interface BookingData {
@@ -53,12 +80,22 @@ interface BookingData {
     CityName: string;
     CountryName: string;
     selectedOption: {
-      OptionId: number;
+      OptionId: number | string;
       Price: number;
       Currency: string;
       Taxes?: number;
       RoomType?: string;
       BoardType?: string;
+      supplier?: string;
+      supplierHotelId?: string;
+      supplierRateKey?: string;
+      hotelId?: number | string;
+      rateKey?: string;
+      BookingCode?: string;
+      HotelCode?: string;
+      supplierTotalFare?: number;
+      roomName?: string;
+      boardName?: string;
       Rooms: Array<{
         RoomId: number;
         RoomName: string;
@@ -86,7 +123,14 @@ const TITLES: { value: Title; label: string }[] = [
   { value: "Miss", label: "Miss" },
   { value: "Ms", label: "Ms" },
   { value: "Dr", label: "Dr" },
+  { value: "Child", label: "Child" },
 ];
+
+const DOCUMENT_TYPES = [
+  { value: "passport", label: "Passport" },
+  { value: "national_id", label: "National ID" },
+  { value: "iqama", label: "Iqama" },
+] as const;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -99,6 +143,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
   const [travelers, setTravelers] = useState<Traveler[]>([]);
+  const [savedTravelers, setSavedTravelers] = useState<SavedTraveler[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [contactInfo, setContactInfo] = useState({
@@ -148,6 +193,12 @@ export default function CheckoutPage() {
           title: "Mr",
           firstName: "",
           lastName: "",
+          gender: "",
+          dateOfBirth: "",
+          nationality: "",
+          documentType: "passport",
+          documentNumber: "",
+          passportExpiryDate: "",
         });
       }
 
@@ -157,8 +208,15 @@ export default function CheckoutPage() {
           roomIndex,
           travelerType: "child",
           index: i,
+          title: "Child",
           firstName: "",
           lastName: "",
+          gender: "",
+          dateOfBirth: "",
+          nationality: "",
+          documentType: "passport",
+          documentNumber: "",
+          passportExpiryDate: "",
         });
       }
     }
@@ -173,6 +231,16 @@ export default function CheckoutPage() {
       }));
     }
 
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch("/api/account/travelers", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((response) => response.json())
+        .then((data) => setSavedTravelers(data.travelers || []))
+        .catch(() => setSavedTravelers([]));
+    }
+
     setLoading(false);
   }, [isDevPreviewAllPages, router, user]);
 
@@ -185,6 +253,28 @@ export default function CheckoutPage() {
     updatedTravelers[index] = {
       ...updatedTravelers[index],
       [field]: value,
+    };
+    setTravelers(updatedTravelers);
+  };
+
+  const applySavedTraveler = (index: number, travelerId: string) => {
+    const saved = savedTravelers.find((traveler) => traveler._id === travelerId);
+    if (!saved) return;
+    const updatedTravelers = [...travelers];
+    updatedTravelers[index] = {
+      ...updatedTravelers[index],
+      savedTravelerId: saved._id,
+      title: saved.title || updatedTravelers[index].title,
+      firstName: saved.firstName || "",
+      lastName: saved.lastName || "",
+      gender: saved.gender || "",
+      dateOfBirth: saved.dateOfBirth || saved.birthDate || "",
+      nationality: saved.nationality || "",
+      documentType: saved.documentType || "passport",
+      documentNumber: saved.documentNumber || saved.passportNumber || saved.nationalId || "",
+      passportExpiryDate: saved.passportExpiryDate || "",
+      phone: saved.phone || "",
+      email: saved.email || "",
     };
     setTravelers(updatedTravelers);
   };
@@ -249,8 +339,9 @@ export default function CheckoutPage() {
         const room = roomsMap.get(traveler.roomIndex)!;
 
         if (traveler.travelerType === "adult") {
+          const adultTitle = traveler.title === "Child" ? "Mr" : traveler.title || "Mr";
           room.AdultNames.push({
-            Title: traveler.title || "Mr",
+            Title: adultTitle,
             FirstName: traveler.firstName.trim(),
             LastName: traveler.lastName.trim(),
           });
@@ -271,13 +362,79 @@ export default function CheckoutPage() {
       }
 
       const leadGuest = travelers.find((t) => t.travelerType === "adult");
+      const quickTravelers = travelers.filter(
+        (traveler) => !traveler.savedTravelerId && traveler.firstName.trim() && traveler.lastName.trim(),
+      );
+      await Promise.all(
+        quickTravelers.map((traveler) =>
+          fetch("/api/account/travelers", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              title: traveler.title,
+              firstName: traveler.firstName,
+              lastName: traveler.lastName,
+              gender: traveler.gender,
+              dateOfBirth: traveler.dateOfBirth,
+              nationality: traveler.nationality,
+              documentType: traveler.documentType,
+              documentNumber: traveler.documentNumber,
+              passportExpiryDate: traveler.passportExpiryDate,
+              phone: traveler.phone,
+              email: traveler.email,
+            }),
+          }).catch(() => null),
+        ),
+      );
+      const bookingTravelers = travelers.map((traveler) => ({
+        savedTravelerId: traveler.savedTravelerId || "",
+        roomIndex: traveler.roomIndex,
+        travelerType: traveler.travelerType,
+        index: traveler.index,
+        title: traveler.title || (traveler.travelerType === "child" ? "Child" : "Mr"),
+        firstName: traveler.firstName.trim(),
+        lastName: traveler.lastName.trim(),
+        gender: traveler.gender || "",
+        dateOfBirth: traveler.dateOfBirth || "",
+        nationality: traveler.nationality || "",
+        documentType: traveler.documentType || "",
+        documentNumber: traveler.documentNumber || "",
+        passportExpiryDate: traveler.passportExpiryDate || "",
+        phone: traveler.phone || "",
+        email: traveler.email || "",
+      }));
+      const selectedOption = bookingData.hotel.selectedOption;
+      const selectedSupplier = String(
+        selectedOption.supplier || "none",
+      ).toLowerCase();
+      const supplierHotelId = String(
+        selectedOption.supplierHotelId ||
+          selectedOption.hotelId ||
+          selectedOption.HotelCode ||
+          bookingData.hotel.HotelId ||
+          "",
+      );
+      const supplierRateKey = String(
+        selectedOption.supplierRateKey ||
+          selectedOption.rateKey ||
+          selectedOption.BookingCode ||
+          selectedOption.OptionId ||
+          "",
+      );
+      const supplierTotalFare =
+        typeof selectedOption.supplierTotalFare === "number" && Number.isFinite(selectedOption.supplierTotalFare)
+          ? selectedOption.supplierTotalFare
+          : totalPrice;
       const dbBooking = {
         bookingReference: yourReference,
         travellandaReference: "",
         yourReference,
-        supplier: "none",
-        supplierHotelId: String(bookingData.hotel.HotelId),
-        supplierRateKey: String(bookingData.hotel.selectedOption.OptionId),
+        supplier: selectedSupplier,
+        supplierHotelId,
+        supplierRateKey,
         supplierBookingReference: "",
         hotelId: bookingData.hotel.HotelId,
         hotelName: bookingData.hotel.HotelName,
@@ -294,6 +451,7 @@ export default function CheckoutPage() {
           adults: room.AdultNames.length,
           children: room.ChildNames?.length || 0,
         })),
+        travelers: bookingTravelers,
         leadGuest: leadGuest
           ? `${leadGuest.title || "Mr"} ${leadGuest.firstName} ${leadGuest.lastName}`
           : "Guest",
@@ -314,6 +472,7 @@ export default function CheckoutPage() {
         metadata: {
           checkoutFlow: "internal_booking_before_payment",
           stripeMetadataReady: true,
+          supplierTotalFare,
         },
       };
 
@@ -356,9 +515,18 @@ export default function CheckoutPage() {
       );
 
       if (!isStripeCheckoutEnabled) {
-        setNotice(
-          `Booking created with ID ${bookingId}. Payment checkout is not enabled yet.`,
-        );
+        const bookingStatus = bookingResult.booking?.bookingStatus || "";
+        if (bookingStatus === "supplier_booking_confirmed") {
+          setNotice(`Booking created with ID ${bookingId}. Your booking is confirmed.`);
+        } else if (bookingStatus === "supplier_booking_failed") {
+          setNotice(
+            `Booking created with ID ${bookingId}. We could not confirm it automatically and will contact you.`,
+          );
+        } else {
+          setNotice(
+            `Booking created with ID ${bookingId}. Payment checkout is not enabled yet.`,
+          );
+        }
         return;
       }
 
@@ -471,6 +639,103 @@ export default function CheckoutPage() {
     ? (selectedOption.Price + (selectedOption.Taxes || 0)) * nights
     : 0;
 
+  const renderTravelerDocumentFields = (travelerIndex: number) => (
+    <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div>
+        <Label htmlFor={`gender-${travelerIndex}`}>Gender</Label>
+        <Input
+          id={`gender-${travelerIndex}`}
+          value={travelers[travelerIndex]?.gender || ""}
+          onChange={(e) => updateTraveler(travelerIndex, "gender", e.target.value)}
+          placeholder="Gender"
+        />
+      </div>
+      <div>
+        <Label htmlFor={`dob-${travelerIndex}`}>Date of birth</Label>
+        <Input
+          id={`dob-${travelerIndex}`}
+          type="date"
+          value={travelers[travelerIndex]?.dateOfBirth || ""}
+          onChange={(e) => updateTraveler(travelerIndex, "dateOfBirth", e.target.value)}
+        />
+      </div>
+      <div>
+        <Label htmlFor={`nationality-${travelerIndex}`}>Nationality</Label>
+        <Input
+          id={`nationality-${travelerIndex}`}
+          value={travelers[travelerIndex]?.nationality || ""}
+          onChange={(e) => updateTraveler(travelerIndex, "nationality", e.target.value)}
+          placeholder="Nationality"
+        />
+      </div>
+      <div>
+        <Label htmlFor={`documentType-${travelerIndex}`}>Document type</Label>
+        <Select
+          value={travelers[travelerIndex]?.documentType || "passport"}
+          onValueChange={(value) => updateTraveler(travelerIndex, "documentType", value)}
+        >
+          <SelectTrigger id={`documentType-${travelerIndex}`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DOCUMENT_TYPES.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor={`documentNumber-${travelerIndex}`}>Document number</Label>
+        <Input
+          id={`documentNumber-${travelerIndex}`}
+          value={travelers[travelerIndex]?.documentNumber || ""}
+          onChange={(e) => updateTraveler(travelerIndex, "documentNumber", e.target.value)}
+          placeholder="Document number"
+        />
+      </div>
+      {(travelers[travelerIndex]?.documentType || "passport") === "passport" && (
+        <div>
+          <Label htmlFor={`passportExpiryDate-${travelerIndex}`}>Passport expiry date</Label>
+          <Input
+            id={`passportExpiryDate-${travelerIndex}`}
+            type="date"
+            value={travelers[travelerIndex]?.passportExpiryDate || ""}
+            onChange={(e) => updateTraveler(travelerIndex, "passportExpiryDate", e.target.value)}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  const renderSavedTravelerPicker = (travelerIndex: number) => (
+    <div className="mb-3">
+      <Label>Saved traveler</Label>
+      {savedTravelers.length ? (
+        <Select
+          value={travelers[travelerIndex]?.savedTravelerId || ""}
+          onValueChange={(value) => applySavedTraveler(travelerIndex, value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Choose saved traveler" />
+          </SelectTrigger>
+          <SelectContent>
+            {savedTravelers.map((traveler) => (
+              <SelectItem key={traveler._id} value={traveler._id}>
+                {[traveler.title, traveler.firstName, traveler.lastName].filter(Boolean).join(" ")}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <div className="rounded-md border bg-muted p-3 text-sm text-muted-foreground">
+          No saved travelers yet. Add quick traveler details below or manage saved travelers from your account.
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Button
@@ -551,6 +816,7 @@ export default function CheckoutPage() {
                           <p className="font-medium mb-3 text-sm">
                             Adult {adultIndex + 1}
                           </p>
+                          {renderSavedTravelerPicker(travelerIndex)}
                           <div className="grid grid-cols-4 gap-3">
                             <div>
                               <Label htmlFor={`title-${travelerIndex}`}>
@@ -615,6 +881,7 @@ export default function CheckoutPage() {
                               placeholder="Last name"
                             />
                           </div>
+                          {savedTravelers.length === 0 && renderTravelerDocumentFields(travelerIndex)}
                         </div>
                       );
                     })}
@@ -649,6 +916,7 @@ export default function CheckoutPage() {
                               </Badge>
                             )}
                           </p>
+                          {renderSavedTravelerPicker(travelerIndex)}
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <Label
@@ -691,6 +959,7 @@ export default function CheckoutPage() {
                               />
                             </div>
                           </div>
+                          {savedTravelers.length === 0 && renderTravelerDocumentFields(travelerIndex)}
                         </div>
                       );
                     })}

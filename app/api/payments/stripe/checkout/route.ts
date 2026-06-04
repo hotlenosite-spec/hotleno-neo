@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { z } from "zod";
+import type { Document } from "mongodb";
 import { BOOKING_STATUSES } from "@/lib/booking-status";
-import dbConnect from "@/lib/mongodb";
-import Booking from "@/models/Booking";
+import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+type BookingDocument = Document & {
+  _id: string;
+};
 
 const checkoutSchema = z.object({
   amount: z.number().positive(),
@@ -67,8 +71,11 @@ export async function POST(req: NextRequest) {
       locale = "en",
     } = validation.data;
 
-    await dbConnect();
-    const booking = await Booking.findById(bookingId).select("_id");
+    const db = await getFirestoreMongoDb();
+    const booking = await db.collection<BookingDocument>("bookings").findOne(
+      { _id: bookingId },
+      { projection: { _id: 1 } },
+    );
 
     if (!booking) {
       return NextResponse.json(

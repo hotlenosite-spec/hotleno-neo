@@ -11,7 +11,8 @@
     "tbo-certification": "node scripts/tbo-certification.mjs",
     "hotelbeds-transfers-certification": "node scripts/hotelbeds-transfers-certification.mjs",
     "hotelbeds-hotels-certification:package": "node scripts/package-hotelbeds-hotels-certification.mjs",
-    "hotelbeds-hotels-certification:screenshots": "node scripts/capture-hotelbeds-hotels-certification-screenshots.mjs"
+    "hotelbeds-hotels-certification:screenshots": "node scripts/capture-hotelbeds-hotels-certification-screenshots.mjs",
+    "seed:local-accounts": "node scripts/seed-local-accounts.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -22,7 +23,10 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "firebase-admin": "^13.10.0",
+    "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.2.0",
     "mongoose": "^8.23.0",
     "next": "16.0.10",
     "next-auth": "^4.24.5",

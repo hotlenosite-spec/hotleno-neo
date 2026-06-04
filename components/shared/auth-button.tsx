@@ -16,6 +16,7 @@ export default function AuthButtons() {
     ? {
         name: user.name,
         email: user.email,
+        role: user.role,
         avatar: user.avatar || "",
       }
     : null;

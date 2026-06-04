@@ -18,6 +18,7 @@ interface User {
   agencyRole?: string;
   hotelPartnerId?: string;
   hotelRole?: string;
+  supplierScope?: string | null;
   isActive?: boolean;
   lastLoginAt?: string;
   avatar?: string;

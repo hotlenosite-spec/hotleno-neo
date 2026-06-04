@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
 import { generateToken } from '@/lib/jwt';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
+import { createUser, publicUser } from '@/lib/firebase-store';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -21,8 +20,6 @@ export async function POST(req: NextRequest) {
 
     if (rateLimitResponse) return rateLimitResponse;
 
-    await dbConnect();
-    
     const body = await req.json();
     
     // Validate input
@@ -36,44 +33,26 @@ export async function POST(req: NextRequest) {
     
     const { name, email, password } = validation.data;
     
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const user = await createUser({ name, email, password });
+    if (!user) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
         { status: 409 }
       );
     }
-    
-    // Create new user
-    const user = await User.create({
-      name,
-      email,
-      password,
-    });
-    
+
     // Generate token
     const token = generateToken({
-      userId: user._id.toString(),
+      userId: user.id,
       email: user.email,
       role: user.role,
+      supplierScope: user.supplierScope,
     });
     
     return NextResponse.json({
       success: true,
       message: 'User registered successfully',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        accountType: user.accountType,
-        agencyId: user.agencyId,
-        agencyRole: user.agencyRole,
-        hotelPartnerId: user.hotelPartnerId,
-        hotelRole: user.hotelRole,
-        isActive: user.isActive,
-      },
+      user: publicUser(user),
       token,
     }, { status: 201 });
     

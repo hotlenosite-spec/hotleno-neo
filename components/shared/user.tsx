@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ConfirmLogout } from "@/components/features/auth/confirm-logout";
 import {
   DropdownMenu,
@@ -25,6 +25,7 @@ import {
 interface UserData {
   name: string;
   email: string;
+  role?: string;
   avatar?: string;
 }
 
@@ -33,8 +34,20 @@ interface UserNavProps {
 }
 
 export function User({ user }: UserNavProps) {
-  const t = useTranslations();
+  const t = useTranslations("account");
+  const locale = useLocale();
   const [isOpen, setIsOpen] = useState(false);
+  const isAdmin = user.role === "admin";
+  const dashboardHref = isAdmin ? `/${locale}/admin` : `/${locale}/account`;
+  const menuItems = [
+    { href: dashboardHref, icon: LayoutIcon, label: isAdmin ? t("nav.adminDashboard") : t("nav.dashboard") },
+    { href: `/${locale}/account/bookings`, icon: LayoutIcon, label: t("nav.bookings") },
+    { href: `/${locale}/account/wallet`, icon: LayoutIcon, label: t("nav.wallet") },
+    { href: `/${locale}/account/profile`, icon: UserFreeIcons, label: t("nav.profile") },
+    { href: `/${locale}/account/travelers`, icon: UserFreeIcons, label: t("nav.travelers") },
+    { href: `/${locale}/account/settings`, icon: SettingsIcon, label: t("nav.settings") },
+    { href: `/${locale}/support`, icon: SettingsIcon, label: t("nav.support") },
+  ];
 
   const getInitials = (name: string) => {
     return name
@@ -84,26 +97,14 @@ export function User({ user }: UserNavProps) {
 
         <DropdownMenuSeparator />
 
-        <Link href="/dashboard">
-          <DropdownMenuItem className="cursor-pointer px-4 py-3 text-sm">
-            <HugeiconsIcon icon={LayoutIcon} className="h-4 w-4 mr-3" />
-            {t("navigation.dashboard")}
-          </DropdownMenuItem>
-        </Link>
-
-        <Link href="/profile">
-          <DropdownMenuItem className="cursor-pointer px-4 py-3 text-sm">
-            <HugeiconsIcon icon={UserFreeIcons} className="h-4 w-4 mr-3" />
-            {t("navigation.profile")}
-          </DropdownMenuItem>
-        </Link>
-
-        <Link href="/settings">
-          <DropdownMenuItem className="cursor-pointer px-4 py-3 text-sm">
-            <HugeiconsIcon icon={SettingsIcon} className="h-4 w-4 mr-3" />
-            {t("navigation.settings")}
-          </DropdownMenuItem>
-        </Link>
+        {menuItems.map((item) => (
+          <Link key={item.href} href={item.href}>
+            <DropdownMenuItem className="cursor-pointer px-4 py-3 text-sm">
+              <HugeiconsIcon icon={item.icon} className="h-4 w-4 mr-3" />
+              {item.label}
+            </DropdownMenuItem>
+          </Link>
+        ))}
 
         <DropdownMenuSeparator />
 

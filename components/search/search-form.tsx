@@ -55,6 +55,21 @@ const CURRENCIES = [
 
 type UnknownRecord = Record<string, unknown>;
 
+const TBO_CERTIFICATION_SUGGESTION: HotelbedsSearchSuggestion = {
+  type: "destination",
+  label: "TBO Certification Test",
+  value: "TBO Certification Test",
+};
+
+const TBO_DUBAI_SUGGESTION: HotelbedsSearchSuggestion = {
+  type: "destination",
+  label: "Dubai, United Arab Emirates",
+  value: "Dubai",
+  destinationCode: "115936",
+  cityCode: "115936",
+  countryCode: "AE",
+};
+
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -147,6 +162,8 @@ function normalizeSuggestion(item: unknown): HotelbedsSearchSuggestion | null {
     getString(merged.destination) ||
     (type === "destination" ? getString(merged.code) : undefined);
 
+  const cityCode = getString(merged.cityCode);
+
   const countryCode =
     getString(merged.countryCode) ||
     (type === "country" ? getString(merged.code) : undefined);
@@ -169,6 +186,7 @@ function normalizeSuggestion(item: unknown): HotelbedsSearchSuggestion | null {
     value: suggestionValue,
     hotelCode,
     destinationCode,
+    cityCode,
     countryCode,
     zoneCode,
   };
@@ -187,6 +205,7 @@ function uniqueSuggestions(
       suggestion.label.toLowerCase(),
       suggestion.hotelCode || "",
       suggestion.destinationCode || "",
+      suggestion.cityCode || "",
       suggestion.countryCode || "",
       suggestion.zoneCode || "",
     ].join(":");
@@ -252,6 +271,66 @@ function extractSuggestions(payload: unknown): HotelbedsSearchSuggestion[] {
   return sortSuggestions(uniqueSuggestions(normalized));
 }
 
+function decodeJwtPayload(token: string): UnknownRecord | null {
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) return null;
+
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decodedPayload = atob(
+      normalizedPayload.padEnd(
+        normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+        "=",
+      ),
+    );
+    const parsed = JSON.parse(decodedPayload) as unknown;
+
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function isTboTesterPayload(payload: UnknownRecord | null) {
+  return (
+    getString(payload?.email).toLowerCase() === "tbo.tester@hotleno.com" ||
+    (getString(payload?.role) === "supplier_tester" &&
+      getString(payload?.supplierScope) === "tbo")
+  );
+}
+
+function getClientTboCertificationMode() {
+  const envMode =
+    process.env.NEXT_PUBLIC_TBO_CERTIFICATION_MODE === "true" ||
+    process.env.TBO_CERTIFICATION_MODE === "true";
+
+  if (envMode) return true;
+  if (typeof window === "undefined") return false;
+
+  return isTboTesterPayload(decodeJwtPayload(localStorage.getItem("token") || ""));
+}
+
+function buildTboCertificationSuggestion(label: string): HotelbedsSearchSuggestion {
+  const normalizedLabel = label.trim() || TBO_CERTIFICATION_SUGGESTION.label;
+
+  return {
+    ...TBO_CERTIFICATION_SUGGESTION,
+    label: normalizedLabel,
+    value: normalizedLabel,
+  };
+}
+
+function isDubaiSearchTerm(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized === "dubai" ||
+    normalized === "dxb" ||
+    normalized === "دبي" ||
+    normalized.includes("dubai") ||
+    normalized.includes("دبي")
+  );
+}
+
 async function fetchHotelbedsSuggestions(
   term: string,
   signal: AbortSignal,
@@ -296,6 +375,13 @@ export default function SearchForm() {
 
   const [destination, setDestination] =
     useState<HotelbedsSearchSuggestion | null>(null);
+  const [tboCertificationMode, setTboCertificationMode] = useState(
+    () => process.env.NEXT_PUBLIC_TBO_CERTIFICATION_MODE === "true",
+  );
+
+  useEffect(() => {
+    setTboCertificationMode(getClientTboCertificationMode());
+  }, []);
 
   const [dates, setDates] = useState({
     checkIn: new Date(),
@@ -330,15 +416,19 @@ export default function SearchForm() {
 
   const handleSearch = async () => {
     if (!destination) {
-      alert(t("search.selectDestination"));
-      return;
+      if (!tboCertificationMode) {
+        alert(t("search.selectDestination"));
+        return;
+      }
     }
 
     setLoading(true);
 
     try {
+      const selectedDestination =
+        destination || buildTboCertificationSuggestion(TBO_CERTIFICATION_SUGGESTION.label);
       const searchParams = {
-        destination,
+        destination: selectedDestination,
         dates,
         guests,
         nationality,
@@ -348,8 +438,8 @@ export default function SearchForm() {
       localStorage.setItem("hotelSearch", JSON.stringify(searchParams));
 
       const query = new URLSearchParams({
-        destination: destination.label,
-        type: destination.type,
+        destination: selectedDestination.label,
+        type: selectedDestination.type,
         checkIn: format(dates.checkIn, "yyyy-MM-dd"),
         checkOut: format(dates.checkOut, "yyyy-MM-dd"),
         adults: String(guests.adults),
@@ -359,12 +449,21 @@ export default function SearchForm() {
         currency,
       });
 
-      if (destination.hotelCode) query.set("hotelCode", destination.hotelCode);
-      if (destination.destinationCode) {
-        query.set("destinationCode", destination.destinationCode);
+      if (selectedDestination.hotelCode) {
+        query.set("hotelCode", selectedDestination.hotelCode);
       }
-      if (destination.countryCode) query.set("countryCode", destination.countryCode);
-      if (destination.zoneCode) query.set("zoneCode", destination.zoneCode);
+      if (selectedDestination.destinationCode) {
+        query.set("destinationCode", selectedDestination.destinationCode);
+      }
+      if (selectedDestination.cityCode) {
+        query.set("cityCode", selectedDestination.cityCode);
+      }
+      if (selectedDestination.countryCode) {
+        query.set("countryCode", selectedDestination.countryCode);
+      }
+      if (selectedDestination.zoneCode) {
+        query.set("zoneCode", selectedDestination.zoneCode);
+      }
 
       router.push(`/${lang}/search?${query.toString()}`);
     } catch (error) {
@@ -401,6 +500,7 @@ export default function SearchForm() {
             value={destination}
             placeholder={copy.destinationPlaceholder}
             onChange={setDestination}
+            tboCertificationMode={tboCertificationMode}
           />
         </SearchField>
 
@@ -432,7 +532,7 @@ export default function SearchForm() {
 
         <Button
           onClick={handleSearch}
-          disabled={loading || !destination}
+          disabled={loading || (!destination && !tboCertificationMode)}
           className="h-[74px] rounded-2xl bg-[#F97316] px-6 text-base font-black text-white shadow-lg shadow-orange-500/25 hover:bg-[#EA580C] disabled:opacity-60"
         >
           <HugeiconsIcon icon={Search01Icon} className="h-5 w-5" />
@@ -495,10 +595,12 @@ function HotelbedsDestinationAutocomplete({
   value,
   placeholder,
   onChange,
+  tboCertificationMode,
 }: {
   value: HotelbedsSearchSuggestion | null;
   placeholder: string;
   onChange: (value: HotelbedsSearchSuggestion | null) => void;
+  tboCertificationMode: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value?.label || "");
@@ -510,18 +612,45 @@ function HotelbedsDestinationAutocomplete({
   const selectedLabel = useMemo(() => value?.label || "", [value?.label]);
 
   useEffect(() => {
+    if (tboCertificationMode) return;
     if (query.trim() === selectedLabel) return;
     onChange(null);
-  }, [onChange, query, selectedLabel]);
+  }, [onChange, query, selectedLabel, tboCertificationMode]);
 
   useEffect(() => {
     const term = query.trim();
+
+    if (tboCertificationMode) {
+      setLoading(false);
+      setSearchCompleted(term.length >= 1);
+      setError("");
+      setSuggestions([TBO_CERTIFICATION_SUGGESTION]);
+      if (term) onChange(buildTboCertificationSuggestion(term));
+      return;
+    }
 
     if (term.length < 2) {
       setSuggestions([]);
       setLoading(false);
       setSearchCompleted(false);
       setError("");
+      return;
+    }
+
+    if (isDubaiSearchTerm(term)) {
+      const dubaiSuggestion = {
+        ...TBO_DUBAI_SUGGESTION,
+        label:
+          term === "دبي"
+            ? "دبي، الإمارات العربية المتحدة"
+            : TBO_DUBAI_SUGGESTION.label,
+      };
+
+      setSuggestions([dubaiSuggestion]);
+      setLoading(false);
+      setSearchCompleted(true);
+      setError("");
+      onChange(dubaiSuggestion);
       return;
     }
 
@@ -557,7 +686,7 @@ function HotelbedsDestinationAutocomplete({
       controller.abort();
       clearTimeout(timeout);
     };
-  }, [query]);
+  }, [onChange, query, tboCertificationMode]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -607,7 +736,15 @@ function HotelbedsDestinationAutocomplete({
               )}
 
             {suggestions.length > 0 && (
-              <CommandGroup heading="نتائج Hotelbeds">
+              <CommandGroup
+                heading={
+                  tboCertificationMode
+                    ? "TBO Certification"
+                    : suggestions.some((suggestion) => suggestion.cityCode === "115936")
+                      ? "TBO Normal Search"
+                      : "نتائج Hotelbeds"
+                }
+              >
                 {suggestions.map((suggestion) => (
                   <CommandItem
                     key={[
@@ -615,6 +752,7 @@ function HotelbedsDestinationAutocomplete({
                       suggestion.value,
                       suggestion.hotelCode,
                       suggestion.destinationCode,
+                      suggestion.cityCode,
                       suggestion.countryCode,
                       suggestion.zoneCode,
                       suggestion.label,

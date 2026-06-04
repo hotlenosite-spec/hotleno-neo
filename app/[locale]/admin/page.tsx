@@ -20,6 +20,7 @@ interface DashboardStats {
   totalUsers: number;
   totalRevenue: number;
   activeBookings: number;
+  reviewRequiredBookings?: number;
   recentBookings: Array<{
     _id: string;
     bookingReference: string;
@@ -44,6 +45,7 @@ const dashboardCopy = {
     description: "A clean overview of Hotleno operations",
     totalBookings: "Total Bookings",
     activeBookings: "active bookings",
+    reviewRequired: "need review",
     revenue: "Revenue",
     fromSystemData: "from system data",
     activeHotels: "Active Hotels",
@@ -84,6 +86,7 @@ const dashboardCopy = {
     description: "نظرة تشغيلية نظيفة على أداء منصة Hotleno",
     totalBookings: "إجمالي الحجوزات",
     activeBookings: "حجوزات نشطة",
+    reviewRequired: "تحتاج مراجعة",
     revenue: "الإيرادات",
     fromSystemData: "من بيانات النظام",
     activeHotels: "الفنادق النشطة",
@@ -234,7 +237,7 @@ export default function AdminDashboardPage() {
         <TopMetricCard
           title={c.totalBookings}
           value={(stats?.totalBookings || 0).toLocaleString(isAr ? "ar-SA" : "en-US")}
-          description={`${stats?.activeBookings || 0} ${c.activeBookings}`}
+          description={`${stats?.activeBookings || 0} ${c.activeBookings} · ${stats?.reviewRequiredBookings || 0} ${c.reviewRequired}`}
           icon={Calendar01Icon}
           iconClass="bg-[#F97316] text-white"
           descriptionClass="text-emerald-600"

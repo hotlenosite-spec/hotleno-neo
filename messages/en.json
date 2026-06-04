@@ -13,6 +13,7 @@
     "profile": "Profile",
     "dashboard": "Dashboard",
     "settings": "Settings",
+    "myAccount": "My Account",
     "language": "Language",
     "english": "English",
     "arabic": "Arabic",
@@ -89,6 +90,7 @@
     "viewDetails": "View Details",
     "bestPriceGuarantee": "Best price guarantee",
     "photos": "photos",
+    "noImage": "No image available",
     "starHotel": "Star Hotel",
     "standardRoom": "Standard Room",
     "available": "Available",
@@ -364,7 +366,18 @@
     "joined": "Joined",
     "bookings": "Bookings",
     "adminAccessRequired": "Admin access required",
-    "notAuthenticated": "Please sign in to access this page"
+    "notAuthenticated": "Please sign in to access this page",
+    "editUser": "Edit user",
+    "userUpdated": "User updated",
+    "name": "Name",
+    "phone": "Phone",
+    "role": "Role",
+    "status": "Status",
+    "nationality": "Nationality",
+    "nationalId": "National ID",
+    "passportNumber": "Passport number",
+    "passportExpiryDate": "Passport expiry date",
+    "edit": "Edit"
   },
   "support": {
     "support": "Support",
@@ -440,6 +453,180 @@
     "delete": "Delete",
     "publish": "Publish",
     "hide": "Hide"
+  },
+  "account": {
+    "loading": "Loading account data...",
+    "authRequiredTitle": "Sign in to view your account",
+    "authRequiredDescription": "Manage your bookings, travelers, wallet, and support requests from one place.",
+    "comingSoon": "Coming soon",
+    "nav": {
+      "adminDashboard": "Admin Dashboard",
+      "dashboard": "Dashboard",
+      "profile": "My Profile",
+      "bookings": "My Bookings",
+      "wallet": "Wallet",
+      "travelers": "Travelers",
+      "settings": "Settings",
+      "support": "Support Center",
+      "logout": "Sign out"
+    },
+    "status": {
+      "active": "Active account",
+      "inactive": "Inactive account"
+    },
+    "customerStatus": {
+      "requestCreated": "Request created",
+      "processing": "Awaiting processing",
+      "confirmed": "Confirmed",
+      "cancellationRequested": "Cancellation requested",
+      "cancelled": "Cancelled",
+      "underReview": "Under review",
+      "cancellationFailed": "Cancellation could not be completed. We will contact you.",
+      "amendmentPending": "Amendment request is being processed",
+      "additionalPaymentPending": "Awaiting additional payment"
+    },
+    "actions": {
+      "explore": "Explore",
+      "details": "Details",
+      "cancel": "Cancel",
+      "save": "Save traveler",
+      "saving": "Saving..."
+    },
+    "dashboard": {
+      "eyebrow": "HOTLENO account",
+      "welcome": "Welcome back, {name}",
+      "traveler": "Traveler",
+      "description": "Your trips, services, wallet, and saved travelers are ready when you are.",
+      "walletBalance": "Wallet balance",
+      "totalBookings": "Total bookings",
+      "activeBookings": "Active bookings",
+      "travelers": "Saved travelers",
+      "services": "HOTLENO services",
+      "recentBookings": "Recent bookings",
+      "quickLinks": "Quick links"
+    },
+    "services": {
+      "hotel": {
+        "title": "Hotels",
+        "description": "Find and book trusted stays with live supplier availability."
+      },
+      "flight": {
+        "title": "Flights",
+        "description": "Flight booking will be available from your HOTLENO account soon."
+      },
+      "car": {
+        "title": "Cars",
+        "description": "Reserve cars for business trips and holidays in one account."
+      },
+      "activity": {
+        "title": "Activities",
+        "description": "Discover tours, tickets, and destination experiences."
+      },
+      "transfer": {
+        "title": "Airport meet and assist",
+        "description": "Arrange airport pickup, drop-off, and transfer support."
+      },
+      "esim": {
+        "title": "eSIM",
+        "description": "Stay connected with travel eSIM plans from HOTLENO."
+      }
+    },
+    "bookings": {
+      "eyebrow": "Trip history",
+      "title": "My Bookings",
+      "description": "View and manage your HOTLENO bookings.",
+      "listTitle": "Bookings",
+      "bookingId": "Booking ID",
+      "service": "Service",
+      "name": "Hotel or service",
+      "date": "Date",
+      "price": "Price",
+      "supplier": "Supplier",
+      "status": "Status",
+      "actions": "Actions",
+      "emptyTitle": "No bookings yet",
+      "empty": "Your bookings will appear here after you complete a reservation.",
+      "notFound": "Booking not found",
+      "cancelRequestSaved": "Cancellation request was saved."
+    },
+    "bookingDetail": {
+      "eyebrow": "Booking details",
+      "tripDetails": "Trip details",
+      "location": "Location",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "supplierStatus": "Supplier status",
+      "rooms": "Rooms",
+      "room": "Room",
+      "adults": "adults",
+      "children": "children",
+      "summary": "Summary",
+      "leadGuest": "Lead guest",
+      "email": "Email",
+      "phone": "Phone",
+      "createdAt": "Created at",
+      "cancellationPolicy": "Cancellation policy",
+      "supplierPolicy": "Cancellation policy depends on supplier terms",
+      "travelers": "Travelers"
+    },
+    "wallet": {
+      "eyebrow": "Payments",
+      "title": "Wallet",
+      "description": "Track your credits, refunds, and wallet balance.",
+      "balance": "Current balance",
+      "credits": "Credits",
+      "refunds": "Refunds",
+      "transactions": "Wallet activity",
+      "emptyTitle": "No wallet activity",
+      "empty": "Credits, refunds, and wallet transactions will appear here."
+    },
+    "profile": {
+      "eyebrow": "Account profile",
+      "title": "My Profile",
+      "description": "Review your basic account information.",
+      "accountInfo": "Account information",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Mobile number",
+      "accountType": "Account type",
+      "createdAt": "Created at",
+      "status": "Account status",
+      "nationality": "Nationality",
+      "birthDate": "Date of birth",
+      "nationalId": "National ID",
+      "passportNumber": "Passport number",
+      "passportExpiryDate": "Passport expiry date"
+    },
+    "travelers": {
+      "eyebrow": "Saved guests",
+      "title": "Travelers",
+      "description": "Save frequent travelers for faster checkout.",
+      "addTraveler": "Add traveler",
+      "savedTravelers": "Saved travelers",
+      "titleField": "Title",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "gender": "Gender",
+      "birthDate": "Birth date",
+      "nationality": "Nationality",
+      "emptyTitle": "No saved travelers",
+      "empty": "Add travelers here to reuse them in future bookings.",
+      "dateOfBirth": "Date of birth",
+      "documentType": "Document type",
+      "documentNumber": "Document number",
+      "passportNumber": "Passport number",
+      "nationalId": "National ID",
+      "passportExpiryDate": "Passport expiry date",
+      "phone": "Phone",
+      "email": "Email"
+    },
+    "settings": {
+      "eyebrow": "Preferences",
+      "title": "Settings",
+      "description": "Manage account preferences and notification settings.",
+      "preferences": "Preferences",
+      "readOnly": "Settings are read-only for now and will be editable in a later release."
+    }
   },
   "components": {
     "shared": {

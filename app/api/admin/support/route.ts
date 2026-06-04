@@ -1,161 +1,124 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import SupportTicket from '@/models/SupportTicket';
-import User from '@/models/User';
-import { verifyToken } from '@/lib/jwt';
+import { NextRequest, NextResponse } from "next/server";
+import type { Document } from "mongodb";
+import { verifyToken } from "@/lib/jwt";
+import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
+import { getUserById } from "@/lib/firebase-store";
 
-// GET - Fetch all support tickets (admin only)
+type StringIdDocument = Document & { _id: string };
+
+async function requireAdmin(req: NextRequest) {
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) return { error: "No token provided", status: 401 } as const;
+
+  const decoded = verifyToken(token);
+  const currentUser = await getUserById(decoded.userId);
+  if (!currentUser || currentUser.role !== "admin") {
+    return { error: "Unauthorized - Admin access required", status: 403 } as const;
+  }
+
+  return { currentUser };
+}
+
+function matchesTicketFilters(ticket: Record<string, unknown>, searchParams: URLSearchParams) {
+  const status = searchParams.get("status");
+  const priority = searchParams.get("priority");
+  if (status && String(ticket.status ?? "") !== status) return false;
+  if (priority && String(ticket.priority ?? "") !== priority) return false;
+  return true;
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No token provided' },
-        { status: 401 }
-      );
+    const auth = await requireAdmin(req);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const decoded = verifyToken(token);
-    
-    await dbConnect();
-    
-    // Check if user is admin
-    const currentUser = await User.findById(decoded.userId);
-    
-    if (!currentUser || currentUser.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      );
-    }
-    
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status');
-    const priority = searchParams.get('priority');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    
-    // Build query
-    const query: Record<string, unknown> = {};
-    if (status) query.status = status;
-    if (priority) query.priority = priority;
-    
-    // Calculate pagination
+    const page = Math.max(parseInt(searchParams.get("page") || "1"), 1);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
     const skip = (page - 1) * limit;
-    
-    // Fetch tickets with user info
-    const tickets = await SupportTicket.find(query)
-      .populate('userId', 'name email')
-      .populate('assignedTo', 'name')
-      .sort({ priority: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .select('-messages');
-    
-    // Get total count
-    const total = await SupportTicket.countDocuments(query);
-    
-    // Get stats
-    const stats = {
-      total: await SupportTicket.countDocuments(),
-      open: await SupportTicket.countDocuments({ status: 'open' }),
-      inProgress: await SupportTicket.countDocuments({ status: 'in_progress' }),
-      waiting: await SupportTicket.countDocuments({ status: 'waiting' }),
-      resolved: await SupportTicket.countDocuments({ status: 'resolved' }),
-      urgent: await SupportTicket.countDocuments({ priority: 'urgent', status: { $nin: ['resolved', 'closed'] } }),
-    };
-    
+    const db = await getFirestoreMongoDb();
+    const allTickets = (await db
+      .collection<StringIdDocument>("support_tickets")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray()) as Record<string, unknown>[];
+    const filteredTickets = allTickets
+      .filter((ticket) => ticket._id !== "_meta")
+      .filter((ticket) => matchesTicketFilters(ticket, searchParams));
+    const tickets = filteredTickets.slice(skip, skip + limit);
+    const activeTickets = allTickets.filter(
+      (ticket) => !["resolved", "closed"].includes(String(ticket.status ?? "")),
+    );
+
+    console.info("[admin/support] collection=support_tickets count=%d", filteredTickets.length);
+
     return NextResponse.json({
       success: true,
       tickets,
-      stats,
+      stats: {
+        total: allTickets.length,
+        open: allTickets.filter((ticket) => ticket.status === "open").length,
+        inProgress: allTickets.filter((ticket) => ticket.status === "in_progress").length,
+        waiting: allTickets.filter((ticket) => ticket.status === "waiting").length,
+        resolved: allTickets.filter((ticket) => ticket.status === "resolved").length,
+        urgent: activeTickets.filter((ticket) => ticket.priority === "urgent").length,
+      },
       pagination: {
         page,
         limit,
-        total,
-        pages: Math.ceil(total / limit),
+        total: filteredTickets.length,
+        pages: Math.ceil(filteredTickets.length / limit),
       },
     });
-    
   } catch (error) {
-    console.error('Admin support tickets fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch tickets' },
-      { status: 500 }
+    console.error(
+      "[admin/support] fetch failed:",
+      error instanceof Error ? error.message : "Unknown error",
     );
+    return NextResponse.json({ error: "Failed to fetch tickets" }, { status: 500 });
   }
 }
 
-// PATCH - Update ticket (assign, change status, priority)
 export async function PATCH(req: NextRequest) {
   try {
-    const token = req.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No token provided' },
-        { status: 401 }
-      );
+    const auth = await requireAdmin(req);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const decoded = verifyToken(token);
     const body = await req.json();
-    
-    await dbConnect();
-    
-    // Check if user is admin
-    const currentUser = await User.findById(decoded.userId);
-    
-    if (!currentUser || currentUser.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      );
-    }
-    
-    const { ticketId, status, priority, assignedTo } = body;
-    
+    const ticketId = typeof body.ticketId === "string" ? body.ticketId : "";
     if (!ticketId) {
-      return NextResponse.json(
-        { error: 'Ticket ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Ticket ID is required" }, { status: 400 });
     }
-    
-    const updateData: Record<string, unknown> = {};
-    if (status) updateData.status = status;
-    if (priority) updateData.priority = priority;
-    if (assignedTo) updateData.assignedTo = assignedTo;
-    
-    if (status === 'resolved') {
-      updateData.resolvedAt = new Date();
-    }
-    
-    const ticket = await SupportTicket.findByIdAndUpdate(
-      ticketId,
-      updateData,
-      { new: true }
-    ).populate('userId', 'name email');
-    
-    if (!ticket) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      );
-    }
-    
+
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (typeof body.status === "string") updateData.status = body.status;
+    if (typeof body.priority === "string") updateData.priority = body.priority;
+    if (typeof body.assignedTo === "string") updateData.assignedTo = body.assignedTo;
+    if (body.status === "resolved") updateData.resolvedAt = new Date();
+
+    const db = await getFirestoreMongoDb();
+    const tickets = db.collection<StringIdDocument>("support_tickets");
+    await tickets.updateOne({ _id: ticketId }, { $set: updateData });
+    const ticket = await tickets.findOne({ _id: ticketId });
+
+    if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+
+    console.info("[admin/support] collection=support_tickets updated=1");
+
     return NextResponse.json({
       success: true,
-      message: 'Ticket updated successfully',
+      message: "Ticket updated successfully",
       ticket,
     });
-    
-  } catch (error: unknown) {
-    console.error('Ticket update error:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to update ticket' },
-      { status: 500 }
+  } catch (error) {
+    console.error(
+      "[admin/support] update failed:",
+      error instanceof Error ? error.message : "Unknown error",
     );
+    return NextResponse.json({ error: "Failed to update ticket" }, { status: 500 });
   }
 }

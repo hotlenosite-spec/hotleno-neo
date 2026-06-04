@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { travellandaClient } from '@/lib/providers/travellanda';
+import { shouldSkipTravellandaForTbo } from '@/lib/hotels/tbo-mode';
 import type { 
   HotelSearchParams, 
   HotelSearchResponse, 
@@ -48,6 +49,26 @@ const defaultFilters: HotelFilters = {
   boardTypes: [],
   refundableOnly: false,
 };
+
+function createFallbackPolicies(optionId: number, currency = 'USD'): HotelPoliciesResponse {
+  return {
+    ServerTime: new Date().toISOString(),
+    ServerType: 'hotleno-supplier-layer',
+    ExecutionTime: '0',
+    ResponseType: 'HotelPolicies',
+    OptionId: optionId,
+    Currency: currency,
+    TotalPrice: 0,
+    Policies: [],
+    Restrictions: [
+      {
+        Type: 'supplier_policy',
+        Description: 'سياسة الإلغاء حسب شروط المزود',
+      },
+    ],
+    Alerts: [],
+  } as HotelPoliciesResponse;
+}
 
 export function useHotelsEnhanced(): UseHotelsEnhancedReturn {
   const [searchResults, setSearchResults] = useState<HotelSearchResponse | null>(null);
@@ -107,6 +128,9 @@ export function useHotelsEnhanced(): UseHotelsEnhancedReturn {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('token')
+            ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            : {}),
         },
         body: JSON.stringify(requestParams),
       });
@@ -254,11 +278,29 @@ export function useHotelPolicies() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPolicies = useCallback(async (hotelId: number, optionId: number) => {
+  const fetchPolicies = useCallback(async (
+    hotelId: number,
+    optionId: number,
+    context?: {
+      hotel?: HotelSearchResponse['Hotels'][number] | null;
+      option?: HotelSearchResponse['Hotels'][number]['Options'][number] | null;
+      currency?: string;
+    },
+  ) => {
     setLoading(true);
     setError(null);
     
     try {
+      if (shouldSkipTravellandaForTbo(context?.hotel)) {
+        console.info('Skipping policies fetch for TBO certification booking flow');
+        const fallback = createFallbackPolicies(
+          optionId,
+          context?.option?.Currency || context?.currency,
+        );
+        setPolicies(fallback);
+        return fallback;
+      }
+
       const result = await travellandaClient.request<HotelPoliciesResponse>({
         RequestType: 'HotelPolicies',
         HotelIds: [hotelId],

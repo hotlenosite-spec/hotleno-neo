@@ -1,12 +1,14 @@
-import mongoose from 'mongoose';
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import dbConnect from '@/lib/mongodb';
-import Agency, { AGENCY_STATUSES } from '@/models/Agency';
-import AdminActionLog from '@/models/AdminActionLog';
-import User, { AGENCY_ROLES } from '@/models/User';
-import { verifyToken } from '@/lib/jwt';
+import { NextRequest, NextResponse } from "next/server";
+import type { Document } from "mongodb";
+import { z } from "zod";
+import { verifyToken } from "@/lib/jwt";
+import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
+import { createLog, getUserById } from "@/lib/firebase-store";
 
+type StringIdDocument = Document & { _id: string };
+
+const AGENCY_STATUSES = ["pending", "active", "suspended", "rejected"] as const;
+const AGENCY_ROLES = ["owner", "manager", "agent", "accountant"] as const;
 const agencyStatusSchema = z.enum(AGENCY_STATUSES);
 const agencyRoleSchema = z.enum(AGENCY_ROLES);
 
@@ -16,7 +18,7 @@ const agencyPayloadSchema = z.object({
   country: z.string().max(100).optional(),
   city: z.string().max(100).optional(),
   phone: z.string().max(50).optional(),
-  email: z.string().email().or(z.literal('')).optional(),
+  email: z.string().email().or(z.literal("")).optional(),
   status: agencyStatusSchema.optional(),
   commissionRate: z.number().min(0).optional(),
   markupRate: z.number().min(0).optional(),
@@ -33,330 +35,212 @@ const createAgencySchema = agencyPayloadSchema.extend({
 
 function getAgencyUserRole(agencyRole: z.infer<typeof agencyRoleSchema>) {
   switch (agencyRole) {
-    case 'owner':
-      return 'agency_owner';
-    case 'manager':
-      return 'agency_manager';
-    case 'agent':
-      return 'agency_agent';
-    case 'accountant':
-      return 'agency_accountant';
+    case "owner":
+      return "agency_owner";
+    case "manager":
+      return "agency_manager";
+    case "agent":
+      return "agency_agent";
+    case "accountant":
+      return "agency_accountant";
   }
 }
 
 async function requireAdmin(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    return { error: 'No token provided', status: 401 };
-  }
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) return { error: "No token provided", status: 401 } as const;
 
   const decoded = verifyToken(token);
-  await dbConnect();
-  const user = await User.findById(decoded.userId);
-
-  if (!user || user.role !== 'admin') {
-    return { error: 'Unauthorized - Admin access required', status: 403 };
+  const user = await getUserById(decoded.userId);
+  if (!user || user.role !== "admin") {
+    return { error: "Unauthorized - Admin access required", status: 403 } as const;
   }
 
   return { user };
 }
 
-async function logAdminAction(params: {
-  adminUserId: mongoose.Types.ObjectId;
-  targetType: 'agency' | 'user';
-  targetId?: mongoose.Types.ObjectId;
-  type: string;
-  message: string;
-  request?: unknown;
-  response?: unknown;
-}) {
-  await AdminActionLog.create({
-    adminUserId: params.adminUserId,
-    targetType: params.targetType,
-    targetId: params.targetId,
-    type: params.type,
-    status: 'success',
-    message: params.message,
-    request: params.request ?? null,
-    response: params.response ?? null,
-  });
+function makeId(prefix: string) {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function buildAgencyQuery(searchParams: URLSearchParams) {
-  const status = searchParams.get('status');
-  const city = searchParams.get('city');
-  const country = searchParams.get('country');
-  const search = searchParams.get('search');
-  const query: Record<string, unknown> = {};
-
-  if (status) {
-    query.status = status;
-  }
-
-  if (city) {
-    query.city = { $regex: city, $options: 'i' };
-  }
-
-  if (country) {
-    query.country = { $regex: country, $options: 'i' };
-  }
-
+function matchesAgencyFilters(agency: Record<string, unknown>, searchParams: URLSearchParams) {
+  const status = searchParams.get("status");
+  const city = searchParams.get("city")?.toLowerCase();
+  const country = searchParams.get("country")?.toLowerCase();
+  const search = searchParams.get("search")?.toLowerCase();
+  if (status && String(agency.status ?? "") !== status) return false;
+  if (city && !String(agency.city ?? "").toLowerCase().includes(city)) return false;
+  if (country && !String(agency.country ?? "").toLowerCase().includes(country)) return false;
   if (search) {
-    query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { commercialName: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } },
-      { phone: { $regex: search, $options: 'i' } },
-    ];
+    const searchable = [
+      agency.name,
+      agency.commercialName,
+      agency.email,
+      agency.phone,
+    ].map((value) => String(value ?? "").toLowerCase());
+    if (!searchable.some((value) => value.includes(search))) return false;
   }
-
-  return query;
+  return true;
 }
 
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
-
-    if ('error' in auth) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status },
-      );
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { searchParams } = new URL(req.url);
-    const page = Math.max(parseInt(searchParams.get('page') || '1'), 1);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
-    const query = buildAgencyQuery(searchParams);
+    const page = Math.max(parseInt(searchParams.get("page") || "1"), 1);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    const db = await getFirestoreMongoDb();
+    const allAgencies = (await db
+      .collection<StringIdDocument>("agencies")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray()) as Record<string, unknown>[];
+    const filteredAgencies = allAgencies
+      .filter((agency) => agency._id !== "_meta")
+      .filter((agency) => matchesAgencyFilters(agency, searchParams));
     const skip = (page - 1) * limit;
+    const agencies = filteredAgencies.slice(skip, skip + limit);
 
-    const [agencies, total] = await Promise.all([
-      Agency.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
-      Agency.countDocuments(query),
-    ]);
+    console.info("[admin/agencies] collection=agencies count=%d", filteredAgencies.length);
 
     return NextResponse.json({
       agencies,
       pagination: {
         page,
         limit,
-        total,
-        pages: Math.ceil(total / limit),
+        total: filteredAgencies.length,
+        pages: Math.ceil(filteredAgencies.length / limit),
       },
     });
   } catch (error) {
-    console.error('Admin agencies fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch agencies' },
-      { status: 500 },
+    console.error(
+      "[admin/agencies] fetch failed:",
+      error instanceof Error ? error.message : "Unknown error",
     );
+    return NextResponse.json({ error: "Failed to fetch agencies" }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
-
-    if ('error' in auth) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status },
-      );
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const body = await req.json();
     const validation = createAgencySchema.safeParse(body);
-
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.errors },
+        { error: "Validation failed", details: validation.error.errors },
         { status: 400 },
       );
     }
 
-    const { balance: _balance, ...agencyData } = validation.data;
-    const agency = await Agency.create(agencyData);
-
-    await logAdminAction({
-      adminUserId: auth.user._id,
-      targetType: 'agency',
-      targetId: agency._id,
-      type: 'agency_created',
-      message: 'Admin created B2B agency',
-      request: {
-        name: validation.data.name,
-        email: validation.data.email,
-        status: validation.data.status ?? 'pending',
-      },
-      response: {
-        agencyId: agency._id,
-        status: agency.status,
-      },
+    const now = new Date();
+    const agency = {
+      _id: makeId("agency"),
+      ...validation.data,
+      status: validation.data.status ?? "pending",
+      balance: 0,
+      currency: validation.data.currency ?? "USD",
+      createdAt: now,
+      updatedAt: now,
+    };
+    const db = await getFirestoreMongoDb();
+    await db.collection<StringIdDocument>("agencies").insertOne(agency);
+    await createLog({
+      type: "admin_agency_created",
+      status: "success",
+      message: "Admin created B2B agency",
+      request: { agencyId: agency._id, status: agency.status },
+      response: { agencyId: agency._id },
     });
 
+    console.info("[admin/agencies] collection=agencies created=1");
     return NextResponse.json({ success: true, agency }, { status: 201 });
   } catch (error) {
-    console.error('Admin agency create error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create agency' },
-      { status: 500 },
+    console.error(
+      "[admin/agencies] create failed:",
+      error instanceof Error ? error.message : "Unknown error",
     );
+    return NextResponse.json({ error: "Failed to create agency" }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
-
-    if ('error' in auth) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status },
-      );
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const body = await req.json();
-    const { action, agencyId, userId } = body;
+    const agencyId = typeof body.agencyId === "string" ? body.agencyId : "";
+    const db = await getFirestoreMongoDb();
+    const agencies = db.collection<StringIdDocument>("agencies");
+    const agency = agencyId ? await agencies.findOne({ _id: agencyId }) : null;
+    if (!agency) return NextResponse.json({ error: "Agency not found" }, { status: 404 });
 
-    if (!agencyId || !mongoose.Types.ObjectId.isValid(agencyId)) {
-      return NextResponse.json(
-        { error: 'Valid agencyId is required' },
-        { status: 400 },
-      );
-    }
-
-    const agency = await Agency.findById(agencyId);
-
-    if (!agency) {
-      return NextResponse.json(
-        { error: 'Agency not found' },
-        { status: 404 },
-      );
-    }
-
-    if (action === 'link_user') {
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        return NextResponse.json(
-          { error: 'Valid userId is required' },
-          { status: 400 },
-        );
-      }
-
+    if (body.action === "link_user") {
       const roleValidation = agencyRoleSchema.safeParse(body.agencyRole);
-
-      if (!roleValidation.success) {
-        return NextResponse.json(
-          { error: 'Valid agencyRole is required' },
-          { status: 400 },
-        );
+      const userId = typeof body.userId === "string" ? body.userId : "";
+      if (!userId || !roleValidation.success) {
+        return NextResponse.json({ error: "Valid userId and agencyRole are required" }, { status: 400 });
       }
 
-      const user = await User.findByIdAndUpdate(
-        userId,
+      await db.collection<StringIdDocument>("users").updateOne(
+        { _id: userId },
         {
-          agencyId: agency._id,
-          agencyRole: roleValidation.data,
-          accountType: 'b2b',
-          role: getAgencyUserRole(roleValidation.data),
+          $set: {
+            agencyId,
+            agencyRole: roleValidation.data,
+            accountType: "b2b",
+            role: getAgencyUserRole(roleValidation.data),
+            updatedAt: new Date(),
+          },
         },
-        { new: true, runValidators: true },
-      ).select('-password');
-
-      if (!user) {
-        return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 },
-        );
-      }
-
-      await logAdminAction({
-        adminUserId: auth.user._id,
-        targetType: 'user',
-        targetId: user._id,
-        type: 'agency_user_linked',
-        message: 'Admin linked user to B2B agency',
-        request: {
-          agencyId,
-          userId,
-          agencyRole: roleValidation.data,
-        },
-        response: {
-          userId: user._id,
-          agencyId: user.agencyId,
-          agencyRole: user.agencyRole,
-          role: user.role,
-        },
+      );
+      const user = await db.collection<StringIdDocument>("users").findOne({ _id: userId });
+      if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+      await createLog({
+        type: "admin_agency_user_linked",
+        status: "success",
+        message: "Admin linked user to B2B agency",
+        request: { agencyId, userId, agencyRole: roleValidation.data },
       });
-
       return NextResponse.json({ success: true, user });
     }
 
-    if (action === 'change_status') {
-      const statusValidation = agencyStatusSchema.safeParse(body.status);
-
-      if (!statusValidation.success) {
-        return NextResponse.json(
-          { error: 'Valid agency status is required' },
-          { status: 400 },
-        );
-      }
-
-      agency.status = statusValidation.data;
-      await agency.save();
-
-      await logAdminAction({
-        adminUserId: auth.user._id,
-        targetType: 'agency',
-        targetId: agency._id,
-        type: 'agency_status_changed',
-        message: 'Admin changed B2B agency status',
-        request: { agencyId, status: statusValidation.data },
-        response: { agencyId: agency._id, status: agency.status },
-      });
-
-      return NextResponse.json({ success: true, agency });
-    }
-
-    const validation = agencyPayloadSchema.safeParse(body);
-
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.errors },
-        { status: 400 },
-      );
-    }
-
-    const update = Object.fromEntries(
-      Object.entries(validation.data).filter(
-        ([key, value]) => key !== 'balance' && value !== undefined,
-      ),
-    );
-
-    const updatedAgency = await Agency.findByIdAndUpdate(agencyId, update, {
-      new: true,
-      runValidators: true,
+    const update =
+      body.action === "change_status"
+        ? { status: agencyStatusSchema.parse(body.status) }
+        : Object.fromEntries(
+            Object.entries(agencyPayloadSchema.parse(body)).filter(
+              ([key, value]) => key !== "balance" && value !== undefined,
+            ),
+          );
+    await agencies.updateOne({ _id: agencyId }, { $set: { ...update, updatedAt: new Date() } });
+    const updatedAgency = await agencies.findOne({ _id: agencyId });
+    await createLog({
+      type: "admin_agency_updated",
+      status: "success",
+      message: "Admin updated B2B agency",
+      request: { agencyId, fields: Object.keys(update) },
+      response: { agencyId },
     });
 
-    await logAdminAction({
-      adminUserId: auth.user._id,
-      targetType: 'agency',
-      targetId: agency._id,
-      type: 'agency_updated',
-      message: 'Admin updated B2B agency',
-      request: update,
-      response: {
-        agencyId: updatedAgency?._id,
-        status: updatedAgency?.status,
-      },
-    });
-
+    console.info("[admin/agencies] collection=agencies updated=1");
     return NextResponse.json({ success: true, agency: updatedAgency });
   } catch (error) {
-    console.error('Admin agency update error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update agency' },
-      { status: 500 },
+    console.error(
+      "[admin/agencies] update failed:",
+      error instanceof Error ? error.message : "Unknown error",
     );
+    return NextResponse.json({ error: "Failed to update agency" }, { status: 500 });
   }
 }

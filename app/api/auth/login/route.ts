@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
 import { generateToken } from '@/lib/jwt';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
+import {
+  getUserByEmail,
+  publicUser,
+  updateUserLastLogin,
+  validatePassword,
+} from '@/lib/firebase-store';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -20,8 +24,6 @@ export async function POST(req: NextRequest) {
 
     if (rateLimitResponse) return rateLimitResponse;
 
-    await dbConnect();
-    
     const body = await req.json();
     
     // Validate input
@@ -35,8 +37,7 @@ export async function POST(req: NextRequest) {
     
     const { email, password } = validation.data;
     
-    // Find user
-    const user = await User.findOne({ email }).select('+password');
+    const user = await getUserByEmail(email);
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
@@ -44,8 +45,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
+    const isPasswordValid = await validatePassword(user, password);
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
@@ -60,33 +60,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    user.lastLoginAt = new Date();
-    await user.save();
+    const updatedUser = await updateUserLastLogin(user.id);
+    const authenticatedUser = updatedUser ?? user;
     
     // Generate token
     const token = generateToken({
-      userId: user._id.toString(),
+      userId: authenticatedUser.id,
       email: user.email,
       role: user.role,
+      supplierScope: user.supplierScope,
     });
     
     return NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        accountType: user.accountType,
-        agencyId: user.agencyId,
-        agencyRole: user.agencyRole,
-        hotelPartnerId: user.hotelPartnerId,
-        hotelRole: user.hotelRole,
-        isActive: user.isActive,
-        lastLoginAt: user.lastLoginAt,
-        avatar: user.avatar,
-      },
+      user: publicUser(authenticatedUser),
       token,
     });
     

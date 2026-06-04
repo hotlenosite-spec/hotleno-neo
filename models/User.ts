@@ -20,10 +20,12 @@ export const USER_ROLES = [
   'hotel_manager',
   'hotel_staff',
   'admin',
+  'supplier_tester',
   'user',
 ] as const;
 
-export const ACCOUNT_TYPES = ['b2c', 'b2b', 'hotel', 'admin'] as const;
+export const ACCOUNT_TYPES = ['b2c', 'b2b', 'hotel', 'admin', 'supplier_test'] as const;
+export const SUPPLIER_SCOPES = ['tbo', 'hotelbeds', 'travellanda'] as const;
 
 export const AGENCY_ROLES = [
   'owner',
@@ -40,6 +42,7 @@ export const HOTEL_ROLES = [
 
 export type UserRole = (typeof USER_ROLES)[number];
 export type AccountType = (typeof ACCOUNT_TYPES)[number];
+export type SupplierScope = (typeof SUPPLIER_SCOPES)[number];
 export type AgencyRole = (typeof AGENCY_ROLES)[number];
 export type HotelRole = (typeof HOTEL_ROLES)[number];
 
@@ -54,6 +57,7 @@ export interface IUser extends Document {
   agencyRole?: AgencyRole;
   hotelPartnerId?: mongoose.Types.ObjectId;
   hotelRole?: HotelRole;
+  supplierScope?: SupplierScope | null;
   isActive: boolean;
   lastLoginAt?: Date;
   phone?: string;
@@ -130,6 +134,12 @@ const UserSchema: Schema<IUser> = new Schema(
       type: String,
       enum: HOTEL_ROLES,
       default: null,
+    },
+    supplierScope: {
+      type: String,
+      enum: SUPPLIER_SCOPES,
+      default: null,
+      index: true,
     },
     isActive: {
       type: Boolean,

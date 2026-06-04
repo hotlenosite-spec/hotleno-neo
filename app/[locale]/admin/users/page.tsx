@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -40,7 +41,14 @@ interface User {
   email: string;
   avatar?: string;
   role: string;
+  supplierScope?: string;
   accountType?: string;
+  nationality?: string;
+  birthDate?: string;
+  nationalId?: string;
+  passportNumber?: string;
+  passportExpiryDate?: string;
+  phone?: string;
   agencyRole?: string;
   hotelRole?: string;
   isActive?: boolean;
@@ -61,6 +69,9 @@ const userRoles = [
   "admin",
 ];
 
+const accountTypes = ["b2c", "b2b", "hotel", "admin", "supplier_test"];
+const supplierScopes = ["", "tbo", "hotelbeds", "travellanda", "mock"];
+
 export default function AdminUsersPage() {
   const t = useTranslations("admin");
   const [users, setUsers] = useState<User[]>([]);
@@ -72,6 +83,20 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [newRole, setNewRole] = useState("");
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "",
+    supplierScope: "",
+    nationality: "",
+    dateOfBirth: "",
+    nationalId: "",
+    passportNumber: "",
+    passportExpiryDate: "",
+    accountType: "b2c",
+    isActive: true,
+  });
 
   useEffect(() => {
     console.log("Users page mounted, fetching users...");
@@ -137,7 +162,27 @@ export default function AdminUsersPage() {
     fetchUsers();
   };
 
-  const handleRoleUpdate = async () => {
+  const openEditDialog = (user: User) => {
+    setSelectedUser(user);
+    setNewRole(user.role);
+    setEditForm({
+      name: user.name || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      role: user.role || "customer",
+      supplierScope: user.supplierScope || "",
+      nationality: user.nationality || "",
+      dateOfBirth: toInputDate(user.birthDate),
+      nationalId: user.nationalId || "",
+      passportNumber: user.passportNumber || "",
+      passportExpiryDate: toInputDate(user.passportExpiryDate),
+      accountType: user.accountType || "b2c",
+      isActive: user.isActive !== false,
+    });
+    setIsRoleDialogOpen(true);
+  };
+
+  const handleUserUpdate = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("/api/admin/users", {
@@ -148,12 +193,14 @@ export default function AdminUsersPage() {
         },
         body: JSON.stringify({
           userId: selectedUser?._id,
-          role: newRole,
+          ...editForm,
+          role: editForm.role || newRole,
+          supplierScope: editForm.supplierScope || null,
         }),
       });
 
       if (response.ok) {
-        toast.success(t("roleUpdated"));
+        toast.success(t("userUpdated"));
         setIsRoleDialogOpen(false);
         fetchUsers();
       } else {
@@ -331,7 +378,12 @@ export default function AdminUsersPage() {
 
                         {user.hotelRole && (
                           <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500 shadow-sm">
-                            {user.hotelRole}
+                        {user.hotelRole}
+                          </span>
+                        )}
+                        {user.supplierScope && (
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500 shadow-sm">
+                            {user.supplierScope}
                           </span>
                         )}
 
@@ -360,14 +412,12 @@ export default function AdminUsersPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setSelectedUser(user);
-                        setNewRole(user.role);
-                        setIsRoleDialogOpen(true);
+                        openEditDialog(user);
                       }}
                       className="rounded-2xl border-slate-200 font-bold"
                     >
                       <HugeiconsIcon icon={ShieldUserIcon} className="ml-1 h-4 w-4" />
-                      {t("changeRole")}
+                      {t("edit")}
                     </Button>
                   </div>
                 </div>
@@ -406,31 +456,31 @@ export default function AdminUsersPage() {
         </CardContent>
       </Card>
 
-      {/* Change Role Dialog */}
+      {/* Edit User Dialog */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-        <DialogContent className="rounded-3xl border-slate-200">
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl border-slate-200 sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-slate-950">
-              {t("changeUserRole")}
+              {t("editUser")}
             </DialogTitle>
             <DialogDescription className="font-medium text-slate-500">
-              {t("changeRoleDescription")} {selectedUser?.name}
+              {selectedUser?.email}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-4">
-            <Select value={newRole} onValueChange={setNewRole}>
-              <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50">
-                <SelectValue placeholder={t("selectRole")} />
-              </SelectTrigger>
-              <SelectContent>
-                {userRoles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid gap-4 py-4 md:grid-cols-2">
+            <AdminField label={t("name")} value={editForm.name} onChange={(value) => setEditForm({ ...editForm, name: value })} />
+            <AdminField label="Email" value={editForm.email} onChange={(value) => setEditForm({ ...editForm, email: value })} />
+            <AdminField label={t("phone")} value={editForm.phone} onChange={(value) => setEditForm({ ...editForm, phone: value })} />
+            <AdminSelect label={t("role")} value={editForm.role} values={userRoles} onChange={(value) => setEditForm({ ...editForm, role: value })} />
+            <AdminSelect label="supplierScope" value={editForm.supplierScope} values={supplierScopes} onChange={(value) => setEditForm({ ...editForm, supplierScope: value })} />
+            <AdminSelect label="accountType" value={editForm.accountType} values={accountTypes} onChange={(value) => setEditForm({ ...editForm, accountType: value })} />
+            <AdminSelect label={t("status")} value={editForm.isActive ? "active" : "inactive"} values={["active", "inactive"]} onChange={(value) => setEditForm({ ...editForm, isActive: value === "active" })} />
+            <AdminField label={t("nationality")} value={editForm.nationality} onChange={(value) => setEditForm({ ...editForm, nationality: value })} />
+            <AdminField label="dateOfBirth" type="date" value={editForm.dateOfBirth} onChange={(value) => setEditForm({ ...editForm, dateOfBirth: value })} />
+            <AdminField label={t("nationalId")} value={editForm.nationalId} onChange={(value) => setEditForm({ ...editForm, nationalId: value })} />
+            <AdminField label={t("passportNumber")} value={editForm.passportNumber} onChange={(value) => setEditForm({ ...editForm, passportNumber: value })} />
+            <AdminField label={t("passportExpiryDate")} type="date" value={editForm.passportExpiryDate} onChange={(value) => setEditForm({ ...editForm, passportExpiryDate: value })} />
           </div>
 
           <DialogFooter>
@@ -443,7 +493,7 @@ export default function AdminUsersPage() {
             </Button>
 
             <Button
-              onClick={handleRoleUpdate}
+              onClick={handleUserUpdate}
               className="rounded-2xl bg-[#071b33] font-bold text-white hover:bg-[#0a2a4f]"
             >
               {t("update")}
@@ -453,6 +503,61 @@ export default function AdminUsersPage() {
       </Dialog>
     </div>
   );
+}
+
+function AdminField({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Input value={value} type={type} onChange={(event) => onChange(event.target.value)} />
+    </div>
+  );
+}
+
+function AdminSelect({
+  label,
+  value,
+  values,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  values: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Select value={value || "none"} onValueChange={(next) => onChange(next === "none" ? "" : next)}>
+        <SelectTrigger className="h-10 rounded-2xl border-slate-200 bg-slate-50">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {values.map((item) => (
+            <SelectItem key={item || "none"} value={item || "none"}>
+              {item || "-"}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function toInputDate(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
 }
 
 function HeroMiniCard({ title, value }: { title: string; value: string }) {

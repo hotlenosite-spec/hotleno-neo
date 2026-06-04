@@ -92,6 +92,13 @@ export interface RoomInOption {
 
 export interface HotelOption {
   OptionId: number;
+  rateKey?: string;
+  supplier?: string;
+  supplierHotelId?: string;
+  supplierRateKey?: string;
+  BookingCode?: string;
+  HotelCode?: string;
+  supplierTotalFare?: number;
   OnRequest: number; // 0 = available, 1 = on request
   BoardType: string;
   BoardName?: string;

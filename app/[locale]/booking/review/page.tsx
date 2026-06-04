@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { BookingBreadcrumb } from "@/components/booking/booking-breadcrumb";
+import { shouldSkipTravellandaForTbo } from "@/lib/hotels/tbo-mode";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { LeftTriangleIcon, CheckmarkCircleIcon } from "@hugeicons/core-free-icons";
 
@@ -25,8 +26,28 @@ interface HotelData {
   BoardType: string;
   Currency: string;
   Price: number;
+  TotalPrice?: number;
   Taxes?: number;
   OptionId?: number;
+  rateKey?: string;
+  supplierRateKey?: string;
+  BookingCode?: string;
+  supplierHotelId?: string;
+  HotelCode?: string;
+  supplierTotalFare?: number;
+  roomName?: string;
+  price?: number;
+  totalPrice?: number;
+  currency?: string;
+  refundable?: boolean;
+  boardName?: string;
+  mealType?: string;
+  supplier?: string;
+  hotelId?: number;
+  checkIn?: string;
+  checkOut?: string;
+  guests?: SearchParamsData["guests"];
+  nights?: number;
 }
 
 interface PoliciesData {
@@ -40,6 +61,133 @@ interface PoliciesData {
     Amount: number;
   };
 }
+
+const createSupplierFallbackPolicies = useCallback((): PoliciesData => {
+  return {
+    CancellationPolicy: {
+      Description: "سياسة الإلغاء حسب شروط المزود",
+    },
+    ImportantInformation: ["سياسة الإلغاء حسب شروط المزود"],
+  };
+}, []);
+
+function toNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function calculateNights(checkIn?: string, checkOut?: string) {
+  if (!checkIn || !checkOut) return 1;
+
+  const start = new Date(checkIn);
+  const end = new Date(checkOut);
+  const diff = end.getTime() - start.getTime();
+  const nights = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+  return nights > 0 ? nights : 1;
+}
+
+const normalizeSelectedRoomForReview = useCallback((
+  optionData: Partial<HotelData> & Record<string, unknown>,
+  bookingData: {
+    hotel?: Record<string, unknown>;
+    selectedRoom?: Record<string, unknown>;
+  } | null,
+  searchData: SearchParamsData,
+): HotelData => {
+  const selectedRoom = {
+    ...(optionData || {}),
+    ...((bookingData?.hotel?.selectedOption as Record<string, unknown> | undefined) || {}),
+    ...(bookingData?.selectedRoom || {}),
+  };
+  const nights =
+    toNumber(selectedRoom.nights) ||
+    searchData.guests.nights ||
+    calculateNights(searchData.dates.checkIn, searchData.dates.checkOut);
+  const taxes = toNumber(selectedRoom.Taxes);
+  const rawPrice = toNumber(selectedRoom.Price || selectedRoom.price);
+  const rawTotalPrice = toNumber(selectedRoom.totalPrice || selectedRoom.TotalPrice);
+  const price = rawPrice || (rawTotalPrice > 0 ? rawTotalPrice / nights - taxes : 0);
+  const totalPrice = rawTotalPrice || (price + taxes) * nights;
+  const currency =
+    String(selectedRoom.Currency || selectedRoom.currency || searchData.currency || "USD");
+  const supplier = String(selectedRoom.supplier || "").toLowerCase();
+
+  return {
+    ...(optionData as HotelData),
+    ...(selectedRoom as Partial<HotelData>),
+    HotelName: String(
+      optionData.HotelName ||
+        bookingData?.hotel?.HotelName ||
+        selectedRoom.HotelName ||
+        "",
+    ),
+    RoomType: String(selectedRoom.RoomType || selectedRoom.roomName || ""),
+    BoardType: String(selectedRoom.BoardType || selectedRoom.boardName || selectedRoom.mealType || ""),
+    Currency: currency,
+    Price: price,
+    TotalPrice: rawTotalPrice,
+    totalPrice,
+    Taxes: taxes,
+    OptionId: toNumber(selectedRoom.OptionId) || undefined,
+    rateKey: String(
+      selectedRoom.rateKey ||
+        selectedRoom.supplierRateKey ||
+        selectedRoom.BookingCode ||
+        selectedRoom.OptionId ||
+        "",
+    ),
+    supplierRateKey: String(
+      selectedRoom.supplierRateKey ||
+        selectedRoom.rateKey ||
+        selectedRoom.BookingCode ||
+        selectedRoom.OptionId ||
+        "",
+    ),
+    BookingCode: String(
+      selectedRoom.BookingCode ||
+        selectedRoom.supplierRateKey ||
+        selectedRoom.rateKey ||
+        "",
+    ),
+    supplierHotelId: String(
+      selectedRoom.supplierHotelId ||
+        selectedRoom.HotelCode ||
+        selectedRoom.hotelId ||
+        selectedRoom.HotelId ||
+        "",
+    ),
+    HotelCode: String(
+      selectedRoom.HotelCode ||
+        selectedRoom.supplierHotelId ||
+        selectedRoom.hotelId ||
+        selectedRoom.HotelId ||
+        "",
+    ),
+    supplierTotalFare: toNumber(selectedRoom.supplierTotalFare || rawTotalPrice || rawPrice),
+    roomName: String(selectedRoom.roomName || selectedRoom.RoomName || selectedRoom.RoomType || ""),
+    price,
+    currency,
+    refundable:
+      typeof selectedRoom.refundable === "boolean"
+        ? selectedRoom.refundable
+        : selectedRoom.IsNonRefundable === true
+          ? false
+          : undefined,
+    boardName: String(selectedRoom.boardName || selectedRoom.BoardName || selectedRoom.BoardType || ""),
+    mealType: String(selectedRoom.mealType || selectedRoom.BoardType || selectedRoom.BoardName || ""),
+    supplier,
+    hotelId: toNumber(selectedRoom.hotelId || selectedRoom.HotelId) || undefined,
+    checkIn: String(selectedRoom.checkIn || searchData.dates.checkIn || ""),
+    checkOut: String(selectedRoom.checkOut || searchData.dates.checkOut || ""),
+    guests: searchData.guests,
+    nights,
+  };
+}, []);
 
   const [policies, setPolicies] = useState<PoliciesData | null>(null);
   const [hotel, setHotel] = useState<HotelData | null>(null);
@@ -55,6 +203,7 @@ interface SearchParamsData {
     rooms: number;
     nights?: number;
   };
+  currency?: string;
 }
 
   const [searchParams, setSearchParams] = useState<SearchParamsData | null>(null);
@@ -64,6 +213,7 @@ interface SearchParamsData {
       try {
         const savedSearch = localStorage.getItem('hotelSearch');
         const selectedOption = localStorage.getItem('selectedOption');
+        const bookingDataRaw = localStorage.getItem('bookingData');
 
         if (!savedSearch || !selectedOption) {
           router.push('/');
@@ -72,9 +222,35 @@ interface SearchParamsData {
 
         const searchData = JSON.parse(savedSearch);
         const optionData = JSON.parse(selectedOption);
+        const bookingData = bookingDataRaw ? JSON.parse(bookingDataRaw) : null;
+        const normalizedRoom = normalizeSelectedRoomForReview(optionData, bookingData, searchData);
+        const sourceHotel = bookingData?.hotel || optionData?.hotel || null;
+        const isTboBookingFlow =
+          normalizedRoom.supplier === "tbo" || shouldSkipTravellandaForTbo(sourceHotel);
 
         setSearchParams(searchData);
-        setHotel(optionData);
+        setHotel(normalizedRoom);
+
+        if (isTboBookingFlow) {
+          if (normalizedRoom.Price <= 0 && (normalizedRoom.totalPrice || 0) <= 0) {
+            console.warn("Missing selected TBO room price");
+          }
+          console.info("Selected room pricing", {
+            selectedRoomPrice: normalizedRoom.Price,
+            selectedRoomCurrency: normalizedRoom.Currency,
+            nights: normalizedRoom.nights,
+            computedTotal: normalizedRoom.totalPrice,
+            supplier: normalizedRoom.supplier,
+          });
+          console.info('Skipping policies fetch for TBO certification booking flow');
+          setPolicies(
+            bookingData?.policies?.CancellationPolicy
+              ? bookingData.policies
+              : createSupplierFallbackPolicies(),
+          );
+          setLoading(false);
+          return;
+        }
 
         // Get policies - Need HotelIds array for the API
         const hotelId = optionData.HotelId || optionData.hotel?.HotelId || searchData?.hotel?.HotelId;
@@ -110,12 +286,16 @@ interface SearchParamsData {
     };
 
     loadBookingData();
-  }, [router]);
+  }, [router, createSupplierFallbackPolicies, normalizeSelectedRoomForReview]);
 
   const handleContinue = () => {
     if (acceptedTerms && hotel && searchParams) {
       localStorage.setItem('bookingData', JSON.stringify({
-        hotel,
+        hotel: {
+          ...hotel,
+          selectedOption: hotel,
+        },
+        selectedRoom: hotel,
         policies,
         searchParams,
       }));
@@ -150,6 +330,14 @@ interface SearchParamsData {
       </div>
     );
   }
+
+  const nights =
+    hotel?.nights ||
+    searchParams?.guests.nights ||
+    calculateNights(searchParams?.dates.checkIn, searchParams?.dates.checkOut);
+  const nightlyPrice = hotel?.Price || 0;
+  const taxes = hotel?.Taxes || 0;
+  const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -291,13 +479,13 @@ interface SearchParamsData {
               
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span>{t('booking.roomPrice')} ({searchParams?.guests.nights || 1} {t('hotels.nights')})</span>
-                  <span>{hotel?.Currency} {hotel?.Price && hotel.Price * (searchParams?.guests.nights || 1)}</span>
+                  <span>{t('booking.roomPrice')} ({nights} {t('hotels.nights')})</span>
+                  <span>{hotel?.Currency} {nightlyPrice * nights}</span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span>{t('hotelDetails.taxesFees')}</span>
-                  <span>{hotel?.Currency} {hotel?.Taxes || 0}</span>
+                  <span>{hotel?.Currency} {taxes}</span>
                 </div>
 
                 {policies?.CityTax && (
@@ -312,7 +500,7 @@ interface SearchParamsData {
                 <div className="flex justify-between font-bold text-lg">
                   <span>{t('booking.total')}</span>
                   <span>
-                    {hotel?.Currency} {hotel?.Price && hotel.Price + (hotel?.Taxes || 0)}
+                    {hotel?.Currency} {totalPrice}
                   </span>
                 </div>
               </div>

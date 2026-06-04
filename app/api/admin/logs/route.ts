@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import BookingLog from '@/models/BookingLog';
-import PaymentLog from '@/models/PaymentLog';
-import SupplierLog from '@/models/SupplierLog';
-import AdminActionLog from '@/models/AdminActionLog';
-import User from '@/models/User';
+import type { Document } from 'mongodb';
 import { verifyToken } from '@/lib/jwt';
+import { getFirestoreMongoDb } from '@/lib/firestore-mongo';
+import { getUserById } from '@/lib/firebase-store';
+
+type StringIdDocument = Document & { _id: string };
 
 async function requireAdmin(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace('Bearer ', '');
@@ -15,8 +14,7 @@ async function requireAdmin(req: NextRequest) {
   }
 
   const decoded = verifyToken(token);
-  await dbConnect();
-  const user = await User.findById(decoded.userId);
+  const user = await getUserById(decoded.userId);
 
   if (!user || user.role !== 'admin') {
     return { error: 'Unauthorized - Admin access required', status: 403 };
@@ -25,25 +23,40 @@ async function requireAdmin(req: NextRequest) {
   return { user };
 }
 
-function buildLogQuery(searchParams: URLSearchParams) {
+function matchesFilters(log: Record<string, unknown>, searchParams: URLSearchParams) {
   const bookingId = searchParams.get('bookingId');
   const type = searchParams.get('type');
   const status = searchParams.get('status');
-  const query: Record<string, unknown> = {};
 
   if (bookingId) {
-    query.bookingId = bookingId;
+    const request = typeof log.request === 'object' && log.request ? log.request as Record<string, unknown> : {};
+    const response = typeof log.response === 'object' && log.response ? log.response as Record<string, unknown> : {};
+    const hasBookingId =
+      String(log.bookingId ?? '') === bookingId ||
+      String(request.bookingId ?? '') === bookingId ||
+      String(response.bookingId ?? '') === bookingId;
+    if (!hasBookingId) return false;
   }
 
-  if (type) {
-    query.type = { $regex: type, $options: 'i' };
+  if (type && !String(log.type ?? '').toLowerCase().includes(type.toLowerCase())) {
+    return false;
   }
 
-  if (status) {
-    query.status = status;
+  if (status && String(log.status ?? '') !== status) {
+    return false;
   }
 
-  return query;
+  return true;
+}
+
+function byLogType(logs: Record<string, unknown>[], kind: 'booking' | 'payment' | 'supplier' | 'admin') {
+  return logs.filter((log) => {
+    const type = String(log.type ?? '').toLowerCase();
+    if (kind === 'admin') return type.includes('admin');
+    if (kind === 'payment') return type.includes('payment') || type.includes('stripe');
+    if (kind === 'supplier') return type.includes('supplier') || String(log.supplier ?? 'none') !== 'none';
+    return type.includes('booking') || (!type.includes('payment') && !type.includes('supplier') && !type.includes('admin'));
+  });
 }
 
 export async function GET(req: NextRequest) {
@@ -59,14 +72,24 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '25'), 100);
-    const query = buildLogQuery(searchParams);
+    const db = await getFirestoreMongoDb();
+    const logs = (await db
+      .collection<StringIdDocument>('logs')
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(500)
+      .toArray()) as Record<string, unknown>[];
+    const filteredLogs = logs
+      .filter((log) => log._id !== '_meta')
+      .filter((log) => matchesFilters(log, searchParams))
+      .slice(0, limit);
 
-    const [bookingLogs, paymentLogs, supplierLogs, adminActionLogs] = await Promise.all([
-      BookingLog.find(query).sort({ createdAt: -1 }).limit(limit).lean(),
-      PaymentLog.find(query).sort({ createdAt: -1 }).limit(limit).lean(),
-      SupplierLog.find(query).sort({ createdAt: -1 }).limit(limit).lean(),
-      AdminActionLog.find(query).sort({ createdAt: -1 }).limit(limit).lean(),
-    ]);
+    const bookingLogs = byLogType(filteredLogs, 'booking');
+    const paymentLogs = byLogType(filteredLogs, 'payment');
+    const supplierLogs = byLogType(filteredLogs, 'supplier');
+    const adminActionLogs = byLogType(filteredLogs, 'admin');
+
+    console.info("[admin/logs] collection=logs count=%d", filteredLogs.length);
 
     return NextResponse.json({
       bookingLogs,
@@ -75,7 +98,10 @@ export async function GET(req: NextRequest) {
       adminActionLogs,
     });
   } catch (error) {
-    console.error('Admin logs fetch error:', error);
+    console.error(
+      "[admin/logs] fetch failed:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
     return NextResponse.json(
       { error: 'Failed to fetch admin logs' },
       { status: 500 },

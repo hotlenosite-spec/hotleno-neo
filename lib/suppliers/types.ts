@@ -94,6 +94,7 @@ export interface SupplierBookRequest {
     phone?: string;
   };
   guests?: Array<{
+    title?: string;
     firstName: string;
     lastName: string;
     type: "adult" | "child";

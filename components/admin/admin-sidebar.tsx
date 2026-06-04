@@ -138,6 +138,7 @@ export function AdminSidebar() {
     { title: isAr ? "الوكالات" : "Agencies", href: "/admin/agencies", icon: HandshakeIcon },
     { title: isAr ? "الأفلييت" : "Affiliates", href: "/admin/affiliates", icon: HandshakeIcon },
     { title: isAr ? "المدفوعات" : "Payments", href: "/admin/payments", icon: CardIcon },
+    { title: "Suppliers Control", href: "/admin/suppliers", icon: SettingsIcon },
     { title: isAr ? "السجلات" : "Logs", href: "/admin/logs", icon: ChartIcon },
     { title: isAr ? "المدونة" : "Blog", href: "/admin/blog", icon: ChartIcon },
     { title: t("settings"), href: "/admin/settings", icon: SettingsIcon },

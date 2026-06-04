@@ -1,0 +1,254 @@
+{
+  "Status": {
+    "Code": 200,
+    "Description": "Successful"
+  },
+  "HotelResult": [
+    {
+      "HotelCode": "1120548",
+      "Currency": "USD",
+      "Rooms": [
+        {
+          "Name": [
+            "Luxury Room, 1 King Bed"
+          ],
+          "BookingCode": "1120548!TB!1!TB!ef2a804c-5927-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "Inclusion": "Free self parking",
+          "DayRates": [
+            [
+              {
+                "BasePrice": 84.44
+              },
+              {
+                "BasePrice": 84.44
+              }
+            ]
+          ],
+          "TotalFare": 213.89,
+          "TotalTax": 45.01,
+          "RoomPromotion": [
+            "Book now and save"
+          ],
+          "CancelPolicies": [
+            {
+              "FromDate": "25-05-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 0
+            },
+            {
+              "FromDate": "27-06-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 116.055
+            }
+          ],
+          "MealType": "Room_Only",
+          "IsRefundable": true,
+          "Supplements": [
+            [
+              {
+                "Index": 1,
+                "Type": "AtProperty",
+                "Description": "mandatory_tax",
+                "Price": 40,
+                "Currency": "AED"
+              }
+            ]
+          ],
+          "WithTransfers": false
+        },
+        {
+          "Name": [
+            "Luxury Room, 1 King Bed"
+          ],
+          "BookingCode": "1120548!TB!2!TB!ef2a804c-5927-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "Inclusion": "Free breakfast,Free self parking",
+          "DayRates": [
+            [
+              {
+                "BasePrice": 102.76
+              },
+              {
+                "BasePrice": 102.76
+              }
+            ]
+          ],
+          "TotalFare": 260.3,
+          "TotalTax": 54.79,
+          "RoomPromotion": [
+            "Book now and save"
+          ],
+          "CancelPolicies": [
+            {
+              "FromDate": "25-05-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 0
+            },
+            {
+              "FromDate": "27-06-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 141.325
+            }
+          ],
+          "MealType": "BreakFast",
+          "IsRefundable": true,
+          "Supplements": [
+            [
+              {
+                "Index": 1,
+                "Type": "AtProperty",
+                "Description": "mandatory_tax",
+                "Price": 40,
+                "Currency": "AED"
+              }
+            ]
+          ],
+          "WithTransfers": false
+        },
+        {
+          "Name": [
+            "Luxury Room, 1 King Bed (Coastline View)"
+          ],
+          "BookingCode": "1120548!TB!3!TB!ef2a804c-5927-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "Inclusion": "Free breakfast,Free self parking",
+          "DayRates": [
+            [
+              {
+                "BasePrice": 106.21
+              },
+              {
+                "BasePrice": 106.21
+              }
+            ]
+          ],
+          "TotalFare": 269.04,
+          "TotalTax": 56.62,
+          "RoomPromotion": [
+            "Book now and save"
+          ],
+          "CancelPolicies": [
+            {
+              "FromDate": "25-05-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 0
+            },
+            {
+              "FromDate": "27-06-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 146.07
+            }
+          ],
+          "MealType": "BreakFast",
+          "IsRefundable": true,
+          "Supplements": [
+            [
+              {
+                "Index": 1,
+                "Type": "AtProperty",
+                "Description": "mandatory_tax",
+                "Price": 40,
+                "Currency": "AED"
+              }
+            ]
+          ],
+          "WithTransfers": false
+        },
+        {
+          "Name": [
+            "Luxury Room, 1 King Bed"
+          ],
+          "BookingCode": "1120548!TB!4!TB!ef2a804c-5927-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "Inclusion": "Half board",
+          "DayRates": [
+            [
+              {
+                "BasePrice": 121.29
+              },
+              {
+                "BasePrice": 115.28
+              }
+            ]
+          ],
+          "TotalFare": 296.78,
+          "TotalTax": 60.22,
+          "RoomPromotion": [
+            "Book now and save"
+          ],
+          "CancelPolicies": [
+            {
+              "FromDate": "25-05-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 0
+            },
+            {
+              "FromDate": "27-06-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 161.185
+            }
+          ],
+          "MealType": "Half_Board",
+          "IsRefundable": true,
+          "Supplements": [
+            [
+              {
+                "Index": 1,
+                "Type": "AtProperty",
+                "Description": "mandatory_tax",
+                "Price": 40,
+                "Currency": "AED"
+              }
+            ]
+          ],
+          "WithTransfers": false
+        },
+        {
+          "Name": [
+            "Luxury Room, 1 King Bed (Coastline View)"
+          ],
+          "BookingCode": "1120548!TB!5!TB!ef2a804c-5927-11f1-9283-aee6b823b233!TB!N!TB!AFF!",
+          "Inclusion": "Half board",
+          "DayRates": [
+            [
+              {
+                "BasePrice": 125.07
+              },
+              {
+                "BasePrice": 118.88
+              }
+            ]
+          ],
+          "TotalFare": 306.05,
+          "TotalTax": 62.1,
+          "RoomPromotion": [
+            "Book now and save"
+          ],
+          "CancelPolicies": [
+            {
+              "FromDate": "25-05-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 0
+            },
+            {
+              "FromDate": "27-06-2026 00:00:00",
+              "ChargeType": "Fixed",
+              "CancellationCharge": 166.22
+            }
+          ],
+          "MealType": "Half_Board",
+          "IsRefundable": true,
+          "Supplements": [
+            [
+              {
+                "Index": 1,
+                "Type": "AtProperty",
+                "Description": "mandatory_tax",
+                "Price": 40,
+                "Currency": "AED"
+              }
+            ]
+          ],
+          "WithTransfers": false
+        }
+      ]
+    }
+  ]
+}

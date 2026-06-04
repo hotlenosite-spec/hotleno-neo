@@ -1,456 +1,557 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Booking from '@/models/Booking';
-import BookingLog from '@/models/BookingLog';
-import SupplierLog from '@/models/SupplierLog';
-import User from '@/models/User';
-import { verifyToken } from '@/lib/jwt';
-import { getNextBookingStatus, isBookingStatus } from '@/lib/booking-status';
+import { NextRequest, NextResponse } from "next/server";
+import type { Document } from "mongodb";
+import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
+import { createLog, getUserById } from "@/lib/firebase-store";
+import { getNextBookingStatus, isBookingStatus, type BookingStatus } from "@/lib/booking-status";
+import { verifyToken } from "@/lib/jwt";
+
+type BookingDocument = Document & {
+  _id: string;
+  userId?: string;
+  customerEmail?: string;
+  customerName?: string;
+  bookingReference?: string;
+  hotelName?: string;
+  leadGuest?: string;
+  contactEmail?: string;
+  status?: string;
+  totalPrice?: number;
+  currency?: string;
+  paymentStatus?: string;
+  supplierStatus?: string;
+  checkInDate?: Date | string;
+  checkOutDate?: Date | string;
+  checkIn?: Date | string;
+  checkOut?: Date | string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  metadata?: Record<string, unknown>;
+  amendments?: unknown[];
+  travelers?: unknown[];
+  paymentAdjustments?: unknown[];
+  archived?: boolean;
+  hiddenFromAdminMainList?: boolean;
+  archivedReason?: string;
+  archivedAt?: Date | string;
+};
+
+type PaymentAdjustmentDocument = Document & {
+  _id: string;
+};
+
+type NormalizedRoom = ReturnType<typeof normalizeRoom>;
 
 const operationalStatuses = [
-  'pending_payment',
-  'payment_succeeded',
-  'supplier_booking_processing',
-  'supplier_booking_pending',
-  'supplier_booking_failed',
-  'manual_review_required',
-  'refund_required',
-  'refunded',
+  "pending_payment",
+  "payment_disabled_created",
+  "payment_succeeded",
+  "supplier_booking_not_started",
+  "supplier_booking_processing",
+  "supplier_booking_pending",
+  "supplier_booking_failed",
+  "manual_review_required",
+  "refund_required",
+  "refunded",
 ];
+
+async function requireAdmin(req: NextRequest) {
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) return { error: "No token provided", status: 401 } as const;
+
+  const decoded = verifyToken(token);
+  const user = await getUserById(decoded.userId);
+  if (!user || user.role !== "admin") {
+    return { error: "Unauthorized - Admin access required", status: 403 } as const;
+  }
+
+  return { user, decoded } as const;
+}
+
+function includesText(value: unknown, search: string) {
+  return String(value || "").toLowerCase().includes(search);
+}
+
+function toIsoString(value: unknown) {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string" || typeof value === "number") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+  }
+  return "";
+}
+
+function toNumber(value: unknown, fallback = 0) {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function calculateNights(checkIn: unknown, checkOut: unknown) {
+  const start = new Date(String(checkIn || ""));
+  const end = new Date(String(checkOut || ""));
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 1;
+  const nights = Math.ceil((end.getTime() - start.getTime()) / 86_400_000);
+  return nights > 0 ? nights : 1;
+}
+
+function normalizeTraveler(value: unknown) {
+  const traveler = typeof value === "object" && value ? value as Record<string, unknown> : {};
+  return {
+    title: String(traveler.title ?? ""),
+    firstName: String(traveler.firstName ?? ""),
+    lastName: String(traveler.lastName ?? ""),
+    gender: String(traveler.gender ?? ""),
+    dateOfBirth: String(traveler.dateOfBirth ?? ""),
+    nationality: String(traveler.nationality ?? ""),
+    documentType: String(traveler.documentType ?? ""),
+    documentNumber: String(traveler.documentNumber ?? ""),
+    passportNumber: String(traveler.passportNumber ?? ""),
+    nationalId: String(traveler.nationalId ?? ""),
+    passportExpiryDate: String(traveler.passportExpiryDate ?? ""),
+    phone: String(traveler.phone ?? ""),
+    email: String(traveler.email ?? ""),
+    travelerType: String(traveler.travelerType ?? ""),
+    roomIndex: toNumber(traveler.roomIndex),
+    index: toNumber(traveler.index),
+  };
+}
+
+function normalizeRoom(value: unknown, index: number) {
+  const room = typeof value === "object" && value ? value as Record<string, unknown> : {};
+  const childrenAges = Array.isArray(room.childrenAges)
+    ? room.childrenAges.map((age) => toNumber(age)).filter((age) => age >= 0)
+    : [];
+  return {
+    roomId: toNumber(room.roomId, index + 1),
+    roomName: String(room.roomName ?? `Room ${index + 1}`),
+    adults: toNumber(room.adults, 1),
+    children: toNumber(room.children, childrenAges.length),
+    childrenAges,
+  };
+}
+
+function buildPaxRooms(rooms: ReturnType<typeof normalizeRoom>[]) {
+  return rooms.map((room) => ({
+    Adults: room.adults,
+    Children: room.children,
+    ChildrenAges: room.childrenAges.slice(0, room.children),
+  }));
+}
+
+function normalizeBookingForAdmin(booking: BookingDocument) {
+  const checkInDate = toIsoString(booking.checkInDate ?? booking.checkIn);
+  const checkOutDate = toIsoString(booking.checkOutDate ?? booking.checkOut);
+  const createdAt = toIsoString(booking.createdAt);
+  const updatedAt = toIsoString(booking.updatedAt);
+
+  return {
+    ...booking,
+    checkInDate,
+    checkOutDate,
+    createdAt,
+    updatedAt,
+    userId:
+      typeof booking.userId === "string"
+        ? {
+            _id: booking.userId,
+            name: booking.customerName || "",
+            email: booking.customerEmail || booking.contactEmail || "",
+          }
+        : booking.userId,
+  };
+}
+
+function canDirectlySetStatus(currentStatus: string | undefined, nextStatus: string) {
+  if (!currentStatus || !isBookingStatus(currentStatus)) return nextStatus;
+  return getNextBookingStatus(currentStatus, nextStatus as BookingStatus);
+}
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No token provided' },
-        { status: 401 }
-      );
+    const auth = await requireAdmin(req);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const decoded = verifyToken(token);
-    
-    // Check if user is admin
-    await dbConnect();
-    const user = await User.findById(decoded.userId);
-    
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      );
-    }
-    
-    // Get query parameters
+    const db = await getFirestoreMongoDb();
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status');
-    const paymentStatus = searchParams.get('paymentStatus');
-    const supplierStatus = searchParams.get('supplierStatus');
-    const operationalFilter = searchParams.get('operationalFilter');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const search = searchParams.get('search');
-    
-    // Build query
+    const status = searchParams.get("status");
+    const paymentStatus = searchParams.get("paymentStatus");
+    const supplierStatus = searchParams.get("supplierStatus");
+    const operationalFilter = searchParams.get("operationalFilter");
+    const archiveView =
+      searchParams.get("view") === "archive" ||
+      searchParams.get("archived") === "true";
+    const page = Number.parseInt(searchParams.get("page") || "1", 10);
+    const limit = Number.parseInt(searchParams.get("limit") || "20", 10);
+    const search = searchParams.get("search")?.trim().toLowerCase();
     const query: Record<string, unknown> = {};
-    
-    if (status) {
-      query.status = status;
+
+    if (status) query.status = status;
+    if (paymentStatus) query.paymentStatus = paymentStatus;
+    if (supplierStatus) query.supplierStatus = supplierStatus;
+    if (operationalFilter === "refund_required") {
+      query.status = { $in: ["manual_review_required", "refund_required"] };
+    }
+    if (operationalFilter === "supplier_booking_failed") {
+      query.status = "supplier_booking_failed";
     }
 
-    if (paymentStatus) {
-      query.paymentStatus = paymentStatus;
-    }
-
-    if (supplierStatus) {
-      query.supplierStatus = supplierStatus;
-    }
-
-    if (operationalFilter === 'refund_required') {
-      query.status = { $in: ['manual_review_required', 'refund_required'] };
-    }
-
-    if (operationalFilter === 'supplier_booking_failed') {
-      query.status = 'supplier_booking_failed';
-    }
-    
-    if (search) {
-      const matchingUsers = await User.find({
-        $or: [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-        ],
-      })
-        .select('_id')
-        .limit(50);
-
-      query.$or = [
-        { bookingReference: { $regex: search, $options: 'i' } },
-        { hotelName: { $regex: search, $options: 'i' } },
-        { leadGuest: { $regex: search, $options: 'i' } },
-        { contactEmail: { $regex: search, $options: 'i' } },
-        ...matchingUsers.map((matchedUser) => ({ userId: matchedUser._id })),
-      ];
-    }
-    
-    // Calculate pagination
-    const skip = (page - 1) * limit;
-    
-    // Fetch bookings with user details
-    const bookings = await Booking.find(query)
+    const allBookings = await db
+      .collection<BookingDocument>("bookings")
+      .find(query)
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('userId', 'name email');
-    
-    // Get total count
-    const total = await Booking.countDocuments(query);
-    const operationalCountsResult = await Booking.aggregate([
-      {
-        $match: {
-          status: { $in: operationalStatuses },
-        },
-      },
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-        },
-      },
-    ]);
+      .toArray();
+    const realBookings = allBookings.filter((booking) => booking._id !== "_meta");
+    const visibleBookings = realBookings.filter((booking) => {
+      const isArchived =
+        booking.archived === true || booking.hiddenFromAdminMainList === true;
+      return archiveView ? isArchived : !isArchived;
+    });
+    const filteredBookings = search
+      ? visibleBookings.filter(
+          (booking) =>
+            includesText(booking.bookingReference, search) ||
+            includesText(booking.hotelName, search) ||
+            includesText(booking.leadGuest, search) ||
+            includesText(booking.contactEmail, search) ||
+            includesText(booking.customerEmail, search) ||
+            includesText(booking.customerName, search),
+        )
+      : visibleBookings;
+    const skip = (Math.max(page, 1) - 1) * limit;
+    const bookings = filteredBookings
+      .slice(skip, skip + limit)
+      .map(normalizeBookingForAdmin);
     const operationalCounts = operationalStatuses.reduce<Record<string, number>>(
       (counts, statusName) => {
-        counts[statusName] =
-          operationalCountsResult.find((item) => item._id === statusName)
-            ?.count || 0;
+        counts[statusName] = visibleBookings.filter(
+          (booking) => booking.status === statusName,
+        ).length;
         return counts;
       },
       {},
     );
-    
+    const missingDateFields = visibleBookings.reduce(
+      (counts, booking) => {
+        if (!toIsoString(booking.checkInDate ?? booking.checkIn)) counts.checkInDate += 1;
+        if (!toIsoString(booking.checkOutDate ?? booking.checkOut)) counts.checkOutDate += 1;
+        if (!toIsoString(booking.createdAt)) counts.createdAt += 1;
+        return counts;
+      },
+      { checkInDate: 0, checkOutDate: 0, createdAt: 0 },
+    );
+
+    console.info(
+      "[admin/bookings] collection=bookings count=%d missingDates=%j",
+      visibleBookings.length,
+      missingDateFields,
+    );
+
     return NextResponse.json({
       bookings,
       operationalCounts,
       pagination: {
         page,
         limit,
-        total,
-        pages: Math.ceil(total / limit),
+        total: filteredBookings.length,
+        pages: Math.ceil(filteredBookings.length / limit),
       },
     });
-    
   } catch (error) {
-    console.error('Admin bookings fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch bookings' },
-      { status: 500 }
+    console.error(
+      "[admin/bookings] fetch failed:",
+      error instanceof Error ? error.message : "Unknown error",
     );
+    return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 });
   }
 }
 
-// PATCH - Update booking status
 export async function PATCH(req: NextRequest) {
   try {
-    const token = req.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No token provided' },
-        { status: 401 }
-      );
+    const auth = await requireAdmin(req);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const decoded = verifyToken(token);
     const body = await req.json();
-    
-    // Check if user is admin
-    await dbConnect();
-    const user = await User.findById(decoded.userId);
-    
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      );
-    }
-    
     const { bookingId, status, action, note } = body;
-    
     if (!bookingId || (!status && !action)) {
       return NextResponse.json(
-        { error: 'Booking ID and status or action are required' },
-        { status: 400 }
+        { error: "Booking ID and status or action are required" },
+        { status: 400 },
       );
     }
 
-    if (action === 'retry_supplier_booking') {
-      const booking = await Booking.findById(bookingId);
-
-      if (!booking) {
-        return NextResponse.json(
-          { error: 'Booking not found' },
-          { status: 404 }
-        );
-      }
-
-      if (!['supplier_booking_failed', 'manual_review_required', 'refund_required'].includes(booking.status)) {
-        return NextResponse.json(
-          { error: 'Retry is only available for failed supplier bookings or refund-required bookings' },
-          { status: 400 }
-        );
-      }
-
-      booking.status = getNextBookingStatus(booking.status, 'supplier_booking_processing');
-      booking.supplierStatus = 'pending';
-      booking.failureReason = '';
-      booking.metadata = {
-        ...(booking.metadata ?? {}),
-        retryRequestedAt: new Date().toISOString(),
-        retryRequestedBy: decoded.userId,
-        retryMode: 'admin_placeholder_only',
-      };
-      await booking.save();
-
-      await SupplierLog.create({
-        bookingId: booking._id,
-        supplier: booking.supplier || 'none',
-        type: 'supplier_booking_retry_requested',
-        status: 'pending',
-        message: 'Admin requested supplier booking retry; no real supplier was called',
-        request: {
-          action,
-          previousStatus: 'supplier_booking_failed_or_refund_required',
-          mode: 'admin_placeholder_only',
-        },
-        response: {
-          bookingStatus: booking.status,
-          supplierStatus: booking.supplierStatus,
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: 'Supplier booking retry queued',
-        booking,
-      });
+    const db = await getFirestoreMongoDb();
+    const bookings = db.collection<BookingDocument>("bookings");
+    const booking = await bookings.findOne({ _id: bookingId });
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (action === 'mark_reviewed') {
-      const booking = await Booking.findById(bookingId);
+    const now = new Date();
+    const updates: Record<string, unknown> = { updatedAt: now };
+    let logType = "booking_status_updated";
+    let message = "Booking status updated";
 
-      if (!booking) {
+    if (action === "retry_supplier_booking") {
+      if (!["supplier_booking_failed", "manual_review_required", "refund_required"].includes(String(booking.status))) {
         return NextResponse.json(
-          { error: 'Booking not found' },
-          { status: 404 }
+          { error: "Retry is only available for failed supplier bookings or refund-required bookings" },
+          { status: 400 },
         );
       }
 
-      booking.metadata = {
+      updates.status = canDirectlySetStatus(booking.status, "supplier_booking_processing");
+      updates.supplierStatus = "pending";
+      updates.failureReason = "";
+      updates.metadata = {
         ...(booking.metadata ?? {}),
-        reviewedAt: new Date().toISOString(),
-        reviewedBy: decoded.userId,
+        retryRequestedAt: now.toISOString(),
+        retryRequestedBy: auth.decoded.userId,
+        retryMode: "admin_placeholder_only_no_supplier_call",
       };
-      await booking.save();
-
-      await BookingLog.create({
-        bookingId: booking._id,
-        type: 'booking_marked_reviewed',
-        status: 'success',
-        message: 'Admin marked booking as reviewed',
-        request: { action },
-        response: {
-          bookingStatus: booking.status,
-          reviewedAt: booking.metadata.reviewedAt,
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: 'Booking marked as reviewed',
-        booking,
-      });
-    }
-
-    if (action === 'mark_refund_required') {
-      const booking = await Booking.findById(bookingId);
-
-      if (!booking) {
-        return NextResponse.json(
-          { error: 'Booking not found' },
-          { status: 404 }
-        );
-      }
-
-      booking.status = getNextBookingStatus(booking.status, 'manual_review_required');
-      booking.paymentStatus = 'refund_required';
-      booking.metadata = {
+      logType = "supplier_booking_retry_requested";
+      message = "Admin requested supplier booking retry; no real supplier was called";
+    } else if (action === "mark_reviewed") {
+      updates.metadata = {
         ...(booking.metadata ?? {}),
-        refundRequiredAt: new Date().toISOString(),
-        refundRequiredBy: decoded.userId,
-        refundMode: 'admin_review_only_no_stripe_refund',
+        reviewedAt: now.toISOString(),
+        reviewedBy: auth.decoded.userId,
       };
-      await booking.save();
-
-      await BookingLog.create({
-        bookingId: booking._id,
-        type: 'booking_marked_manual_review_required',
-        status: 'success',
-        message: 'Admin marked booking as manual review required; no Stripe refund was executed',
-        request: { action },
-        response: {
-          bookingStatus: booking.status,
-          paymentStatus: booking.paymentStatus,
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: 'Booking marked as manual review required',
-        booking,
-      });
-    }
-
-    if (action === 'mark_cancelled') {
-      const booking = await Booking.findById(bookingId);
-
-      if (!booking) {
-        return NextResponse.json(
-          { error: 'Booking not found' },
-          { status: 404 }
-        );
-      }
-
-      booking.status = getNextBookingStatus(booking.status, 'cancelled');
-      booking.supplierStatus = 'cancelled';
-      booking.metadata = {
+      logType = "booking_marked_reviewed";
+      message = "Admin marked booking as reviewed";
+    } else if (action === "mark_refund_required") {
+      updates.status = canDirectlySetStatus(booking.status, "manual_review_required");
+      updates.paymentStatus = "refund_required";
+      updates.metadata = {
         ...(booking.metadata ?? {}),
-        cancelledAt: new Date().toISOString(),
-        cancelledBy: decoded.userId,
-        cancellationMode: 'admin_internal_only_no_supplier_cancel',
+        refundRequiredAt: now.toISOString(),
+        refundRequiredBy: auth.decoded.userId,
+        refundMode: "admin_review_only_no_stripe_refund",
       };
-      await booking.save();
-
-      await BookingLog.create({
-        bookingId: booking._id,
-        type: 'booking_marked_cancelled',
-        status: 'success',
-        message: 'Admin marked booking as cancelled; no supplier cancellation was executed',
-        request: { action },
-        response: {
-          bookingStatus: booking.status,
-          supplierStatus: booking.supplierStatus,
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: 'Booking marked as cancelled',
-        booking,
-      });
-    }
-
-    if (action === 'add_admin_note') {
-      if (typeof note !== 'string' || note.trim().length === 0) {
-        return NextResponse.json(
-          { error: 'Admin note is required' },
-          { status: 400 }
-        );
+      logType = "booking_marked_manual_review_required";
+      message = "Admin marked booking as manual review required; no Stripe refund was executed";
+    } else if (action === "mark_cancelled") {
+      return NextResponse.json(
+        { error: "Use /api/bookings/cancel for supplier-aware cancellation" },
+        { status: 400 },
+      );
+    } else if (action === "add_admin_note") {
+      if (typeof note !== "string" || note.trim().length === 0) {
+        return NextResponse.json({ error: "Admin note is required" }, { status: 400 });
       }
-
-      const booking = await Booking.findById(bookingId);
-
-      if (!booking) {
-        return NextResponse.json(
-          { error: 'Booking not found' },
-          { status: 404 }
-        );
-      }
-
       const existingNotes = Array.isArray(booking.metadata?.adminNotes)
         ? booking.metadata.adminNotes
         : [];
-
-      const adminNote = {
-        note: note.trim(),
-        createdAt: new Date().toISOString(),
-        createdBy: decoded.userId,
-      };
-
-      booking.metadata = {
+      updates.metadata = {
         ...(booking.metadata ?? {}),
-        adminNotes: [...existingNotes, adminNote],
+        adminNotes: [
+          ...existingNotes,
+          {
+            note: note.trim(),
+            createdAt: now.toISOString(),
+            createdBy: auth.decoded.userId,
+          },
+        ],
       };
-      await booking.save();
-
-      await BookingLog.create({
-        bookingId: booking._id,
-        type: 'admin_note_added',
-        status: 'success',
-        message: 'Admin note added to booking metadata',
-        request: { action },
-        response: {
-          noteCreatedAt: adminNote.createdAt,
-          noteCreatedBy: adminNote.createdBy,
+      logType = "admin_note_added";
+      message = "Admin note added";
+    } else if (action === "amend_booking") {
+      const oldValue = {
+        checkInDate: toIsoString(booking.checkInDate ?? booking.checkIn),
+        checkOutDate: toIsoString(booking.checkOutDate ?? booking.checkOut),
+        totalPrice: toNumber(booking.totalPrice),
+        travelers: Array.isArray(booking.travelers) ? booking.travelers : [],
+        rooms: Array.isArray(booking.rooms) ? booking.rooms : [],
+      };
+      const nextCheckInDate = body.checkInDate || oldValue.checkInDate;
+      const nextCheckOutDate = body.checkOutDate || oldValue.checkOutDate;
+      const nextTravelers = Array.isArray(body.travelers)
+        ? body.travelers.map(normalizeTraveler)
+        : oldValue.travelers;
+      const nextRooms: NormalizedRoom[] = Array.isArray(body.rooms)
+        ? body.rooms.map(normalizeRoom)
+        : oldValue.rooms.map(normalizeRoom);
+      const paxRooms = buildPaxRooms(nextRooms);
+      const originalTotal = toNumber(body.originalTotal, oldValue.totalPrice);
+      const newTotal = roundMoney(toNumber(body.newTotal, originalTotal));
+      const priceDifference = roundMoney(newTotal - originalTotal);
+      const amendmentNotes = typeof body.notes === "string" ? body.notes.trim() : "";
+      if (priceDifference !== 0 && !amendmentNotes) {
+        return NextResponse.json(
+          { error: "Amendment reason is required when price changes" },
+          { status: 400 },
+        );
+      }
+      const nights = calculateNights(nextCheckInDate, nextCheckOutDate);
+      const roomsChanged = JSON.stringify(nextRooms) !== JSON.stringify(oldValue.rooms);
+      const datesChanged =
+        nextCheckInDate !== oldValue.checkInDate ||
+        nextCheckOutDate !== oldValue.checkOutDate;
+      const travelersChanged = JSON.stringify(nextTravelers) !== JSON.stringify(oldValue.travelers);
+      const amendmentType = roomsChanged
+        ? "occupancy_change"
+        : datesChanged
+          ? "date_change"
+          : travelersChanged
+            ? "traveler_update"
+            : "traveler_update";
+      const existingAmendments = Array.isArray(booking.amendments)
+        ? booking.amendments
+        : [];
+      const supplierConfirmed =
+        booking.supplierStatus === "confirmed" ||
+        booking.status === "supplier_booking_confirmed";
+      const amendment = {
+        type: amendmentType,
+        status: supplierConfirmed ? "pending_supplier_action" : "applied_internal_before_supplier",
+        requiresSupplierAction: supplierConfirmed,
+        oldValue,
+        newValue: {
+          checkInDate: nextCheckInDate,
+          checkOutDate: nextCheckOutDate,
+          travelers: nextTravelers,
+          rooms: nextRooms,
+          guests: {
+            rooms: nextRooms.length,
+            adults: nextRooms.reduce((sum: number, room: NormalizedRoom) => sum + room.adults, 0),
+            children: nextRooms.reduce((sum: number, room: NormalizedRoom) => sum + room.children, 0),
+            childrenAges: nextRooms.flatMap((room: NormalizedRoom) => room.childrenAges),
+          },
+          paxRooms,
+          originalTotal,
+          newTotal,
+          priceDifference,
+          nights,
         },
-      });
+        changedBy: auth.decoded.userId,
+        changedAt: now.toISOString(),
+        notes: amendmentNotes,
+        supplierSubmission:
+          supplierConfirmed
+            ? process.env.TBO_AMENDMENT_ENABLED === "true"
+              ? "pending_supplier_action"
+              : "pending_supplier_action_tbo_amendment_disabled"
+            : "not_required_before_supplier",
+      };
 
-      return NextResponse.json({
-        success: true,
-        message: 'Admin note added',
-        booking,
-      });
+      updates.amendments = [...existingAmendments, amendment];
+      updates.metadata = {
+        ...(booking.metadata ?? {}),
+        lastAmendmentAt: now.toISOString(),
+        tboAmendmentEnabled: process.env.TBO_AMENDMENT_ENABLED === "true",
+        supplierAmendmentSubmission:
+          supplierConfirmed
+            ? process.env.TBO_AMENDMENT_ENABLED === "true"
+              ? "pending_supplier_action"
+              : "pending_supplier_action_tbo_amendment_disabled"
+            : "not_required_before_supplier",
+      };
+
+      if (!supplierConfirmed) {
+        updates.checkInDate = new Date(String(nextCheckInDate));
+        updates.checkOutDate = new Date(String(nextCheckOutDate));
+        updates.travelers = nextTravelers;
+        updates.rooms = nextRooms;
+        updates.guests = amendment.newValue.guests;
+        updates.PaxRooms = paxRooms;
+        updates.totalPrice = newTotal;
+        updates.nights = nights;
+        updates.originalTotal = originalTotal;
+        updates.newTotal = newTotal;
+        updates.priceDifference = priceDifference;
+
+        if (priceDifference > 0) {
+          updates.status = "pending_additional_payment";
+          updates.bookingStatus = "pending_additional_payment";
+          updates.paymentStatus = "additional_payment_pending";
+        } else if (priceDifference < 0) {
+          updates.status = "refund_due";
+          updates.bookingStatus = "refund_due";
+          updates.refundDue = Math.abs(priceDifference);
+          updates.paymentStatus = "refund_due";
+        }
+      } else if (priceDifference !== 0) {
+        updates.pendingAmendmentPriceDifference = priceDifference;
+        updates.pendingAmendmentTotal = newTotal;
+      }
+
+      if (priceDifference !== 0) {
+        const adjustment = {
+          _id: `adjustment-${bookingId}-${Date.now()}`,
+          bookingId,
+          customerEmail: booking.customerEmail || booking.contactEmail || "",
+          amount: Math.abs(priceDifference),
+          currency: String(booking.currency || body.currency || "USD"),
+          reason:
+            priceDifference > 0
+              ? "booking_amendment_additional_payment"
+              : "booking_amendment_refund_due",
+          status: priceDifference > 0 ? "pending" : "refund_due",
+          createdAt: now,
+          updatedAt: now,
+        };
+        await db
+          .collection<PaymentAdjustmentDocument>("payment_adjustments")
+          .insertOne(adjustment);
+        updates.paymentAdjustments = [
+          ...(Array.isArray(booking.paymentAdjustments) ? booking.paymentAdjustments : []),
+          adjustment,
+        ];
+      }
+
+      logType = supplierConfirmed ? "booking_amendment_pending_supplier_action" : "booking_amended_internal_only";
+      message = supplierConfirmed
+        ? "Admin created pending supplier amendment; no final booking fields were changed"
+        : "Admin amended booking internally before supplier confirmation";
+    } else {
+      if (!isBookingStatus(status)) {
+        return NextResponse.json({ error: "Invalid booking status" }, { status: 400 });
+      }
+      updates.status = canDirectlySetStatus(booking.status, status);
     }
 
-    if (!isBookingStatus(status)) {
-      return NextResponse.json(
-        { error: 'Invalid booking status' },
-        { status: 400 }
+    await bookings.updateOne({ _id: bookingId }, { $set: updates });
+    if (typeof updates.status === "string") {
+      await bookings.updateOne(
+        { _id: bookingId },
+        { $set: { bookingStatus: updates.status } },
       );
     }
-    
-    const booking = await Booking.findById(bookingId);
-
-    if (!booking) {
-      return NextResponse.json(
-        { error: 'Booking not found' },
-        { status: 404 }
-      );
-    }
-
-    booking.status = getNextBookingStatus(booking.status, status);
-    await booking.save();
-
-    await BookingLog.create({
-      bookingId: booking._id,
-      type: 'booking_status_updated',
-      status: 'success',
-      message: 'Admin updated booking status',
-      request: { status },
-      response: { bookingStatus: booking.status },
+    const updatedBooking = await bookings.findOne({ _id: bookingId });
+    await createLog({
+      supplier: String(booking.supplier || "none"),
+      type: logType,
+      status: "success",
+      message,
+      request: { bookingId, action, status },
+      response: {
+        bookingId,
+        bookingStatus: updatedBooking?.status,
+        paymentStatus: updatedBooking?.paymentStatus,
+        supplierStatus: updatedBooking?.supplierStatus,
+      },
     });
-    
+
     return NextResponse.json({
       success: true,
-      message: 'Booking status updated',
-      booking,
+      message,
+      booking: updatedBooking ? normalizeBookingForAdmin(updatedBooking) : null,
     });
-    
   } catch (error) {
-    console.error('Booking update error:', error);
-    if (
-      error instanceof Error &&
-      error.message.startsWith('Invalid booking status transition')
-    ) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
-    }
-
+    console.error(
+      "[admin/bookings] update failed:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
     return NextResponse.json(
-      { error: 'Failed to update booking' },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : "Failed to update booking" },
+      { status: 500 },
     );
   }
 }

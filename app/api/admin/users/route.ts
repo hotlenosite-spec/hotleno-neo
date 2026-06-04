@@ -1,46 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
-import { USER_ROLES } from '@/models/User';
-import Booking from '@/models/Booking';
 import { verifyToken } from '@/lib/jwt';
+import {
+  getUserById,
+  listUsers,
+  publicUser,
+  updateUserRole,
+  USER_ROLES,
+  type UserRole,
+} from '@/lib/firebase-store';
+import { getFirestoreMongoDb } from '@/lib/firestore-mongo';
 
 const editableRoles = USER_ROLES.filter((role) => role !== 'user');
-
-function getAccountTypeForRole(role: string) {
-  if (role === 'admin') return 'admin';
-  if (role.startsWith('agency_')) return 'b2b';
-  if (role.startsWith('hotel_')) return 'hotel';
-  return 'b2c';
-}
-
-function getAgencyRoleForRole(role: string) {
-  switch (role) {
-    case 'agency_owner':
-      return 'owner';
-    case 'agency_manager':
-      return 'manager';
-    case 'agency_agent':
-      return 'agent';
-    case 'agency_accountant':
-      return 'accountant';
-    default:
-      return null;
-  }
-}
-
-function getHotelRoleForRole(role: string) {
-  switch (role) {
-    case 'hotel_owner':
-      return 'owner';
-    case 'hotel_manager':
-      return 'manager';
-    case 'hotel_staff':
-      return 'staff';
-    default:
-      return null;
-  }
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -56,8 +26,7 @@ export async function GET(req: NextRequest) {
     const decoded = verifyToken(token);
     
     // Check if user is admin
-    await dbConnect();
-    const currentUser = await User.findById(decoded.userId);
+    const currentUser = await getUserById(decoded.userId);
     
     if (!currentUser || currentUser.role !== 'admin') {
       return NextResponse.json(
@@ -73,56 +42,24 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search');
     
-    // Build query
-    const query: Record<string, unknown> = {};
-    
-    if (role) {
-      query.role = role;
-    }
-    
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ];
-    }
-    
-    // Calculate pagination
-    const skip = (page - 1) * limit;
-    
-    // Fetch users (exclude password)
-    const users = await User.find(query)
-      .select('-password')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
-    // Get booking count for each user
-    const usersWithBookings = await Promise.all(
-      users.map(async (user) => {
-        const bookingCount = await Booking.countDocuments({ userId: user._id });
-        return {
-          ...user.toObject(),
-          bookingCount,
-        };
-      })
-    );
-    
-    // Get total count
-    const total = await User.countDocuments(query);
+    const result = await listUsers({ role, search, page, limit });
+    console.info("[admin/users] collection=users count=%d", result.users.length);
     
     return NextResponse.json({
-      users: usersWithBookings,
+      users: result.users,
       pagination: {
         page,
         limit,
-        total,
-        pages: Math.ceil(total / limit),
+        total: result.total,
+        pages: Math.ceil(result.total / limit),
       },
     });
     
   } catch (error) {
-    console.error('Admin users fetch error:', error);
+    console.error(
+      "[admin/users] fetch failed:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
     return NextResponse.json(
       { error: 'Failed to fetch users' },
       { status: 500 }
@@ -146,8 +83,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     
     // Check if user is admin
-    await dbConnect();
-    const currentUser = await User.findById(decoded.userId);
+    const currentUser = await getUserById(decoded.userId);
     
     if (!currentUser || currentUser.role !== 'admin') {
       return NextResponse.json(
@@ -158,14 +94,14 @@ export async function PATCH(req: NextRequest) {
     
     const { userId, role } = body;
     
-    if (!userId || !role) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'User ID and role are required' },
+        { error: 'User ID is required' },
         { status: 400 }
       );
     }
 
-    if (!editableRoles.includes(role as (typeof editableRoles)[number])) {
+    if (role && !editableRoles.includes(role as (typeof editableRoles)[number])) {
       return NextResponse.json(
         { error: 'Invalid user role' },
         { status: 400 }
@@ -173,23 +109,14 @@ export async function PATCH(req: NextRequest) {
     }
     
     // Prevent admin from demoting themselves
-    if (userId === decoded.userId && role !== 'admin') {
+    if (role && userId === decoded.userId && role !== 'admin') {
       return NextResponse.json(
         { error: 'Cannot change your own role' },
         { status: 400 }
       );
     }
-    
-    const user = await User.findByIdAndUpdate(
-      userId,
-      {
-        role,
-        accountType: getAccountTypeForRole(role),
-        agencyRole: getAgencyRoleForRole(role),
-        hotelRole: getHotelRoleForRole(role),
-      },
-      { new: true, runValidators: true }
-    ).select('-password');
+
+    let user = role ? await updateUserRole(userId, role as UserRole) : await getUserById(userId);
     
     if (!user) {
       return NextResponse.json(
@@ -197,15 +124,49 @@ export async function PATCH(req: NextRequest) {
         { status: 404 }
       );
     }
+
+    const updates: Record<string, unknown> = {
+      updatedAt: new Date(),
+    };
+    for (const key of [
+      "name",
+      "email",
+      "phone",
+      "supplierScope",
+      "nationality",
+      "nationalId",
+      "passportNumber",
+      "accountType",
+    ]) {
+      if (body[key] !== undefined) updates[key] = body[key];
+    }
+    if (body.isActive !== undefined) updates.isActive = Boolean(body.isActive);
+    if (body.passportExpiryDate !== undefined) {
+      updates.passportExpiryDate = body.passportExpiryDate
+        ? new Date(body.passportExpiryDate)
+        : null;
+    }
+    if (body.dateOfBirth !== undefined || body.birthDate !== undefined) {
+      const dateOfBirth = body.dateOfBirth ?? body.birthDate;
+      updates.birthDate = dateOfBirth ? new Date(dateOfBirth) : null;
+    }
+    if (Object.keys(updates).length > 1) {
+      const db = await getFirestoreMongoDb();
+      await db.collection("users").updateOne({ _id: userId }, { $set: updates });
+      user = await getUserById(userId);
+    }
     
     return NextResponse.json({
       success: true,
-      message: 'User role updated',
-      user,
+      message: 'User updated',
+      user: user ? publicUser(user) : null,
     });
     
   } catch (error) {
-    console.error('User update error:', error);
+    console.error(
+      "[admin/users] update failed:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
     return NextResponse.json(
       { error: 'Failed to update user' },
       { status: 500 }

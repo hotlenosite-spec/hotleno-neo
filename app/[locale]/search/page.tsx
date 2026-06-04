@@ -39,9 +39,12 @@ function buildSavedSearch(params: URLSearchParams): SavedSearch {
 
   return {
     destination: {
-      type: params.get("cityId") ? "city" : "country",
+      type: params.get("cityId") || params.get("cityCode") ? "city" : "country",
       code: params.get("countryCode") || "",
-      id: params.get("cityId") ? toNumber(params.get("cityId"), 0) : undefined,
+      id:
+        params.get("cityId") || params.get("cityCode")
+          ? toNumber(params.get("cityId") || params.get("cityCode"), 0)
+          : undefined,
       name: destination,
     },
     dates: {
@@ -96,6 +99,7 @@ export default function SearchPage() {
       countryCode: params.get("countryCode") || undefined,
       hotelCode,
       destinationCode: params.get("destinationCode") || undefined,
+      cityCode: params.get("cityCode") || undefined,
       zoneCode: params.get("zoneCode") || undefined,
       hotelIds: hotelCode ? [hotelCode] : hotelIds,
     };
@@ -117,11 +121,13 @@ export default function SearchPage() {
       try {
         const savedSearch = buildSavedSearch(new URLSearchParams(paramsKey));
         localStorage.setItem("hotelSearch", JSON.stringify(savedSearch));
+        const token = localStorage.getItem("token");
 
         const response = await fetch("/api/hotels/search", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
             destination: request.destination,
@@ -129,6 +135,7 @@ export default function SearchPage() {
             countryCode: request.countryCode,
             hotelCode: request.hotelCode,
             destinationCode: request.destinationCode,
+            cityCode: request.cityCode,
             zoneCode: request.zoneCode,
             hotelIds: request.hotelIds,
             CheckInDate: request.checkIn,

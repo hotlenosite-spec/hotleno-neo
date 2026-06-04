@@ -1,28 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Booking from '@/models/Booking';
-import BookingLog from '@/models/BookingLog';
-import PaymentLog from '@/models/PaymentLog';
-import SupplierLog from '@/models/SupplierLog';
-import User from '@/models/User';
-import { verifyToken } from '@/lib/jwt';
+import { NextRequest, NextResponse } from "next/server";
+import type { Document } from "mongodb";
+import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
+import { getUserById } from "@/lib/firebase-store";
+import { verifyToken } from "@/lib/jwt";
+
+type BookingDocument = Document & {
+  _id: string;
+};
 
 async function requireAdmin(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    return { error: 'No token provided', status: 401 };
-  }
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) return { error: "No token provided", status: 401 } as const;
 
   const decoded = verifyToken(token);
-  await dbConnect();
-  const user = await User.findById(decoded.userId);
-
-  if (!user || user.role !== 'admin') {
-    return { error: 'Unauthorized - Admin access required', status: 403 };
+  const user = await getUserById(decoded.userId);
+  if (!user || user.role !== "admin") {
+    return { error: "Unauthorized - Admin access required", status: 403 } as const;
   }
 
-  return { user };
+  return { user } as const;
 }
 
 export async function GET(
@@ -31,31 +27,41 @@ export async function GET(
 ) {
   try {
     const auth = await requireAdmin(req);
-
-    if ('error' in auth) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status },
-      );
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { bookingId } = await params;
-    const booking = await Booking.findById(bookingId).select(
-      'bookingReference status paymentStatus supplierStatus metadata',
-    );
+    const db = await getFirestoreMongoDb();
+    const booking = await db
+      .collection<BookingDocument>("bookings")
+      .findOne({ _id: bookingId });
 
     if (!booking) {
-      return NextResponse.json(
-        { error: 'Booking not found' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    const [bookingLogs, paymentLogs, supplierLogs] = await Promise.all([
-      BookingLog.find({ bookingId }).sort({ createdAt: -1 }).limit(50).lean(),
-      PaymentLog.find({ bookingId }).sort({ createdAt: -1 }).limit(50).lean(),
-      SupplierLog.find({ bookingId }).sort({ createdAt: -1 }).limit(50).lean(),
-    ]);
+    const allLogs = await db
+      .collection("logs")
+      .find({
+        $or: [
+          { bookingId },
+          { "request.bookingId": bookingId },
+          { "response.bookingId": bookingId },
+        ],
+      })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+    const bookingLogs = allLogs.filter((log) =>
+      String(log.type || "").includes("booking"),
+    );
+    const supplierLogs = allLogs.filter((log) =>
+      String(log.type || "").includes("supplier"),
+    );
+    const paymentLogs = allLogs.filter((log) =>
+      String(log.type || "").includes("payment"),
+    );
 
     return NextResponse.json({
       booking,
@@ -66,9 +72,9 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Admin booking logs fetch error:', error);
+    console.error("Admin booking logs fetch error:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch booking logs' },
+      { error: "Failed to fetch booking logs" },
       { status: 500 },
     );
   }

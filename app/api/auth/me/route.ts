@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
 import { verifyToken } from '@/lib/jwt';
+import { getUserById, publicUser } from '@/lib/firebase-store';
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,9 +15,7 @@ export async function GET(req: NextRequest) {
 
     const decoded = verifyToken(token);
     
-    await dbConnect();
-    
-    const user = await User.findById(decoded.userId);
+    const user = await getUserById(decoded.userId);
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -28,25 +25,7 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        accountType: user.accountType,
-        agencyId: user.agencyId,
-        agencyRole: user.agencyRole,
-        hotelPartnerId: user.hotelPartnerId,
-        hotelRole: user.hotelRole,
-        isActive: user.isActive,
-        lastLoginAt: user.lastLoginAt,
-        avatar: user.avatar,
-        phone: user.phone,
-        birthDate: user.birthDate,
-        nationality: user.nationality,
-        preferences: user.preferences,
-        createdAt: user.createdAt,
-      },
+      user: publicUser(user),
     });
     
   } catch (_error) {

@@ -13,6 +13,7 @@
     "profile": "الملف الشخصي",
     "dashboard": "لوحة التحكم",
     "settings": "الإعدادات",
+    "myAccount": "حسابي",
     "language": "اللغة",
     "english": "English",
     "arabic": "العربية",
@@ -90,6 +91,7 @@
     "viewDetails": "عرض التفاصيل",
     "bestPriceGuarantee": "ضمان أفضل سعر",
     "photos": "صور",
+    "noImage": "لا توجد صورة",
     "starHotel": "فندق نجوم",
     "standardRoom": "غرفة قياسية",
     "available": "متاح",
@@ -401,7 +403,17 @@
     "logs": "السجلات",
     "actions": "الإجراءات",
     "revenue": "الإيرادات",
-    "databaseNotConnected": "قاعدة البيانات غير متصلة"
+    "databaseNotConnected": "قاعدة البيانات غير متصلة",
+    "editUser": "تعديل المستخدم",
+    "userUpdated": "تم تحديث المستخدم",
+    "name": "الاسم",
+    "phone": "الجوال",
+    "role": "الدور",
+    "nationality": "الجنسية",
+    "nationalId": "رقم الهوية الوطنية",
+    "passportNumber": "رقم الجواز",
+    "passportExpiryDate": "تاريخ انتهاء الجواز",
+    "edit": "تعديل"
   },
   "support": {
     "support": "الدعم",
@@ -474,6 +486,180 @@
     "delete": "حذف",
     "publish": "نشر",
     "hide": "إخفاء"
+  },
+  "account": {
+    "loading": "جاري تحميل بيانات الحساب...",
+    "authRequiredTitle": "سجّل الدخول لعرض حسابك",
+    "authRequiredDescription": "أدر حجوزاتك ومسافريك ومحفظتك وطلبات الدعم من مكان واحد.",
+    "comingSoon": "قريبًا",
+    "nav": {
+      "adminDashboard": "لوحة الإدارة",
+      "dashboard": "لوحة التحكم",
+      "profile": "ملفي الشخصي",
+      "bookings": "حجوزاتي",
+      "wallet": "محفظتي",
+      "travelers": "المسافرون",
+      "settings": "الإعدادات",
+      "support": "مركز الدعم",
+      "logout": "تسجيل الخروج"
+    },
+    "status": {
+      "active": "الحساب نشط",
+      "inactive": "الحساب غير نشط"
+    },
+    "customerStatus": {
+      "requestCreated": "تم إنشاء الطلب",
+      "processing": "بانتظار المعالجة",
+      "confirmed": "مؤكد",
+      "cancellationRequested": "تم طلب الإلغاء",
+      "cancelled": "ملغي",
+      "underReview": "قيد المراجعة",
+      "cancellationFailed": "تعذر إلغاء الحجز، سيتم التواصل معك",
+      "amendmentPending": "طلب تعديل قيد المعالجة",
+      "additionalPaymentPending": "بانتظار دفع فرق السعر"
+    },
+    "actions": {
+      "explore": "استكشف",
+      "details": "التفاصيل",
+      "cancel": "إلغاء",
+      "save": "حفظ المسافر",
+      "saving": "جاري الحفظ..."
+    },
+    "dashboard": {
+      "eyebrow": "حساب HOTLENO",
+      "welcome": "مرحبًا بعودتك، {name}",
+      "traveler": "المسافر",
+      "description": "رحلاتك وخدماتك ومحفظتك والمسافرون المحفوظون جاهزون في مكان واحد.",
+      "walletBalance": "رصيد المحفظة",
+      "totalBookings": "إجمالي الحجوزات",
+      "activeBookings": "الحجوزات النشطة",
+      "travelers": "المسافرون المحفوظون",
+      "services": "خدمات HOTLENO",
+      "recentBookings": "آخر الحجوزات",
+      "quickLinks": "روابط سريعة"
+    },
+    "services": {
+      "hotel": {
+        "title": "الفنادق",
+        "description": "ابحث واحجز إقامات موثوقة بتوفر مباشر من المزودين."
+      },
+      "flight": {
+        "title": "الطيران",
+        "description": "حجز الطيران سيكون متاحًا قريبًا من حساب HOTLENO."
+      },
+      "car": {
+        "title": "السيارات",
+        "description": "احجز السيارات لرحلات العمل والإجازات من حساب واحد."
+      },
+      "activity": {
+        "title": "الأنشطة",
+        "description": "اكتشف الجولات والتذاكر وتجارب الوجهات."
+      },
+      "transfer": {
+        "title": "الاستقبال والتوديع من المطار",
+        "description": "رتّب الاستقبال والتوديع والتنقلات من وإلى المطار."
+      },
+      "esim": {
+        "title": "الشرائح الإلكترونية eSIM",
+        "description": "ابقَ متصلًا أثناء السفر عبر خطط eSIM من HOTLENO."
+      }
+    },
+    "bookings": {
+      "eyebrow": "سجل الرحلات",
+      "title": "حجوزاتي",
+      "description": "اعرض وأدر حجوزات HOTLENO الخاصة بك.",
+      "listTitle": "الحجوزات",
+      "bookingId": "رقم الحجز",
+      "service": "الخدمة",
+      "name": "الفندق أو الخدمة",
+      "date": "التاريخ",
+      "price": "السعر",
+      "supplier": "المزود",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "emptyTitle": "لا توجد حجوزات بعد",
+      "empty": "ستظهر حجوزاتك هنا بعد إكمال أول حجز.",
+      "notFound": "لم يتم العثور على الحجز",
+      "cancelRequestSaved": "تم حفظ طلب الإلغاء."
+    },
+    "bookingDetail": {
+      "eyebrow": "تفاصيل الحجز",
+      "tripDetails": "تفاصيل الرحلة",
+      "location": "الموقع",
+      "checkIn": "تسجيل الدخول",
+      "checkOut": "تسجيل الخروج",
+      "supplierStatus": "حالة المزود",
+      "rooms": "الغرف",
+      "room": "غرفة",
+      "adults": "بالغين",
+      "children": "أطفال",
+      "summary": "الملخص",
+      "leadGuest": "المسافر الرئيسي",
+      "email": "البريد الإلكتروني",
+      "phone": "الجوال",
+      "createdAt": "تاريخ الإنشاء",
+      "cancellationPolicy": "سياسة الإلغاء",
+      "supplierPolicy": "سياسة الإلغاء حسب شروط المزود",
+      "travelers": "المسافرون"
+    },
+    "wallet": {
+      "eyebrow": "المدفوعات",
+      "title": "المحفظة",
+      "description": "تابع الرصيد والرصيد التعويضي والمبالغ المستردة.",
+      "balance": "الرصيد الحالي",
+      "credits": "الرصيد التعويضي",
+      "refunds": "المبالغ المستردة",
+      "transactions": "عمليات المحفظة",
+      "emptyTitle": "لا توجد عمليات في المحفظة",
+      "empty": "ستظهر الأرصدة والمبالغ المستردة وعمليات المحفظة هنا."
+    },
+    "profile": {
+      "eyebrow": "ملف الحساب",
+      "title": "ملفي الشخصي",
+      "description": "راجع بيانات حسابك الأساسية.",
+      "accountInfo": "معلومات الحساب",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الجوال",
+      "accountType": "نوع الحساب",
+      "createdAt": "تاريخ الإنشاء",
+      "status": "حالة الحساب",
+      "nationality": "الجنسية",
+      "birthDate": "تاريخ الميلاد",
+      "nationalId": "رقم الهوية الوطنية",
+      "passportNumber": "رقم الجواز",
+      "passportExpiryDate": "تاريخ انتهاء الجواز"
+    },
+    "travelers": {
+      "eyebrow": "الضيوف المحفوظون",
+      "title": "المسافرون",
+      "description": "احفظ بيانات المسافرين المتكررين لتسريع الحجز.",
+      "addTraveler": "إضافة مسافر",
+      "savedTravelers": "المسافرون المحفوظون",
+      "titleField": "اللقب",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "gender": "النوع",
+      "birthDate": "تاريخ الميلاد",
+      "nationality": "الجنسية",
+      "emptyTitle": "لا يوجد مسافرون محفوظون",
+      "empty": "أضف المسافرين هنا لاستخدامهم في الحجوزات القادمة.",
+      "dateOfBirth": "تاريخ الميلاد",
+      "documentType": "نوع الوثيقة",
+      "documentNumber": "رقم الوثيقة",
+      "passportNumber": "رقم الجواز",
+      "nationalId": "رقم الهوية الوطنية",
+      "passportExpiryDate": "تاريخ انتهاء الجواز",
+      "phone": "رقم الجوال",
+      "email": "البريد الإلكتروني"
+    },
+    "settings": {
+      "eyebrow": "التفضيلات",
+      "title": "الإعدادات",
+      "description": "أدر تفضيلات الحساب والتنبيهات.",
+      "preferences": "التفضيلات",
+      "readOnly": "الإعدادات للقراءة فقط مؤقتًا وستكون قابلة للتعديل لاحقًا."
+    }
   },
   "components": {
     "shared": {

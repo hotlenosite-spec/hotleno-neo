@@ -4,6 +4,7 @@ export interface TokenPayload {
   userId: string;
   email: string;
   role: string;
+  supplierScope?: string | null;
 }
 
 function getJwtSecret() {

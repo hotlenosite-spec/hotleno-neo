@@ -27,6 +27,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { HotelSearchResult, HotelOption, HotelImage } from "@/types/travellanda";
 import { formatCurrency } from "@/hooks/use-hotels-enhanced";
+import { hasTboSupplierOffer, isTboCertificationMode } from "@/lib/hotels/tbo-mode";
 import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 
@@ -64,9 +65,19 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
   // Fetch hotel details for images
   useEffect(() => {
     let cancelled = false;
+    const shouldSkipExternalImageFetch =
+      isTboCertificationMode() || hasTboSupplierOffer(hotel);
 
     if (hotel.Images && hotel.Images.length > 0) {
       setImages(hotel.Images);
+      setImagesLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (shouldSkipExternalImageFetch) {
+      setImages([]);
       setImagesLoading(false);
       return () => {
         cancelled = true;
@@ -84,15 +95,20 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
           }),
         });
 
-        if (!response.ok) throw new Error('Failed to fetch images');
+        if (!response.ok) {
+          if (!cancelled) setImages([]);
+          return;
+        }
 
         const data = await response.json();
         
         if (!cancelled && data.Hotels?.[0]?.Images) {
           setImages(data.Hotels[0].Images);
+        } else if (!cancelled) {
+          setImages([]);
         }
-      } catch (err) {
-        console.error('Failed to load hotel images:', err);
+      } catch {
+        if (!cancelled) setImages([]);
       } finally {
         if (!cancelled) setImagesLoading(false);
       }
@@ -101,7 +117,7 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
     fetchHotelImages();
     
     return () => { cancelled = true; };
-  }, [hotel.HotelId, hotel.Images]);
+  }, [hotel]);
 
   const mainImage = images[0]?.Url || HOTEL_PLACEHOLDER;
   
@@ -133,7 +149,7 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
           <div className="relative h-56 md:h-full min-h-[200px] bg-muted">
             {imagesLoading ? (
               <Skeleton className="absolute inset-0" />
-            ) : (
+            ) : images.length > 0 ? (
               <>
                 <Image
                   src={mainImage}
@@ -146,6 +162,13 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
                 {/* Image overlay gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
               </>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                <div className="text-center text-muted-foreground">
+                  <HugeiconsIcon icon={Image01Icon} className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <span className="text-sm">{t('hotels.noImage')}</span>
+                </div>
+              </div>
             )}
             
             {/* Star Rating Badge */}
@@ -164,15 +187,6 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
               </div>
             )}
 
-            {/* Placeholder indicator */}
-            {!imagesLoading && images.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                <div className="text-center text-muted-foreground">
-                  <HugeiconsIcon icon={Image01Icon} className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <span className="text-sm">{t('hotels.noImage')}</span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
   normalizeSupplierHotels,
@@ -7,19 +6,25 @@ import {
 } from "@/lib/hotels/normalize-hotels";
 import {
   createSupplierProvider,
-  getConfiguredSupplierProvider,
   type SupplierGuestOccupancy,
   type SupplierProvider,
   type SupplierProviderName,
   type SupplierSearchHotelsRequest,
   type SupplierSearchHotelsResponse,
 } from "@/lib/suppliers";
+import { getAuthUserFromRequest } from "@/lib/auth-user";
+import { getEnabledSupplierNamesForSearch } from "@/lib/suppliers/supplier-settings";
 import { enrichHotelbedsHotelsWithContent } from "@/lib/suppliers/hotelbeds-content-enrichment";
+import {
+  enrichTboHotelsWithCachedContent,
+  getTboNormalSearchHotelCodes,
+  isTboNormalSearchEnabled,
+} from "@/lib/suppliers/tbo-content-store";
 import {
   getStoredHotelCodesForCountry,
   getStoredHotelCodesForZone,
 } from "@/lib/suppliers/hotelbeds-content-store";
-import SupplierLog from "@/models/SupplierLog";
+import { createLog } from "@/lib/firebase-store";
 import type { HotelSearchResponse } from "@/types/travellanda";
 
 export const runtime = "nodejs";
@@ -36,10 +41,23 @@ function isSupplierProviderName(value: string): value is SupplierProviderName {
   return SUPPLIER_NAMES.includes(value as SupplierProviderName);
 }
 
-function getSearchProviders(providerOverride?: string): SupplierProvider[] {
+async function getSearchProviders(params: {
+  providerOverride?: string;
+  role?: string;
+  supplierScope?: string | null;
+}): Promise<SupplierProvider[]> {
+  const { providerOverride, role, supplierScope } = params;
   if (providerOverride) {
+    if (role !== "admin" && role !== "supplier_tester") {
+      throw new Error("Supplier provider override requires an authenticated tester or admin");
+    }
+
     if (!isSupplierProviderName(providerOverride)) {
       throw new Error(`Unsupported supplier provider: ${providerOverride}`);
+    }
+
+    if (role === "supplier_tester" && supplierScope !== providerOverride) {
+      throw new Error("Supplier tester is not allowed to use this provider");
     }
 
     if (providerOverride === "mock" && process.env.NODE_ENV === "production") {
@@ -49,44 +67,12 @@ function getSearchProviders(providerOverride?: string): SupplierProvider[] {
     return [createSupplierProvider(providerOverride)];
   }
 
-  const configuredProviders = process.env.SUPPLIER_PROVIDERS;
-
-  if (!configuredProviders) {
-    if (!process.env.SUPPLIER_PROVIDER && process.env.NODE_ENV === "production") {
-      throw new Error(
-        "SUPPLIER_PROVIDER or SUPPLIER_PROVIDERS must be configured in production",
-      );
-    }
-
-    return [getConfiguredSupplierProvider()];
-  }
-
-  const providerNames = configuredProviders
-    .split(",")
-    .map((provider) => provider.trim())
-    .filter(Boolean);
-
-  if (providerNames.length === 0) {
-    if (!process.env.SUPPLIER_PROVIDER && process.env.NODE_ENV === "production") {
-      throw new Error(
-        "SUPPLIER_PROVIDER or SUPPLIER_PROVIDERS must be configured in production",
-      );
-    }
-
-    return [getConfiguredSupplierProvider()];
-  }
-
-  return providerNames.map((providerName) => {
-    if (!isSupplierProviderName(providerName)) {
-      throw new Error(`Unsupported supplier provider: ${providerName}`);
-    }
-
-    if (providerName === "mock" && process.env.NODE_ENV === "production") {
-      throw new Error("Mock supplier provider cannot be used in production");
-    }
-
-    return createSupplierProvider(providerName);
+  const providerNames = await getEnabledSupplierNamesForSearch({
+    role,
+    supplierScope,
   });
+
+  return providerNames.map((providerName) => createSupplierProvider(providerName));
 }
 
 function toSupplierRooms(rooms: unknown): SupplierGuestOccupancy[] {
@@ -124,6 +110,17 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unknown supplier search error";
 }
 
+function isTboCertificationTester(user: {
+  email?: string;
+  role?: string;
+  supplierScope?: string | null;
+} | null) {
+  return (
+    user?.email?.toLowerCase() === "tbo.tester@hotleno.com" ||
+    (user?.role === "supplier_tester" && user?.supplierScope === "tbo")
+  );
+}
+
 function createTimeoutError(providerName: string, timeoutMs: number) {
   return new Error(
     `Supplier ${providerName} search timed out after ${timeoutMs}ms`,
@@ -139,8 +136,7 @@ async function logSupplierSearch(params: {
   error?: unknown;
 }) {
   try {
-    await dbConnect();
-    await SupplierLog.create({
+    await createLog({
       supplier: params.supplier,
       type: "supplier_hotel_search",
       status: params.status,
@@ -222,7 +218,12 @@ export async function POST(req: NextRequest) {
     const checkOut = body.checkOutDate ?? body.CheckOutDate ?? body.checkOut;
     const currency = body.currency ?? body.Currency ?? "USD";
     const rooms = toSupplierRooms(body.rooms ?? body.Rooms);
-    const providers = getSearchProviders(body.provider ?? body.supplierProvider);
+    const authUser = getAuthUserFromRequest(req);
+    const providers = await getSearchProviders({
+      providerOverride: body.provider ?? body.supplierProvider,
+      role: authUser?.role,
+      supplierScope: authUser?.supplierScope,
+    });
     const timeoutMs = getSupplierSearchTimeoutMs();
     const explicitHotelIds = [
       ...(body.hotelCode ? [body.hotelCode] : []),
@@ -231,15 +232,29 @@ export async function POST(req: NextRequest) {
     ]
       .map(String)
       .filter(Boolean);
+    const tboNormalHotelIds =
+      explicitHotelIds.length > 0 || isTboCertificationTester(authUser)
+        ? []
+        : await getTboNormalSearchHotelCodes({
+            destination: body.destination,
+            cityCode: body.cityCode,
+            destinationCode: body.destinationCode,
+            countryCode: body.countryCode,
+          });
     const storedHotelIds =
-      explicitHotelIds.length > 0 || body.destinationCode
+      explicitHotelIds.length > 0 || tboNormalHotelIds.length > 0 || body.destinationCode
         ? []
         : body.zoneCode
           ? await getStoredHotelCodesForZone(String(body.zoneCode))
           : body.countryCode
             ? await getStoredHotelCodesForCountry(String(body.countryCode))
             : [];
-    const hotelIds = explicitHotelIds.length > 0 ? explicitHotelIds : storedHotelIds;
+    const hotelIds =
+      explicitHotelIds.length > 0
+        ? explicitHotelIds
+        : tboNormalHotelIds.length > 0
+          ? tboNormalHotelIds
+          : storedHotelIds;
 
     if (!checkIn || !checkOut) {
       return NextResponse.json(
@@ -254,6 +269,14 @@ export async function POST(req: NextRequest) {
         status: "skipped",
         message: "Hotel search skipped because no supplier providers are configured",
       });
+
+      return NextResponse.json(
+        {
+          error: "HOTEL_SEARCH_UNAVAILABLE",
+          message: "البحث غير متاح مؤقتًا لأن جميع موردي الفنادق متوقفون.",
+        },
+        { status: 503 },
+      );
     }
 
     const supplierRequest: SupplierSearchHotelsRequest = {
@@ -270,10 +293,19 @@ export async function POST(req: NextRequest) {
       currency,
       metadata: {
         cityId: body.cityId ?? body.CityIds?.[0],
+        cityCode: body.cityCode,
+        destinationCode: body.destinationCode,
         hotelIds,
         hotelCode: body.hotelCode,
         countryCode: body.countryCode,
         zoneCode: body.zoneCode,
+        userEmail: authUser?.email,
+        role: authUser?.role,
+        supplierScope: authUser?.supplierScope,
+        tboNormalSearch: tboNormalHotelIds.length > 0,
+        disableEnvHotelCodes:
+          tboNormalHotelIds.length > 0 ||
+          (!isTboCertificationTester(authUser) && isTboNormalSearchEnabled()),
       },
     };
 
@@ -295,22 +327,21 @@ export async function POST(req: NextRequest) {
       } satisfies HotelSearchResponse);
     }
 
-    const supplierResponses = (
-      await Promise.all(
-        providers.map((provider) =>
-          searchProviderSafely({
-            provider,
-            request: supplierRequest,
-            timeoutMs,
-          }),
-        ),
-      )
-    ).filter(
-      (response): response is SupplierSearchHotelsResponse => Boolean(response),
-    );
+    const supplierResponses: SupplierSearchHotelsResponse[] = [];
+    for (const provider of providers) {
+      const response = await searchProviderSafely({
+        provider,
+        request: supplierRequest,
+        timeoutMs,
+      });
+      if (response) supplierResponses.push(response);
+    }
 
-    const enrichedSupplierHotels = await enrichHotelbedsHotelsWithContent(
+    const tboContentHotels = await enrichTboHotelsWithCachedContent(
       supplierResponses.flatMap((response) => response.hotels),
+    );
+    const enrichedSupplierHotels = await enrichHotelbedsHotelsWithContent(
+      tboContentHotels,
     );
     const unifiedHotels = normalizeSupplierHotels(enrichedSupplierHotels, currency);
     const hotels = unifiedHotels.map(toLegacyHotelResult);

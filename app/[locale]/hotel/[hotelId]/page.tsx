@@ -12,6 +12,7 @@ import { RoomSelector } from "@/components/hotel/room-selector";
 import { HotelImageGallery } from "@/components/hotel/hotel-image-gallery";
 import { BookingBreadcrumb } from "@/components/booking/booking-breadcrumb";
 import { useHotelPolicies } from "@/hooks/use-hotels-enhanced";
+import { shouldSkipTravellandaForTbo } from "@/lib/hotels/tbo-mode";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { 
   StarIcon, 
@@ -23,6 +24,78 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { HotelSearchResult, HotelOption, HotelPoliciesResponse, SavedSearch } from "@/types/travellanda";
 import { formatCurrency, calculateNights } from "@/hooks/use-hotels-enhanced";
+
+function createSupplierFallbackPolicies(
+  option: HotelOption,
+  currency: string,
+): HotelPoliciesResponse {
+  return {
+    ServerTime: new Date().toISOString(),
+    ServerType: "hotleno-supplier-layer",
+    ExecutionTime: "0",
+    ResponseType: "HotelPolicies",
+    OptionId: option.OptionId,
+    Currency: option.Currency || currency,
+    TotalPrice: (option.Price ?? option.TotalPrice ?? 0) + (option.Taxes ?? 0),
+    Policies: [],
+    Restrictions: [
+      {
+        Type: "supplier_policy",
+        Description: "سياسة الإلغاء حسب شروط المزود",
+      },
+    ],
+    Alerts: [],
+  } as HotelPoliciesResponse;
+}
+
+function toNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function getSelectedRoomSnapshot(
+  option: HotelOption,
+  hotelId: string,
+  searchParams: SavedSearch,
+  supplier: string,
+) {
+  const price = toNumber(option.Price || option.TotalPrice);
+  const taxes = toNumber(option.Taxes);
+  const nights = searchParams.guests.nights || 1;
+  const currency = option.Currency || searchParams.currency || "USD";
+
+  return {
+    ...option,
+    HotelId: Number.parseInt(hotelId, 10),
+    roomName: option.RoomName || option.RoomType,
+    rateKey: option.rateKey || option.supplierRateKey || option.BookingCode || String(option.OptionId),
+    supplierRateKey: option.supplierRateKey || option.rateKey || option.BookingCode || String(option.OptionId),
+    BookingCode: option.BookingCode || option.supplierRateKey || option.rateKey,
+    supplierHotelId: option.supplierHotelId || option.HotelCode || hotelId,
+    HotelCode: option.HotelCode || option.supplierHotelId || hotelId,
+    supplierTotalFare: option.supplierTotalFare ?? option.TotalPrice ?? price,
+    price,
+    totalPrice: (price + taxes) * nights,
+    currency,
+    refundable: !option.IsNonRefundable,
+    boardName: option.BoardName || option.BoardType,
+    mealType: option.BoardType || option.BoardName,
+    supplier,
+    hotelId: Number.parseInt(hotelId, 10),
+    checkIn: searchParams.dates.checkIn,
+    checkOut: searchParams.dates.checkOut,
+    guests: searchParams.guests,
+    nights,
+    Price: price,
+    TotalPrice: option.TotalPrice ?? price,
+    Taxes: taxes,
+    Currency: currency,
+  };
+}
 
 export default function HotelDetailsPage() {
   const router = useRouter();
@@ -188,31 +261,51 @@ interface HotelDetailsData {
     };
     setSelectedOption(sanitizedOption);
     
+    if (shouldSkipTravellandaForTbo(hotel)) {
+      console.info('Skipping policies fetch for TBO certification booking flow');
+      setPolicies(createSupplierFallbackPolicies(sanitizedOption, hotel?.Options?.[0]?.Currency || 'USD'));
+      return;
+    }
+
     // Fetch policies for the selected option
     try {
       const hotelIdNum = parseInt(hotelId);
-      const policiesData = await fetchPolicies(hotelIdNum, option.OptionId);
+      const policiesData = await fetchPolicies(hotelIdNum, option.OptionId, {
+        hotel,
+        option: sanitizedOption,
+        currency: hotel?.Options?.[0]?.Currency,
+      });
       setPolicies(policiesData);
     } catch (err) {
-      console.error('Failed to fetch policies:', err);
+      if (!shouldSkipTravellandaForTbo(hotel)) {
+        console.error('Failed to fetch policies:', err);
+      }
     }
   };
 
   const handleBookNow = () => {
     if (selectedOption && hotel && searchParams) {
+      const supplier = shouldSkipTravellandaForTbo(hotel) ? "tbo" : "travellanda";
+      const selectedRoom = getSelectedRoomSnapshot(
+        selectedOption,
+        hotelId,
+        searchParams,
+        supplier,
+      );
       // Store complete booking data
       const bookingData = {
         hotel: {
           ...hotel,
-          selectedOption,
+          selectedOption: selectedRoom,
         },
+        selectedRoom,
         policies,
         searchParams,
       };
       
       // Add HotelId to selectedOption for policies API
       const optionWithHotelId = {
-        ...selectedOption,
+        ...selectedRoom,
         HotelId: parseInt(hotelId),
       };
       
@@ -466,6 +559,16 @@ interface HotelDetailsData {
                       {policies.Alerts.map((alert, idx) => (
                         <p key={idx} className="text-sm text-amber-800">
                           <strong>{alert.Type}:</strong> {alert.Description}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  {policies?.Restrictions && policies.Restrictions.length > 0 && (
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      {policies.Restrictions.map((restriction, idx) => (
+                        <p key={idx} className="text-sm text-amber-800">
+                          {restriction.Description}
                         </p>
                       ))}
                     </div>

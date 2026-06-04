@@ -154,6 +154,13 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
 
   const options: HotelOption[] = hotel.rates.map((rate, index) => ({
     OptionId: stableNumericId(`${hotel.supplier}:${rate.rateKey}:${index}`),
+    rateKey: rate.rateKey,
+    supplier: hotel.supplier,
+    supplierHotelId: hotel.supplierHotelId,
+    supplierRateKey: rate.rateKey,
+    BookingCode: rate.rateKey,
+    HotelCode: hotel.supplierHotelId,
+    supplierTotalFare: rate.price,
     OnRequest: 0,
     BoardType: rate.boardName || "Room Only",
     BoardName: rate.boardName,

@@ -10,6 +10,7 @@ export interface HotelbedsSearchSuggestion {
   type: HotelbedsSearchSuggestionType;
   hotelCode?: string;
   destinationCode?: string;
+  cityCode?: string;
   countryCode?: string;
   zoneCode?: string;
 }
