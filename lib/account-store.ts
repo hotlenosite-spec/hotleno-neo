@@ -26,6 +26,7 @@ export type AccountBooking = Document & {
   supplierStatus?: string;
   archived?: boolean;
   hiddenFromAdminMainList?: boolean;
+  hiddenFromCustomerBookings?: boolean;
   rooms?: unknown[];
   travelers?: unknown[];
   leadGuest?: string;
@@ -70,6 +71,14 @@ function ownerFilter(user: TokenPayload) {
   };
 }
 
+function isHiddenTesterBooking(booking?: AccountBooking | null) {
+  return (
+    booking?.archived === true ||
+    booking?.hiddenFromAdminMainList === true ||
+    booking?.hiddenFromCustomerBookings === true
+  );
+}
+
 export async function listCustomerBookings(
   user: TokenPayload,
   options: { limit?: number; status?: string | null } = {},
@@ -90,10 +99,7 @@ export async function listCustomerBookings(
 
   if (user.email.toLowerCase() !== "tbo.tester@hotleno.com") return bookings;
 
-  return bookings.filter(
-    (booking) =>
-      booking.archived !== true && booking.hiddenFromAdminMainList !== true,
-  );
+  return bookings.filter((booking) => !isHiddenTesterBooking(booking));
 }
 
 export async function getCustomerBooking(user: TokenPayload, bookingId: string) {
@@ -105,7 +111,7 @@ export async function getCustomerBooking(user: TokenPayload, bookingId: string) 
 
   if (
     user.email.toLowerCase() === "tbo.tester@hotleno.com" &&
-    (booking?.archived === true || booking?.hiddenFromAdminMainList === true)
+    isHiddenTesterBooking(booking)
   ) {
     return null;
   }

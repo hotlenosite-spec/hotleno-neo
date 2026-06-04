@@ -19,9 +19,15 @@ import type {
 type BookingDocument = Document & {
   _id: string;
   userId: string;
+  customerEmail?: string;
+  archived?: boolean;
+  hiddenFromAdminMainList?: boolean;
+  hiddenFromCustomerBookings?: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
+
+const TESTER_EMAIL = "tbo.tester@hotleno.com";
 
 function toNumber(value: unknown, fallback = 0) {
   const number = typeof value === "number" ? value : Number(value);
@@ -43,6 +49,21 @@ function getBookingId(reference?: unknown) {
 
 function isEnabled(value?: string) {
   return String(value || "").trim().toLowerCase() === "true";
+}
+
+function isTesterToken(decoded: { userId?: string; email?: string }) {
+  return (
+    String(decoded.email || "").toLowerCase() === TESTER_EMAIL ||
+    String(decoded.userId || "").toLowerCase() === TESTER_EMAIL
+  );
+}
+
+function isHiddenTesterBooking(booking: BookingDocument) {
+  return (
+    booking.archived === true ||
+    booking.hiddenFromAdminMainList === true ||
+    booking.hiddenFromCustomerBookings === true
+  );
 }
 
 function safeErrorMessage(error: unknown) {
@@ -420,6 +441,29 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
     const bookingsCollection = db.collection<BookingDocument>("bookings");
+
+    if (isTesterToken(decoded)) {
+      const allBookings = await bookingsCollection
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
+      const visibleBookings = allBookings.filter(
+        (booking) => !isHiddenTesterBooking(booking),
+      );
+      const bookings = visibleBookings.slice(skip, skip + limit);
+
+      return NextResponse.json({
+        success: true,
+        bookings,
+        pagination: {
+          page,
+          limit,
+          total: visibleBookings.length,
+          pages: Math.ceil(visibleBookings.length / limit),
+        },
+      });
+    }
+
     const bookings = await bookingsCollection
       .find(query)
       .sort({ createdAt: -1 })

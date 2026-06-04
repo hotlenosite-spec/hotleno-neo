@@ -7,7 +7,7 @@ import { getUserByEmail } from "@/lib/firebase-store";
 export const runtime = "nodejs";
 
 const TESTER_EMAIL = "tbo.tester@hotleno.com";
-const ARCHIVE_REASON = "TBO certification test cleanup";
+const ARCHIVE_REASON = "TBO tester cleanup before sending portal to TBO";
 
 type BookingDocument = Document & {
   _id: string;
@@ -24,6 +24,7 @@ type BookingDocument = Document & {
   metadata?: Record<string, unknown>;
   archived?: boolean;
   hiddenFromAdminMainList?: boolean;
+  hiddenFromCustomerBookings?: boolean;
 };
 
 function normalized(value: unknown) {
@@ -43,12 +44,20 @@ function isTesterBooking(booking: BookingDocument, testerUserId?: string) {
 }
 
 function isActiveTboBooking(booking: BookingDocument) {
+  const status = normalized(booking.status);
+  const cancellationStatus = normalized(booking.cancellationStatus);
+
   return (
     isTboBooking(booking) &&
     normalized(booking.supplierStatus) === "confirmed" &&
-    normalized(booking.cancellationStatus) !== "cancelled" &&
-    normalized(booking.status) !== "cancelled" &&
-    normalized(booking.bookingStatus) !== "supplier_booking_failed"
+    !["cancelled", "cancellation_requested", "failed"].includes(cancellationStatus) &&
+    ![
+      "cancelled",
+      "cancellation_requested",
+      "cancellation_failed",
+      "supplier_booking_failed",
+      "failed",
+    ].includes(status)
   );
 }
 
@@ -78,16 +87,14 @@ function canArchiveTesterBooking(booking: BookingDocument) {
   const cancellationStatus = normalized(booking.cancellationStatus);
   const paymentStatus = normalized(booking.paymentStatus);
   const supplierSubmission = normalized(booking.metadata?.supplierSubmission);
+  const supplierCancellation = normalized(booking.metadata?.supplierCancellation);
+  const supplierResponseStatus = normalized(booking.supplierResponseStatus);
 
-  if (isActiveTboBooking(booking)) {
-    return cancellationStatus === "cancelled" || supplierStatus === "cancelled";
+  if (booking.archived === true || booking.hiddenFromAdminMainList === true) {
+    return false;
   }
 
-  if (
-    supplierStatus === "confirmed" &&
-    cancellationStatus !== "cancelled" &&
-    status !== "cancelled"
-  ) {
+  if (isActiveTboBooking(booking)) {
     return false;
   }
 
@@ -98,18 +105,33 @@ function canArchiveTesterBooking(booking: BookingDocument) {
     cancellationStatus,
     paymentStatus,
     supplierSubmission,
+    supplierCancellation,
+    supplierResponseStatus,
   ].some((value) =>
     [
       "cancelled",
+      "cancellation_requested",
+      "requested",
+      "cancellation_failed",
       "failed",
       "supplier_booking_failed",
       "payment_disabled_created",
+      "not_required_for_test",
+      "supplier_booking_not_started",
       "internal_only",
       "manual_review_required",
       "cancelled_local_only",
       "not_started",
-      "failed",
+      "sent_to_supplier",
     ].includes(value),
+  );
+}
+
+function isAlreadyArchived(booking: BookingDocument) {
+  return (
+    booking.archived === true ||
+    booking.hiddenFromAdminMainList === true ||
+    booking.hiddenFromCustomerBookings === true
   );
 }
 
@@ -168,9 +190,10 @@ export async function POST(req: NextRequest) {
   const testerBookings = allBookings.filter(
     (booking) => isTboBooking(booking) && isTesterBooking(booking, tester?.id),
   );
+  const alreadyArchivedBookings = testerBookings.filter(isAlreadyArchived);
   const archivableBookings = testerBookings.filter(canArchiveTesterBooking);
   const skippedActiveBookings = testerBookings.filter(
-    (booking) => isActiveTboBooking(booking) && !canArchiveTesterBooking(booking),
+    (booking) => isActiveTboBooking(booking) && !isAlreadyArchived(booking),
   );
   const reviewRequiredBookings = testerBookings.filter(
     (booking) => needsReview(booking) && !canArchiveTesterBooking(booking),
@@ -188,7 +211,9 @@ export async function POST(req: NextRequest) {
           archived: true,
           archivedReason: ARCHIVE_REASON,
           archivedAt: now,
+          archivedBy: "system/admin-cleanup",
           hiddenFromAdminMainList: true,
+          hiddenFromCustomerBookings: true,
           updatedAt: now,
         },
       },
@@ -207,21 +232,28 @@ export async function POST(req: NextRequest) {
     JSON.stringify({
       confirm,
       totalBookings: allBookings.length,
-      totalFound: testerBookings.length,
-      activeTboBookings: summary.activeTboBookings,
+      totalTesterBookings: testerBookings.length,
+      activeSkipped: skippedActiveBookings.length,
+      alreadyArchived: alreadyArchivedBookings.length,
       archivedCount: confirm ? archivableBookings.length : 0,
       eligibleForArchive: archivableBookings.length,
-      skippedActiveCount: skippedActiveBookings.length,
       reviewRequiredCount: reviewRequiredBookings.length,
     }),
   );
+
+  const willArchiveBookingIds = affectedBookingRefs;
 
   return NextResponse.json({
     success: true,
     dryRun: !confirm,
     summary,
+    totalTesterBookings: testerBookings.length,
+    activeSkipped: skippedActiveBookings.length,
+    alreadyArchived: alreadyArchivedBookings.length,
+    willArchiveBookingIds,
+    // Backward-compatible aliases used by the existing admin UI.
     totalFound: testerBookings.length,
-    activeTboBookings: summary.activeTboBookings,
+    activeTboBookings: skippedActiveBookings.length,
     archivedCount: confirm ? archivableBookings.length : 0,
     eligibleForArchive: archivableBookings.length,
     skippedActiveCount: skippedActiveBookings.length,

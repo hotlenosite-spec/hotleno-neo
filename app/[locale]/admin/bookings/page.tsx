@@ -230,12 +230,16 @@ export default function AdminBookingsPage() {
   const [cleanupLoading, setCleanupLoading] = useState(false);
   const [cleanupReport, setCleanupReport] = useState<{
     dryRun?: boolean;
+    totalTesterBookings?: number;
     totalFound?: number;
+    activeSkipped?: number;
     activeTboBookings?: number;
+    alreadyArchived?: number;
     archivedCount?: number;
     eligibleForArchive?: number;
     skippedActiveCount?: number;
     reviewRequiredCount?: number;
+    willArchiveBookingIds?: string[];
     affectedBookingRefs?: string[];
     summary?: {
       totalBookings?: number;
@@ -997,12 +1001,27 @@ export default function AdminBookingsPage() {
 
             {cleanupReport ? (
               <div className="mt-4 grid gap-2 text-xs font-bold text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
-                <div>حجوزات tbo.tester: {cleanupReport.totalFound ?? 0}</div>
+                <div>
+                  حجوزات tbo.tester:{" "}
+                  {cleanupReport.totalTesterBookings ?? cleanupReport.totalFound ?? 0}
+                </div>
                 <div>مؤهلة للأرشفة: {cleanupReport.eligibleForArchive ?? 0}</div>
                 <div>تمت أرشفتها: {cleanupReport.archivedCount ?? 0}</div>
-                <div>نشطة عند TBO: {cleanupReport.activeTboBookings ?? 0}</div>
-                <div>تم تخطيها كنشطة: {cleanupReport.skippedActiveCount ?? 0}</div>
+                <div>مؤرشفة سابقًا: {cleanupReport.alreadyArchived ?? 0}</div>
+                <div>
+                  تم تخطيها كنشطة:{" "}
+                  {cleanupReport.activeSkipped ??
+                    cleanupReport.skippedActiveCount ??
+                    cleanupReport.activeTboBookings ??
+                    0}
+                </div>
                 <div>تحتاج مراجعة: {cleanupReport.reviewRequiredCount ?? 0}</div>
+                <div>
+                  ستؤرشف الآن:{" "}
+                  {cleanupReport.willArchiveBookingIds?.length ??
+                    cleanupReport.affectedBookingRefs?.length ??
+                    0}
+                </div>
                 <div>إجمالي الحجوزات: {cleanupReport.summary?.totalBookings ?? 0}</div>
                 <div>
                   بانتظار إلغاء المورد:{" "}
