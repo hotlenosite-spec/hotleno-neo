@@ -295,6 +295,16 @@ export default function CheckoutPage() {
         return false;
       }
 
+      if (!traveler.nationality?.trim()) {
+        setError("Please provide nationality for every traveler");
+        return false;
+      }
+
+      if (!traveler.documentNumber?.trim()) {
+        setError("Please provide document number for every traveler");
+        return false;
+      }
+
       if (
         traveler.travelerType === "child" &&
         traveler.age === undefined &&
@@ -302,6 +312,16 @@ export default function CheckoutPage() {
       ) {
         setError("Please provide each child age or date of birth");
         return false;
+      }
+
+      if (traveler.travelerType === "adult") {
+        const travelerEmail = traveler.email?.trim() || contactInfo.email.trim();
+        const travelerPhone = traveler.phone?.trim() || contactInfo.phone.trim();
+
+        if (!travelerEmail || !travelerPhone) {
+          setError("Please provide phone and email for adult travelers");
+          return false;
+        }
       }
     }
 
@@ -314,6 +334,11 @@ export default function CheckoutPage() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(contactInfo.email)) {
       setError("Please provide a valid email address");
+      return false;
+    }
+
+    if (!contactInfo.phone.trim()) {
+      setError("Please provide a phone number");
       return false;
     }
 
@@ -419,8 +444,12 @@ export default function CheckoutPage() {
         documentType: traveler.documentType || "",
         documentNumber: traveler.documentNumber || "",
         passportExpiryDate: traveler.passportExpiryDate || "",
-        phone: traveler.phone || "",
-        email: traveler.email || "",
+        phone:
+          traveler.phone ||
+          (traveler.travelerType === "adult" ? contactInfo.phone : ""),
+        email:
+          traveler.email ||
+          (traveler.travelerType === "adult" ? contactInfo.email : ""),
       }));
       const selectedOption = bookingData.hotel.selectedOption;
       const selectedSupplier = String(
@@ -662,6 +691,13 @@ export default function CheckoutPage() {
   const totalPrice = selectedOption
     ? (selectedOption.Price + (selectedOption.Taxes || 0)) * nights
     : 0;
+  const formatAge = (age: number) => `${age} year${age === 1 ? "" : "s"}`;
+  const getRoomChildAges = (roomIndex: number) => {
+    const childrenPerRoom = bookingData?.searchParams.guests.children || 0;
+    return (bookingData?.searchParams.guests.childrenAges || [])
+      .slice(roomIndex * childrenPerRoom, (roomIndex + 1) * childrenPerRoom)
+      .filter((age) => Number.isFinite(Number(age)));
+  };
 
   const renderTravelerDocumentFields = (travelerIndex: number) => (
     <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -684,7 +720,9 @@ export default function CheckoutPage() {
         />
       </div>
       <div>
-        <Label htmlFor={`nationality-${travelerIndex}`}>Nationality</Label>
+        <Label htmlFor={`nationality-${travelerIndex}`}>
+          Nationality <span className="text-red-500">*</span>
+        </Label>
         <Input
           id={`nationality-${travelerIndex}`}
           value={travelers[travelerIndex]?.nationality || ""}
@@ -711,7 +749,9 @@ export default function CheckoutPage() {
         </Select>
       </div>
       <div>
-        <Label htmlFor={`documentNumber-${travelerIndex}`}>Document number</Label>
+        <Label htmlFor={`documentNumber-${travelerIndex}`}>
+          Document number <span className="text-red-500">*</span>
+        </Label>
         <Input
           id={`documentNumber-${travelerIndex}`}
           value={travelers[travelerIndex]?.documentNumber || ""}
@@ -730,6 +770,26 @@ export default function CheckoutPage() {
           />
         </div>
       )}
+      <div>
+        <Label htmlFor={`travelerPhone-${travelerIndex}`}>Phone</Label>
+        <Input
+          id={`travelerPhone-${travelerIndex}`}
+          type="tel"
+          value={travelers[travelerIndex]?.phone || ""}
+          onChange={(e) => updateTraveler(travelerIndex, "phone", e.target.value)}
+          placeholder="+966..."
+        />
+      </div>
+      <div>
+        <Label htmlFor={`travelerEmail-${travelerIndex}`}>Email</Label>
+        <Input
+          id={`travelerEmail-${travelerIndex}`}
+          type="email"
+          value={travelers[travelerIndex]?.email || ""}
+          onChange={(e) => updateTraveler(travelerIndex, "email", e.target.value)}
+          placeholder="traveler@email.com"
+        />
+      </div>
     </div>
   );
 
@@ -905,7 +965,7 @@ export default function CheckoutPage() {
                               placeholder="Last name"
                             />
                           </div>
-                          {savedTravelers.length === 0 && renderTravelerDocumentFields(travelerIndex)}
+                          {renderTravelerDocumentFields(travelerIndex)}
                         </div>
                       );
                     })}
@@ -1007,7 +1067,7 @@ export default function CheckoutPage() {
                               />
                             </div>
                           </div>
-                          {savedTravelers.length === 0 && renderTravelerDocumentFields(travelerIndex)}
+                          {renderTravelerDocumentFields(travelerIndex)}
                         </div>
                       );
                     })}
@@ -1140,6 +1200,37 @@ export default function CheckoutPage() {
                     {(bookingData?.searchParams?.guests?.children ?? 0) > 0 &&
                       `, ${bookingData!.searchParams.guests.children} Child`}
                   </span>
+                </div>
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
+                  <p className="mb-2 font-semibold text-slate-700">Room details</p>
+                  <div className="space-y-2 text-slate-600">
+                    {Array.from({
+                      length: bookingData?.searchParams.guests.rooms || 1,
+                    }).map((_, roomIndex) => {
+                      const roomChildAges = getRoomChildAges(roomIndex);
+
+                      return (
+                        <div key={roomIndex}>
+                          <p className="font-medium text-slate-800">
+                            Room {roomIndex + 1}
+                          </p>
+                          <p>
+                            Adults: {bookingData?.searchParams.guests.adults || 0}
+                            {", "}
+                            Children: {bookingData?.searchParams.guests.children || 0}
+                          </p>
+                          {(bookingData?.searchParams.guests.children || 0) > 0 ? (
+                            <p>
+                              Child ages:{" "}
+                              {roomChildAges.length
+                                ? roomChildAges.map(formatAge).join(", ")
+                                : "-"}
+                            </p>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
