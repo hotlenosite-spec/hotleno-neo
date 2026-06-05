@@ -71,6 +71,13 @@ function ownerFilter(user: TokenPayload) {
   };
 }
 
+function customerVisibleFilter() {
+  return {
+    archived: { $ne: true },
+    hiddenFromCustomerBookings: { $ne: true },
+  };
+}
+
 function isHiddenTesterBooking(booking?: AccountBooking | null) {
   return (
     booking?.archived === true ||
@@ -84,7 +91,10 @@ export async function listCustomerBookings(
   options: { limit?: number; status?: string | null } = {},
 ) {
   const db = await getFirestoreMongoDb();
-  const filter: Record<string, unknown> = ownerFilter(user);
+  const filter: Record<string, unknown> = {
+    ...ownerFilter(user),
+    ...customerVisibleFilter(),
+  };
 
   if (options.status) {
     filter.status = options.status;
@@ -107,6 +117,7 @@ export async function getCustomerBooking(user: TokenPayload, bookingId: string) 
   const booking = await db.collection<AccountBooking>("bookings").findOne({
     _id: bookingId,
     ...ownerFilter(user),
+    ...customerVisibleFilter(),
   });
 
   if (

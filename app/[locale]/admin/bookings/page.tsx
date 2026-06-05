@@ -231,6 +231,7 @@ export default function AdminBookingsPage() {
   const [cleanupReport, setCleanupReport] = useState<{
     dryRun?: boolean;
     totalTesterBookings?: number;
+    visibleTesterBookings?: number;
     totalFound?: number;
     activeSkipped?: number;
     activeTboBookings?: number;
@@ -239,6 +240,7 @@ export default function AdminBookingsPage() {
     eligibleForArchive?: number;
     skippedActiveCount?: number;
     reviewRequiredCount?: number;
+    forcedArchiveBookingIds?: string[];
     willArchiveBookingIds?: string[];
     affectedBookingRefs?: string[];
     summary?: {
@@ -1006,6 +1008,7 @@ export default function AdminBookingsPage() {
                   {cleanupReport.totalTesterBookings ?? cleanupReport.totalFound ?? 0}
                 </div>
                 <div>مؤهلة للأرشفة: {cleanupReport.eligibleForArchive ?? 0}</div>
+                <div>ظاهرة للعميل: {cleanupReport.visibleTesterBookings ?? 0}</div>
                 <div>تمت أرشفتها: {cleanupReport.archivedCount ?? 0}</div>
                 <div>مؤرشفة سابقًا: {cleanupReport.alreadyArchived ?? 0}</div>
                 <div>
@@ -1021,6 +1024,9 @@ export default function AdminBookingsPage() {
                   {cleanupReport.willArchiveBookingIds?.length ??
                     cleanupReport.affectedBookingRefs?.length ??
                     0}
+                </div>
+                <div>
+                  أرشفة إجبارية: {cleanupReport.forcedArchiveBookingIds?.length ?? 0}
                 </div>
                 <div>إجمالي الحجوزات: {cleanupReport.summary?.totalBookings ?? 0}</div>
                 <div>

@@ -8,6 +8,10 @@ export const runtime = "nodejs";
 
 const TESTER_EMAIL = "tbo.tester@hotleno.com";
 const ARCHIVE_REASON = "TBO tester cleanup before sending portal to TBO";
+const FORCE_ARCHIVE_BOOKING_IDS = new Set([
+  "HOTLENO-1780536769032",
+  "HOTLENO-1780515284353",
+]);
 
 type BookingDocument = Document & {
   _id: string;
@@ -19,6 +23,7 @@ type BookingDocument = Document & {
   status?: string;
   bookingStatus?: string;
   supplierStatus?: string;
+  supplierResponseStatus?: string;
   cancellationStatus?: string;
   paymentStatus?: string;
   metadata?: Record<string, unknown>;
@@ -135,6 +140,14 @@ function isAlreadyArchived(booking: BookingDocument) {
   );
 }
 
+function getBookingRef(booking: BookingDocument) {
+  return String(booking.bookingReference || booking._id || "");
+}
+
+function isForcedArchiveBooking(booking: BookingDocument) {
+  return FORCE_ARCHIVE_BOOKING_IDS.has(getBookingRef(booking));
+}
+
 function summarizeBookings(bookings: BookingDocument[]) {
   const tboActiveBookings = bookings.filter(isActiveTboBooking);
   return {
@@ -191,12 +204,22 @@ export async function POST(req: NextRequest) {
     (booking) => isTboBooking(booking) && isTesterBooking(booking, tester?.id),
   );
   const alreadyArchivedBookings = testerBookings.filter(isAlreadyArchived);
-  const archivableBookings = testerBookings.filter(canArchiveTesterBooking);
+  const forcedArchiveBookings = testerBookings.filter(
+    (booking) => isForcedArchiveBooking(booking) && !isAlreadyArchived(booking),
+  );
+  const archivableBookings = testerBookings.filter(
+    (booking) =>
+      !isAlreadyArchived(booking) &&
+      (canArchiveTesterBooking(booking) || isForcedArchiveBooking(booking)),
+  );
   const skippedActiveBookings = testerBookings.filter(
     (booking) => isActiveTboBooking(booking) && !isAlreadyArchived(booking),
   );
   const reviewRequiredBookings = testerBookings.filter(
-    (booking) => needsReview(booking) && !canArchiveTesterBooking(booking),
+    (booking) =>
+      needsReview(booking) &&
+      !canArchiveTesterBooking(booking) &&
+      !isForcedArchiveBooking(booking),
   );
   const affectedBookingRefs = archivableBookings.map(
     (booking) => booking.bookingReference || booking._id,
@@ -235,6 +258,7 @@ export async function POST(req: NextRequest) {
       totalTesterBookings: testerBookings.length,
       activeSkipped: skippedActiveBookings.length,
       alreadyArchived: alreadyArchivedBookings.length,
+      forcedArchiveBookingIds: forcedArchiveBookings.map(getBookingRef),
       archivedCount: confirm ? archivableBookings.length : 0,
       eligibleForArchive: archivableBookings.length,
       reviewRequiredCount: reviewRequiredBookings.length,
@@ -248,8 +272,12 @@ export async function POST(req: NextRequest) {
     dryRun: !confirm,
     summary,
     totalTesterBookings: testerBookings.length,
+    visibleTesterBookings: testerBookings.filter(
+      (booking) => !isAlreadyArchived(booking) && !archivableBookings.includes(booking),
+    ).length,
     activeSkipped: skippedActiveBookings.length,
     alreadyArchived: alreadyArchivedBookings.length,
+    forcedArchiveBookingIds: forcedArchiveBookings.map(getBookingRef),
     willArchiveBookingIds,
     // Backward-compatible aliases used by the existing admin UI.
     totalFound: testerBookings.length,

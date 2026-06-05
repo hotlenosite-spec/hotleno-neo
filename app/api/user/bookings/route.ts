@@ -435,7 +435,11 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const limit = toNumber(searchParams.get("limit"), 50);
     const page = toNumber(searchParams.get("page"), 1);
-    const query: Record<string, unknown> = { userId: decoded.userId };
+    const query: Record<string, unknown> = {
+      userId: decoded.userId,
+      archived: { $ne: true },
+      hiddenFromCustomerBookings: { $ne: true },
+    };
 
     if (status) query.status = status;
 
