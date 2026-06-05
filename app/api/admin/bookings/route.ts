@@ -41,6 +41,11 @@ type PaymentAdjustmentDocument = Document & {
 
 type NormalizedRoom = ReturnType<typeof normalizeRoom>;
 
+const FORCE_ARCHIVE_BOOKING_IDS = new Set([
+  "HOTLENO-1780536769032",
+  "HOTLENO-1780515284353",
+]);
+
 const operationalStatuses = [
   "pending_payment",
   "payment_disabled_created",
@@ -165,6 +170,13 @@ function normalizeBookingForAdmin(booking: BookingDocument) {
   };
 }
 
+function isForcedArchiveBooking(booking: BookingDocument) {
+  return (
+    FORCE_ARCHIVE_BOOKING_IDS.has(String(booking.bookingReference || "")) ||
+    FORCE_ARCHIVE_BOOKING_IDS.has(String(booking._id || ""))
+  );
+}
+
 function canDirectlySetStatus(currentStatus: string | undefined, nextStatus: string) {
   if (!currentStatus || !isBookingStatus(currentStatus)) return nextStatus;
   return getNextBookingStatus(currentStatus, nextStatus as BookingStatus);
@@ -209,7 +221,9 @@ export async function GET(req: NextRequest) {
     const realBookings = allBookings.filter((booking) => booking._id !== "_meta");
     const visibleBookings = realBookings.filter((booking) => {
       const isArchived =
-        booking.archived === true || booking.hiddenFromAdminMainList === true;
+        booking.archived === true ||
+        booking.hiddenFromAdminMainList === true ||
+        isForcedArchiveBooking(booking);
       return archiveView ? isArchived : !isArchived;
     });
     const filteredBookings = search

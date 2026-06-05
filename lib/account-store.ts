@@ -65,6 +65,11 @@ type WalletDocument = Document & {
   _id: string;
 };
 
+const FORCE_HIDDEN_CUSTOMER_BOOKING_IDS = new Set([
+  "HOTLENO-1780536769032",
+  "HOTLENO-1780515284353",
+]);
+
 function ownerFilter(user: TokenPayload) {
   return {
     $or: [{ userId: user.userId }, { customerEmail: user.email }],
@@ -82,7 +87,9 @@ function isHiddenTesterBooking(booking?: AccountBooking | null) {
   return (
     booking?.archived === true ||
     booking?.hiddenFromAdminMainList === true ||
-    booking?.hiddenFromCustomerBookings === true
+    booking?.hiddenFromCustomerBookings === true ||
+    FORCE_HIDDEN_CUSTOMER_BOOKING_IDS.has(String(booking?.bookingReference || "")) ||
+    FORCE_HIDDEN_CUSTOMER_BOOKING_IDS.has(String(booking?._id || ""))
   );
 }
 
@@ -106,8 +113,6 @@ export async function listCustomerBookings(
     .sort({ createdAt: -1 })
     .limit(options.limit ?? 50)
     .toArray();
-
-  if (user.email.toLowerCase() !== "tbo.tester@hotleno.com") return bookings;
 
   return bookings.filter((booking) => !isHiddenTesterBooking(booking));
 }

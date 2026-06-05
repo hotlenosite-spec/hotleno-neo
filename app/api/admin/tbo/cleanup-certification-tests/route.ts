@@ -203,19 +203,28 @@ export async function POST(req: NextRequest) {
   const testerBookings = allBookings.filter(
     (booking) => isTboBooking(booking) && isTesterBooking(booking, tester?.id),
   );
-  const alreadyArchivedBookings = testerBookings.filter(isAlreadyArchived);
-  const forcedArchiveBookings = testerBookings.filter(
+  const forcedBookings = allBookings.filter(isForcedArchiveBooking);
+  const cleanupCandidates = Array.from(
+    new Map(
+      [...testerBookings, ...forcedBookings].map((booking) => [booking._id, booking]),
+    ).values(),
+  );
+  const alreadyArchivedBookings = cleanupCandidates.filter(isAlreadyArchived);
+  const forcedArchiveBookings = cleanupCandidates.filter(
     (booking) => isForcedArchiveBooking(booking) && !isAlreadyArchived(booking),
   );
-  const archivableBookings = testerBookings.filter(
+  const archivableBookings = cleanupCandidates.filter(
     (booking) =>
       !isAlreadyArchived(booking) &&
       (canArchiveTesterBooking(booking) || isForcedArchiveBooking(booking)),
   );
-  const skippedActiveBookings = testerBookings.filter(
-    (booking) => isActiveTboBooking(booking) && !isAlreadyArchived(booking),
+  const skippedActiveBookings = cleanupCandidates.filter(
+    (booking) =>
+      isActiveTboBooking(booking) &&
+      !isAlreadyArchived(booking) &&
+      !isForcedArchiveBooking(booking),
   );
-  const reviewRequiredBookings = testerBookings.filter(
+  const reviewRequiredBookings = cleanupCandidates.filter(
     (booking) =>
       needsReview(booking) &&
       !canArchiveTesterBooking(booking) &&
@@ -256,6 +265,7 @@ export async function POST(req: NextRequest) {
       confirm,
       totalBookings: allBookings.length,
       totalTesterBookings: testerBookings.length,
+      cleanupCandidates: cleanupCandidates.length,
       activeSkipped: skippedActiveBookings.length,
       alreadyArchived: alreadyArchivedBookings.length,
       forcedArchiveBookingIds: forcedArchiveBookings.map(getBookingRef),
@@ -272,7 +282,7 @@ export async function POST(req: NextRequest) {
     dryRun: !confirm,
     summary,
     totalTesterBookings: testerBookings.length,
-    visibleTesterBookings: testerBookings.filter(
+    visibleTesterBookings: cleanupCandidates.filter(
       (booking) => !isAlreadyArchived(booking) && !archivableBookings.includes(booking),
     ).length,
     activeSkipped: skippedActiveBookings.length,

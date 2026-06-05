@@ -20,6 +20,7 @@ type BookingDocument = Document & {
   _id: string;
   userId: string;
   customerEmail?: string;
+  bookingReference?: string;
   archived?: boolean;
   hiddenFromAdminMainList?: boolean;
   hiddenFromCustomerBookings?: boolean;
@@ -28,6 +29,10 @@ type BookingDocument = Document & {
 };
 
 const TESTER_EMAIL = "tbo.tester@hotleno.com";
+const FORCE_HIDDEN_CUSTOMER_BOOKING_IDS = new Set([
+  "HOTLENO-1780536769032",
+  "HOTLENO-1780515284353",
+]);
 
 function toNumber(value: unknown, fallback = 0) {
   const number = typeof value === "number" ? value : Number(value);
@@ -62,7 +67,9 @@ function isHiddenTesterBooking(booking: BookingDocument) {
   return (
     booking.archived === true ||
     booking.hiddenFromAdminMainList === true ||
-    booking.hiddenFromCustomerBookings === true
+    booking.hiddenFromCustomerBookings === true ||
+    FORCE_HIDDEN_CUSTOMER_BOOKING_IDS.has(String(booking.bookingReference || "")) ||
+    FORCE_HIDDEN_CUSTOMER_BOOKING_IDS.has(String(booking._id || ""))
   );
 }
 
@@ -447,13 +454,8 @@ export async function GET(req: NextRequest) {
     const bookingsCollection = db.collection<BookingDocument>("bookings");
 
     if (isTesterToken(decoded)) {
-      const allBookings = await bookingsCollection
-        .find(query)
-        .sort({ createdAt: -1 })
-        .toArray();
-      const visibleBookings = allBookings.filter(
-        (booking) => !isHiddenTesterBooking(booking),
-      );
+      const allBookings = await bookingsCollection.find(query).sort({ createdAt: -1 }).toArray();
+      const visibleBookings = allBookings.filter((booking) => !isHiddenTesterBooking(booking));
       const bookings = visibleBookings.slice(skip, skip + limit);
 
       return NextResponse.json({
