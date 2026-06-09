@@ -12,6 +12,11 @@ const cards = [
     text: "Departure pickup time is separated from flight time and Checkpickup.com is shown.",
   },
   {
+    title: "Accommodation live certification run",
+    href: "hotels/certification-run",
+    text: "Run multi-room child test, capture full logs, generate voucher, and cancel booking.",
+  },
+  {
     title: "Hotels voucher sample",
     href: "hotels/voucher-sample",
     text: "Accommodation voucher with multi-room, different occupancy, child age, price, and cancellation status.",

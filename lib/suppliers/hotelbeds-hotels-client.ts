@@ -108,7 +108,7 @@ function getSafeErrorText(payload: unknown) {
   );
 }
 
-function buildAvailabilityBody(request: HotelbedsHotelAvailabilityRequest) {
+export function buildHotelbedsAvailabilityBody(request: HotelbedsHotelAvailabilityRequest) {
   const body: Record<string, unknown> = {
     stay: {
       checkIn: request.checkIn,
@@ -143,18 +143,31 @@ function buildAvailabilityBody(request: HotelbedsHotelAvailabilityRequest) {
   return body;
 }
 
-function buildBookingBody(request: HotelbedsHotelBookingRequest) {
+export function buildHotelbedsBookingBody(request: HotelbedsHotelBookingRequest) {
   const rateKey = request.finalRateKey || request.rateKey;
   const roomIds = [...new Set(request.guests.map((guest) => guest.roomId || 1))];
 
   return {
     clientReference: toHotelbedsClientReference(request.clientReference),
     holder: request.holder,
-    rooms: roomIds.map((roomId) => ({
-        rateKey,
-        paxes: request.guests
-          .filter((guest) => (guest.roomId || 1) === roomId)
-          .map((guest, index) => ({
+    rooms: request.rooms?.length
+      ? request.rooms.map((room, roomIndex) => ({
+          rateKey: room.rateKey,
+          paxes: room.guests.map((guest, guestIndex) => ({
+            roomId: roomIndex + 1,
+            type: guest.type || "AD",
+            name: guest.name,
+            surname: guest.surname,
+            title: guest.title || "Mr",
+            ...(guest.age ? { age: guest.age } : {}),
+            id: guestIndex + 1,
+          })),
+        }))
+      : roomIds.map((roomId) => ({
+          rateKey,
+          paxes: request.guests
+            .filter((guest) => (guest.roomId || 1) === roomId)
+            .map((guest, index) => ({
           roomId,
           type: guest.type || "AD",
           name: guest.name,
@@ -165,6 +178,15 @@ function buildBookingBody(request: HotelbedsHotelBookingRequest) {
         })),
       })),
     ...(request.remark ? { remark: request.remark } : {}),
+  };
+}
+
+export function buildHotelbedsCheckRateBody(request: HotelbedsHotelCheckRateRequest) {
+  const rateKeys = request.rateKeys?.length ? request.rateKeys : [request.rateKey];
+
+  return {
+    rooms: rateKeys.map((rateKey) => ({ rateKey })),
+    ...(request.language ? { language: request.language } : {}),
   };
 }
 
@@ -318,7 +340,7 @@ export class HotelbedsHotelsClient {
 
     return this.request("/hotels", {
       method: "POST",
-      body: buildAvailabilityBody(request),
+      body: buildHotelbedsAvailabilityBody(request),
     });
   }
 
@@ -333,14 +355,7 @@ export class HotelbedsHotelsClient {
 
     return this.request("/checkrates", {
       method: "POST",
-      body: {
-        rooms: [
-          {
-            rateKey: request.rateKey,
-          },
-        ],
-        ...(request.language ? { language: request.language } : {}),
-      },
+      body: buildHotelbedsCheckRateBody(request),
     });
   }
 
@@ -355,7 +370,7 @@ export class HotelbedsHotelsClient {
 
     return this.request("/bookings", {
       method: "POST",
-      body: buildBookingBody(request),
+      body: buildHotelbedsBookingBody(request),
     });
   }
 

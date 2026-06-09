@@ -36,6 +36,7 @@ export type HotelbedsHotelAvailabilityRequest = {
 
 export type HotelbedsHotelCheckRateRequest = {
   rateKey: string;
+  rateKeys?: string[];
   language?: string;
 };
 
@@ -44,6 +45,10 @@ export type HotelbedsHotelBookingRequest = {
   holder: HotelbedsHotelHolder;
   rateKey: string;
   finalRateKey?: string;
+  rooms?: Array<{
+    rateKey: string;
+    guests: HotelbedsHotelGuest[];
+  }>;
   guests: HotelbedsHotelGuest[];
   remark?: string;
   language?: string;

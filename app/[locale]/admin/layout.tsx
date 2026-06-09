@@ -26,7 +26,12 @@ export default function AdminLayout({
   const isDevPreviewAllPages = isDevPreviewAllPagesEnabled();
   const canPreviewAdmin = isDevAdminBypass;
   const requiredPermission = getRequiredPermission(pathname);
+  const isHotelbedsCertificationPath = pathname.includes("/admin/hotelbeds");
+  const canAccessHotelbedsCertification =
+    user?.role === "admin" ||
+    (user?.role === "supplier_tester" && user.supplierScope === "hotelbeds");
   const hasPagePermission =
+    (isHotelbedsCertificationPath && canAccessHotelbedsCertification) ||
     !requiredPermission ||
     !user?.permissions ||
     user.permissions.length === 0 ||
@@ -44,7 +49,7 @@ export default function AdminLayout({
   useEffect(() => {
     if (canPreviewAdmin || isLoading) return;
 
-    if (!isAuthenticated || user?.role !== "admin") {
+    if (!isAuthenticated || (user?.role !== "admin" && !canAccessHotelbedsCertification)) {
       router.push("/");
       return;
     }
@@ -54,6 +59,7 @@ export default function AdminLayout({
     }
   }, [
     canPreviewAdmin,
+    canAccessHotelbedsCertification,
     hasPagePermission,
     isLoading,
     isAuthenticated,
@@ -92,7 +98,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin" || !hasPagePermission) {
+  if (!isAuthenticated || (user?.role !== "admin" && !canAccessHotelbedsCertification) || !hasPagePermission) {
     return null;
   }
 
