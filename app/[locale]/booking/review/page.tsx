@@ -686,20 +686,39 @@ const DOCUMENT_TYPES = [
   const guestRooms = Math.max(searchParams?.guests.rooms || 1, 1);
   const tboDetailGroups = hotel
     ? [
-        { title: "Inclusions", items: asCleanTextArray(hotel.inclusions) },
-        { title: "Room promotions", items: asCleanTextArray(hotel.roomPromotions) },
-        { title: "Supplements", items: asCleanTextArray(hotel.supplements) },
-        { title: "Cancellation policy", items: asCleanTextArray(hotel.cancellationPolicies) },
-        { title: "Rate conditions", items: asCleanTextArray(hotel.rateConditions) },
-        { title: "Amenities", items: asCleanTextArray(hotel.amenities) },
+        { title: t("booking.tbo.inclusions"), items: asCleanTextArray(hotel.inclusions) },
+        { title: t("booking.tbo.promotions"), items: asCleanTextArray(hotel.roomPromotions) },
+        { title: t("booking.tbo.supplements"), items: asCleanTextArray(hotel.supplements) },
+        { title: t("booking.tbo.cancellationPolicy"), items: asCleanTextArray(hotel.cancellationPolicies) },
+        { title: t("booking.tbo.rateConditions"), items: asCleanTextArray(hotel.rateConditions) },
+        { title: t("booking.tbo.amenities"), items: asCleanTextArray(hotel.amenities) },
       ].filter((group) => group.items.length > 0)
     : [];
+  const hasPolicyDetails = Boolean(
+    hotel?.rspPrice ||
+      tboDetailGroups.length > 0 ||
+      policies?.CancellationPolicy ||
+      (policies?.ImportantInformation && policies.ImportantInformation.length > 0),
+  );
+  const areTravelersComplete =
+    travelers.length > 0 &&
+    travelers.every((traveler) => {
+      const hasBaseDetails =
+        traveler.firstName.trim() &&
+        traveler.lastName.trim() &&
+        traveler.nationality.trim() &&
+        traveler.documentNumber.trim();
+      if (!hasBaseDetails) return false;
+      if (traveler.travelerType === "child") return traveler.age !== undefined;
+      return Boolean(traveler.phone.trim() && traveler.email.trim());
+    });
+  const canConfirmBooking = acceptedTerms && areTravelersComplete && !submitting;
   const childAges = (searchParams?.guests.childrenAges || [])
     .map((age) => Number(age))
     .filter((age) => Number.isFinite(age) && age >= 0);
   const formatChildAges = (ages: number[]) =>
     ages.length > 0
-      ? ages.map((age) => `${age} ${age === 1 ? "year" : "years"}`).join(", ")
+      ? ages.map((age) => t("booking.ageValue", { age })).join(", ")
       : "-";
 
   return (
@@ -724,9 +743,9 @@ const DOCUMENT_TYPES = [
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Left Column - Booking Details */}
-        <div className="space-y-6 lg:col-span-2">
+      <div className="mx-auto max-w-5xl space-y-6">
+        {/* Booking Details */}
+        <div className="space-y-6">
           {/* Hotel Summary */}
           <Card className="overflow-hidden border-slate-200 shadow-sm">
             <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
@@ -774,6 +793,32 @@ const DOCUMENT_TYPES = [
                     {searchParams?.dates.checkOut && new Date(searchParams.dates.checkOut).toLocaleDateString()}
                   </p>
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-orange-100 bg-orange-50/60 p-4">
+                <div className="grid gap-3 text-sm sm:grid-cols-3">
+                  <div>
+                    <p className="font-black text-[#0F172A]">{t("booking.roomPrice")}</p>
+                    <p className="mt-1 font-bold text-slate-700">
+                      {hotel?.Currency} {nightlyPrice * nights}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-black text-[#0F172A]">{t("hotelDetails.taxesFees")}</p>
+                    <p className="mt-1 font-bold text-slate-700">
+                      {hotel?.Currency} {taxes}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-black text-[#0F172A]">{t("booking.total")}</p>
+                    <p className="mt-1 text-xl font-black text-[#F97316]">
+                      {hotel?.Currency} {totalPrice}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs leading-5 text-slate-600">
+                  {t("booking.taxNotice")}
+                </p>
               </div>
 
               <div className="mt-4 rounded-xl border border-slate-100 p-4">
@@ -830,6 +875,9 @@ const DOCUMENT_TYPES = [
               <p className="mb-5 text-sm text-muted-foreground">
                 {t("booking.travelersDescription")}
               </p>
+              <p className="mb-5 rounded-xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-bold text-slate-700">
+                <span className="text-red-500">*</span> {t("booking.requiredFieldsNotice")}
+              </p>
               <div className="space-y-6">
                 {Array.from({ length: guestRooms }).map((_, roomIndex) => (
                   <div
@@ -851,9 +899,9 @@ const DOCUMENT_TYPES = [
                         .map(({ traveler, travelerIndex }) => (
                           <div
                             key={`${traveler.travelerType}-${traveler.index}-${travelerIndex}`}
-                            className="rounded-xl border border-slate-100 bg-slate-50 p-4"
+                            className="rounded-xl border border-orange-100 bg-white p-4 shadow-sm"
                           >
-                            <p className="mb-3 font-bold text-slate-800">
+                            <p className="mb-4 rounded-lg bg-orange-50 px-3 py-2 font-black text-[#0F172A]">
                               {traveler.travelerType === "adult"
                                 ? `${t("booking.adult")} ${traveler.index + 1}`
                                 : `${t("booking.child")} ${traveler.index + 1} - ${t("booking.age")} ${traveler.age ?? "-"}`}
@@ -862,14 +910,16 @@ const DOCUMENT_TYPES = [
                             <div className="grid gap-3 md:grid-cols-2">
                               {traveler.travelerType === "adult" ? (
                                 <div>
-                                  <Label>{t("booking.title")}</Label>
+                                  <Label className="font-bold text-[#0F172A]">
+                                    {t("booking.title")} <span className="text-red-500">*</span>
+                                  </Label>
                                   <Select
                                     value={traveler.title || "Mr"}
                                     onValueChange={(value) =>
                                       updateTraveler(travelerIndex, "title", value)
                                     }
                                   >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1 bg-white">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -884,10 +934,11 @@ const DOCUMENT_TYPES = [
                               ) : null}
 
                               <div>
-                                <Label>
+                                <Label className="font-bold text-[#0F172A]">
                                   {t("booking.firstName")} <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
+                                  className="mt-1 bg-white"
                                   value={traveler.firstName}
                                   onChange={(event) =>
                                     updateTraveler(
@@ -901,10 +952,11 @@ const DOCUMENT_TYPES = [
                               </div>
 
                               <div>
-                                <Label>
+                                <Label className="font-bold text-[#0F172A]">
                                   {t("booking.lastName")} <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
+                                  className="mt-1 bg-white"
                                   value={traveler.lastName}
                                   onChange={(event) =>
                                     updateTraveler(
@@ -919,10 +971,11 @@ const DOCUMENT_TYPES = [
 
                               {traveler.travelerType === "child" ? (
                                 <div>
-                                  <Label>
+                                  <Label className="font-bold text-[#0F172A]">
                                     {t("booking.age")} <span className="text-red-500">*</span>
                                   </Label>
                                   <Input
+                                    className="mt-1 bg-white"
                                     type="number"
                                     min={0}
                                     max={17}
@@ -944,10 +997,11 @@ const DOCUMENT_TYPES = [
                               ) : null}
 
                               <div>
-                                <Label>
+                                <Label className="font-bold text-[#0F172A]">
                                   {t("booking.nationality")} <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
+                                  className="mt-1 bg-white"
                                   value={traveler.nationality}
                                   onChange={(event) =>
                                     updateTraveler(
@@ -961,7 +1015,9 @@ const DOCUMENT_TYPES = [
                               </div>
 
                               <div>
-                                <Label>{t("booking.documentType")}</Label>
+                                <Label className="font-bold text-[#0F172A]">
+                                  {t("booking.documentType")} <span className="text-red-500">*</span>
+                                </Label>
                                 <Select
                                   value={traveler.documentType}
                                   onValueChange={(value) =>
@@ -972,7 +1028,7 @@ const DOCUMENT_TYPES = [
                                     )
                                   }
                                 >
-                                  <SelectTrigger>
+                                  <SelectTrigger className="mt-1 bg-white">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -986,10 +1042,11 @@ const DOCUMENT_TYPES = [
                               </div>
 
                               <div>
-                                <Label>
+                                <Label className="font-bold text-[#0F172A]">
                                   {t("booking.documentNumber")} <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
+                                  className="mt-1 bg-white"
                                   value={traveler.documentNumber}
                                   onChange={(event) =>
                                     updateTraveler(
@@ -1005,10 +1062,11 @@ const DOCUMENT_TYPES = [
                               {traveler.travelerType === "adult" ? (
                                 <>
                                   <div>
-                                    <Label>
+                                    <Label className="font-bold text-[#0F172A]">
                                       {t("booking.phone")} <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
+                                      className="mt-1 bg-white"
                                       value={traveler.phone}
                                       onChange={(event) =>
                                         updateTraveler(
@@ -1021,10 +1079,11 @@ const DOCUMENT_TYPES = [
                                     />
                                   </div>
                                   <div>
-                                    <Label>
+                                    <Label className="font-bold text-[#0F172A]">
                                       {t("booking.email")} <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
+                                      className="mt-1 bg-white"
                                       type="email"
                                       value={traveler.email}
                                       onChange={(event) =>
@@ -1049,151 +1108,112 @@ const DOCUMENT_TYPES = [
             </CardContent>
           </Card>
 
-          {/* Policies */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-6">
-              <h3 className="mb-4 text-xl font-black text-[#0F172A]">{t('booking.importantPolicies')}</h3>
-              
-              {policies?.CancellationPolicy && (
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <HugeiconsIcon 
-                      icon={LeftTriangleIcon} 
-                      className="h-5 w-5 text-amber-500" 
-                    />
-                    <h4 className="font-bold">{t('booking.cancellationPolicy')}</h4>
-                  </div>
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <p className="text-amber-800">
-                      {policies.CancellationPolicy.Description}
-                    </p>
-                    {policies.CancellationPolicy.Deadline && (
-                      <p className="font-medium mt-2 text-amber-800">
-                        {t('booking.freeCancellationUntil')}: {policies.CancellationPolicy.Deadline}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {policies?.ImportantInformation && (
-                <div className="space-y-3">
-                  <h4 className="font-bold">{t('booking.importantInformation')}</h4>
-                  <ul className="space-y-2">
-                    {policies.ImportantInformation.map((info: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <HugeiconsIcon 
-                          icon={LeftTriangleIcon} 
-                          className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" 
-                        />
-                        <span>{info}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {(hotel?.rspPrice || tboDetailGroups.length > 0) && (
-                <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <h4 className="mb-3 font-bold text-[#0F172A]">TBO rate details</h4>
-                  {hotel?.rspPrice ? (
-                    <p className="mb-3 text-sm text-slate-700">
-                      <span className="font-bold">RSP Price:</span>{" "}
+          {hasPolicyDetails ? (
+            <Card className="border-orange-100 shadow-sm">
+              <div className="border-b border-orange-100 bg-orange-50 px-6 py-4">
+                <h3 className="text-xl font-black text-[#0F172A]">{t("booking.tbo.rateDetails")}</h3>
+                <p className="mt-1 text-sm font-semibold text-slate-600">
+                  {t("booking.tbo.rateDetailsDescription")}
+                </p>
+              </div>
+              <CardContent className="space-y-5 p-6">
+                {hotel?.rspPrice ? (
+                  <div className="rounded-xl border border-orange-100 bg-white p-4">
+                    <p className="text-sm font-black text-[#0F172A]">{t("booking.tbo.rspPrice")}</p>
+                    <p className="mt-2 text-2xl font-black text-[#F97316]">
                       {hotel.Currency} {hotel.rspPrice}
                     </p>
-                  ) : null}
-                  <div className="space-y-4">
-                    {tboDetailGroups.map((group) => (
-                      <div key={group.title}>
-                        <p className="mb-2 text-sm font-bold text-[#0F172A]">{group.title}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {group.items.map((item) => (
-                            <span
-                              key={`${group.title}-${item}`}
-                              className="rounded-full border border-white bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm"
-                            >
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
                   </div>
-                </div>
-              )}
+                ) : null}
 
-              {/* Terms Acceptance */}
-              <div className="mt-8 pt-6 border-t">
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    id="terms"
-                    checked={acceptedTerms}
-                    onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <Label htmlFor="terms" className="font-medium">
-                      {t('booking.termsAcceptance')}
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {t('booking.termsDescription')}
+                {tboDetailGroups.map((group) => (
+                  <div key={group.title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="mb-3 text-base font-black text-[#0F172A]">{group.title}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {group.items.map((item) => (
+                        <span
+                          key={`${group.title}-${item}`}
+                          className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {policies?.CancellationPolicy ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    <p className="mb-2 text-base font-black text-amber-900">
+                      {t("booking.tbo.cancellationPolicy")}
                     </p>
+                    <p className="text-sm font-semibold leading-6 text-amber-800">
+                      {policies.CancellationPolicy.Description}
+                    </p>
+                    {policies.CancellationPolicy.Deadline ? (
+                      <p className="mt-2 text-sm font-black text-amber-900">
+                        {t("booking.freeCancellationUntil")}: {policies.CancellationPolicy.Deadline}
+                      </p>
+                    ) : null}
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                ) : null}
 
-        {/* Right Column - Price Summary */}
-        <div className="min-w-0">
-          <Card className="sticky top-8 overflow-hidden border-slate-200 shadow-lg shadow-slate-950/5">
-            <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
-              <h3 className="text-lg font-black text-[#0F172A]">{t('booking.priceSummary')}</h3>
-            </div>
+                {policies?.ImportantInformation && policies.ImportantInformation.length > 0 ? (
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="mb-3 text-base font-black text-[#0F172A]">
+                      {t("booking.importantInformation")}
+                    </p>
+                    <ul className="space-y-2">
+                      {policies.ImportantInformation.map((info: string, index: number) => (
+                        <li key={index} className="flex items-start gap-2 text-sm font-semibold text-slate-700">
+                          <HugeiconsIcon
+                            icon={LeftTriangleIcon}
+                            className="mt-0.5 h-4 w-4 shrink-0 text-[#F97316]"
+                          />
+                          <span>{info}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
+
+          <Card className="border-slate-200 shadow-sm">
             <CardContent className="p-6">
-              
-              <div className="space-y-4 text-sm">
-                <div className="flex justify-between gap-4">
-                  <span>{t('booking.roomPrice')} ({nights} {t('hotels.nights')})</span>
-                  <span className="font-bold text-[#0F172A]">{hotel?.Currency} {nightlyPrice * nights}</span>
-                </div>
-                
-                <div className="flex justify-between gap-4">
-                  <span>{t('hotelDetails.taxesFees')}</span>
-                  <span className="font-bold text-[#0F172A]">{hotel?.Currency} {taxes}</span>
-                </div>
-
-                {policies?.CityTax && (
-                  <div className="flex justify-between">
-                    <span>{t('booking.cityTax')}</span>
-                    <span>{policies.CityTax.Currency} {policies.CityTax.Amount}</span>
-                  </div>
-                )}
-
-                <Separator className="my-2" />
-
-                <div className="flex justify-between gap-4 text-lg font-black text-[#0F172A]">
-                  <span>{t('booking.total')}</span>
-                  <span className="text-[#F97316]">
-                    {hotel?.Currency} {totalPrice}
-                  </span>
+              <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <Checkbox
+                  id="terms"
+                  checked={acceptedTerms}
+                  onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <Label htmlFor="terms" className="font-black text-[#0F172A]">
+                    {t("booking.termsAcceptance")} <span className="text-red-500">*</span>
+                  </Label>
+                  <p className="text-sm leading-6 text-slate-600">
+                    {t("booking.termsDescription")}
+                  </p>
                 </div>
               </div>
 
-              <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-muted-foreground">
-                {t("booking.taxNotice")}
-              </p>
+              {!areTravelersComplete ? (
+                <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">
+                  {t("booking.completeTravelersBeforeConfirm")}
+                </p>
+              ) : null}
 
-              <Button 
-                className="mt-6 w-full bg-[#F97316] font-black text-white shadow-lg shadow-orange-500/20 hover:bg-[#EA580C]" 
+              <Button
+                className="mt-5 w-full bg-[#F97316] font-black text-white shadow-lg shadow-orange-500/20 hover:bg-[#EA580C] disabled:cursor-not-allowed disabled:opacity-60"
                 size="lg"
                 onClick={handleContinue}
-                disabled={!acceptedTerms || submitting}
+                disabled={!canConfirmBooking}
               >
                 {submitting ? t("booking.processing") : t("booking.confirmBooking")}
               </Button>
 
-              <div className="mt-5 grid gap-3 border-t border-slate-100 pt-5">
+              <div className="mt-5 grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-3">
                 <TrustItem icon={CreditCardIcon} text={t("booking.trust.securePayment")} />
                 <TrustItem icon={Shield02Icon} text={t("booking.trust.protectedData")} />
                 <TrustItem icon={CustomerServiceIcon} text={t("booking.trust.customerSupport")} />

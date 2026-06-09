@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/components/providers/auth-provider";
 import { AuthDialog } from "@/components/features/auth/auth-dialog";
@@ -26,6 +26,7 @@ interface NavbarProps {
 export default function Navbar({ locale }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const currentLocale = useLocale();
   const t = useTranslations();
   const accountT = useTranslations("account");
@@ -34,8 +35,14 @@ export default function Navbar({ locale }: NavbarProps) {
 
   const switchLocale = (newLocale: string) => {
     const segments = pathname.split("/");
-    segments[1] = newLocale;
-    router.push(segments.join("/"));
+    if (segments[1] === "ar" || segments[1] === "en") {
+      segments[1] = newLocale;
+    } else {
+      segments.splice(1, 0, newLocale);
+    }
+
+    const query = searchParams.toString();
+    router.push(`${segments.join("/") || `/${newLocale}`}${query ? `?${query}` : ""}`);
   };
 
   return (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon, Menu01Icon } from "@hugeicons/core-free-icons";
@@ -23,6 +23,8 @@ export const HeroHeader = () => {
   const t = useTranslations();
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [adminLogoFailed, setAdminLogoFailed] = useState(false);
@@ -43,6 +45,19 @@ export const HeroHeader = () => {
     { label: t("navigation.todayDeals"), href: `/${locale}` },
   ];
   const languageCode = locale === "ar" ? "AR" : "EN";
+  const nextLocale = locale === "ar" ? "en" : "ar";
+
+  const switchLocale = () => {
+    const segments = pathname.split("/");
+    if (segments[1] === "ar" || segments[1] === "en") {
+      segments[1] = nextLocale;
+    } else {
+      segments.splice(1, 0, nextLocale);
+    }
+
+    const query = searchParams.toString();
+    router.push(`${segments.join("/") || `/${nextLocale}`}${query ? `?${query}` : ""}`);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -90,7 +105,11 @@ export const HeroHeader = () => {
           </Link>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700">
+            <button
+              type="button"
+              onClick={switchLocale}
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 transition hover:border-orange-200 hover:bg-orange-50"
+            >
               {!adminFlagFailed ? (
                 <Image
                   width={20}
@@ -112,7 +131,7 @@ export const HeroHeader = () => {
                 className="h-4 w-4 text-slate-500"
                 aria-hidden="true"
               />
-            </div>
+            </button>
           </div>
         </nav>
       </header>
@@ -155,7 +174,11 @@ export const HeroHeader = () => {
                 ))}
               </nav>
 
-              <div className="flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-[#F8FAFC] px-3 py-2 text-sm font-black text-[#0F172A]">
+              <button
+                type="button"
+                onClick={switchLocale}
+                className="flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-[#F8FAFC] px-3 py-2 text-sm font-black text-[#0F172A] transition hover:border-orange-200 hover:bg-orange-50"
+              >
                 <Image
                   width={22}
                   height={22}
@@ -169,7 +192,7 @@ export const HeroHeader = () => {
                   className="h-4 w-4 text-slate-500"
                   aria-hidden="true"
                 />
-              </div>
+              </button>
 
               <CurrencySelect compact />
 
@@ -194,6 +217,17 @@ export const HeroHeader = () => {
                 </SheetHeader>
 
                 <div className="mt-8 flex flex-col gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      switchLocale();
+                    }}
+                    className="flex w-full items-center justify-between rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] px-4 py-3 text-sm font-black text-[#0F172A]"
+                  >
+                    <span>{t("navigation.language")}</span>
+                    <span>{languageCode}</span>
+                  </button>
                   <CurrencySelect className="w-full rounded-2xl" />
                   {navItems.map((item) => (
                     <Link

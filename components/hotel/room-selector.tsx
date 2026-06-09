@@ -94,11 +94,11 @@ function RoomOptionCard({
   const totalPrice = (price + taxes) * nights;
   const pricePerNight = price + taxes;
   const tboDetailGroups = [
-    { title: "Inclusions", items: asCleanTextArray(option.inclusions) },
-    { title: "Room promotions", items: asCleanTextArray(option.roomPromotions) },
-    { title: "Supplements", items: asCleanTextArray(option.supplements) },
-    { title: "Rate conditions", items: asCleanTextArray(option.rateConditions) },
-    { title: "Amenities", items: asCleanTextArray(option.amenities) },
+    { title: t("booking.tbo.inclusions"), items: asCleanTextArray(option.inclusions) },
+    { title: t("booking.tbo.promotions"), items: asCleanTextArray(option.roomPromotions) },
+    { title: t("booking.tbo.supplements"), items: asCleanTextArray(option.supplements) },
+    { title: t("booking.tbo.rateConditions"), items: asCleanTextArray(option.rateConditions) },
+    { title: t("booking.tbo.amenities"), items: asCleanTextArray(option.amenities) },
   ].filter((group) => group.items.length > 0);
   
   return (
@@ -187,7 +187,7 @@ function RoomOptionCard({
               <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
                 {option.rspPrice ? (
                   <p className="mb-2 text-xs text-slate-700">
-                    <span className="font-bold">RSP Price:</span>{" "}
+                    <span className="font-bold">{t("booking.tbo.rspPrice")}:</span>{" "}
                     {option.Currency || safeCurrency} {option.rspPrice}
                   </p>
                 ) : null}

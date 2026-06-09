@@ -365,9 +365,9 @@ interface HotelDetailsData {
   const selectedAmenities = asCleanTextArray(selectedOption?.amenities);
   const selectedTboDetailGroups = selectedOption
     ? [
-        { title: "Room promotions", items: asCleanTextArray(selectedOption.roomPromotions) },
-        { title: "Supplements", items: asCleanTextArray(selectedOption.supplements) },
-        { title: "Rate conditions", items: asCleanTextArray(selectedOption.rateConditions) },
+        { title: t("booking.tbo.promotions"), items: asCleanTextArray(selectedOption.roomPromotions) },
+        { title: t("booking.tbo.supplements"), items: asCleanTextArray(selectedOption.supplements) },
+        { title: t("booking.tbo.rateConditions"), items: asCleanTextArray(selectedOption.rateConditions) },
       ].filter((group) => group.items.length > 0)
     : [];
 
@@ -613,7 +613,7 @@ interface HotelDetailsData {
                       <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
                         {selectedOption.rspPrice ? (
                           <p className="mb-2 text-xs text-slate-700">
-                            <span className="font-bold">RSP Price:</span>{" "}
+                            <span className="font-bold">{t("booking.tbo.rspPrice")}:</span>{" "}
                             {selectedOption.Currency} {selectedOption.rspPrice}
                           </p>
                         ) : null}
