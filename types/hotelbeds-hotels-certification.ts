@@ -12,6 +12,7 @@ export type HotelbedsHotelGuest = {
   surname: string;
   type?: "AD" | "CH";
   age?: number;
+  roomId?: number;
 };
 
 export type HotelbedsHotelHolder = {
@@ -61,18 +62,33 @@ export type HotelbedsHotelCancelRequest = {
 
 export type HotelbedsHotelVoucher = {
   supplier: "hotelbeds-accommodation";
+  hotlenoReference?: string;
   bookingReference?: string;
   hotelName?: string;
+  hotelAddress?: string;
   checkIn?: string;
   checkOut?: string;
   roomName?: string;
   boardName?: string;
+  rooms?: Array<{
+    name?: string;
+    board?: string;
+    adults?: number;
+    children?: number;
+    childAges?: number[];
+    guestNames?: string[];
+  }>;
   holderName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   guestNames?: string[];
   supplierReference?: string;
   cancellationPolicies?: unknown[];
   remarks?: string[];
+  amount?: number;
+  currency?: string;
   status?: string;
+  cancellationStatus?: string;
 };
 
 export type HotelbedsHotelCertificationScenario = {

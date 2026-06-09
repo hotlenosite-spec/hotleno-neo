@@ -67,6 +67,22 @@ function getDetailDefaults(option: TransferOption) {
   return { type: "FLIGHT", direction: option.dropoff.codeType === "IATA" ? "DEPARTURE" : "ARRIVAL" };
 }
 
+function isDepartureOption(option: TransferOption) {
+  return (
+    option.dropoff.codeType === "IATA" ||
+    option.dropoff.codeType === "PORT" ||
+    option.dropoff.codeType === "STATION"
+  );
+}
+
+function getPickupTimeDisplay(option: TransferOption) {
+  if (option.mustCheckPickupTime && isDepartureOption(option)) {
+    return "To be confirmed on Checkpickup.com";
+  }
+
+  return option.pickupDateTime;
+}
+
 function buildPassengers({
   firstName,
   lastName,
@@ -283,6 +299,7 @@ export default function TransfersCheckoutPage() {
                 <Info label="من" value={`${option.pickup.name} (${option.pickup.codeType}/${option.pickup.code})`} />
                 <Info label="إلى" value={`${option.dropoff.name} (${option.dropoff.codeType}/${option.dropoff.code})`} />
                 <Info label="وقت الرحلة" value={option.pickupDateTime} />
+                <Info label="وقت الالتقاط" value={getPickupTimeDisplay(option)} />
                 <Info label="سياسة الإلغاء" value={getCancellationText(option)} />
               </div>
 

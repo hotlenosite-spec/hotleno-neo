@@ -1,13 +1,69 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ActivityVoucher as ActivityVoucherType } from "@/types/activities";
+import type {
+  ActivityAnswer,
+  ActivityCancellationPolicy,
+  ActivityPax,
+  ActivityVoucher as ActivityVoucherType,
+} from "@/types/activities";
 
-function listValue(values?: string[]) {
-  return values?.length ? values.join("، ") : "-";
+function clean(value?: string | null) {
+  const text = String(value || "").trim();
+  return text && text !== "undefined" && text !== "null" ? text : undefined;
+}
+
+function joinValues(values?: Array<string | undefined | null>) {
+  const items = (values || []).map(clean).filter((item): item is string => Boolean(item));
+  return items.length ? items.join(", ") : undefined;
+}
+
+function formatHolder(voucher: ActivityVoucherType) {
+  return clean(`${voucher.holder?.name || ""} ${voucher.holder?.surname || ""}`);
+}
+
+function formatContact(voucher: ActivityVoucherType) {
+  return joinValues([
+    voucher.customerEmail || voucher.holder?.email,
+    voucher.customerPhone || voucher.holder?.telephones?.[0],
+  ]);
+}
+
+function formatPax(paxes?: ActivityPax[]) {
+  if (!paxes?.length) return undefined;
+
+  const adults = paxes.filter((pax) => (pax.type || "").toUpperCase().includes("AD") || pax.age >= 12).length;
+  const children = paxes.filter((pax) => (pax.type || "").toUpperCase().includes("CH") || (pax.age > 1 && pax.age < 12)).length;
+  const infants = paxes.filter((pax) => (pax.type || "").toUpperCase().includes("IN") || pax.age <= 1).length;
+  return `Adults ${adults}, Children ${children}, Infants ${infants}`;
+}
+
+function formatPolicies(policies?: ActivityCancellationPolicy[]) {
+  const lines = (policies || [])
+    .map((policy) => {
+      if (policy.amount !== undefined && policy.currency) {
+        return `${policy.amount} ${policy.currency} from ${policy.from || "not provided"}`;
+      }
+      return clean(policy.description);
+    })
+    .filter((line): line is string => Boolean(line));
+
+  return lines.length ? lines.join("\n") : undefined;
+}
+
+function formatAnswers(answers?: ActivityAnswer[]) {
+  const lines = (answers || [])
+    .map((answer) => {
+      const question = clean(answer.question.text) || clean(answer.question.code);
+      const value = clean(answer.answer);
+      return question && value ? `${question}: ${value}` : undefined;
+    })
+    .filter((line): line is string => Boolean(line));
+
+  return lines.length ? lines.join("\n") : undefined;
 }
 
 export function ActivityVoucher({ voucher }: { voucher: ActivityVoucherType }) {
-  const officialVouchers = voucher.officialVouchers?.filter((item) => item.url) || [];
+  const officialVouchers = voucher.officialVouchers?.filter((item) => clean(item.url)) || [];
 
   if (officialVouchers.length > 0) {
     return (
@@ -16,15 +72,15 @@ export function ActivityVoucher({ voucher }: { voucher: ActivityVoucherType }) {
           <Badge className="bg-emerald-600 text-white">Official Hotelbeds voucher</Badge>
           <Badge variant="outline">Supplier: Hotelbeds Activities</Badge>
         </div>
-        <h2 className="text-2xl font-black">التذكرة الرسمية للدخول</h2>
+        <h2 className="text-2xl font-black">Activity Booking Voucher</h2>
         <p className="mt-3 text-sm font-bold text-emerald-800">
-          عاد Hotelbeds بقسيمة رسمية. يجب استخدام ملف PDF/الرابط الرسمي بدل إنشاء فاتشر داخلي بديل.
+          Official Hotelbeds PDF voucher returned and used for this test case.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           {officialVouchers.map((file, index) => (
             <Button key={`${file.url}-${index}`} asChild className="rounded-2xl bg-emerald-700 text-white hover:bg-emerald-800">
               <a href={file.url} target="_blank" rel="noreferrer">
-                فتح / تحميل التذكرة الرسمية {index + 1}
+                Open official PDF voucher {index + 1}
               </a>
             </Button>
           ))}
@@ -36,54 +92,60 @@ export function ActivityVoucher({ voucher }: { voucher: ActivityVoucherType }) {
   return (
     <section className="rounded-[2rem] border border-orange-200 bg-orange-50 p-6 text-[#0F172A]">
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <Badge className="bg-[#F97316] text-white">Internal voucher</Badge>
+        <Badge className="bg-[#F97316] text-white">HOTLENO generated voucher</Badge>
         <Badge variant="outline">Supplier: Hotelbeds Activities</Badge>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Info label="Booking reference" value={voucher.bookingReference} />
-        <Info label="Client reference" value={voucher.clientReference} />
-        <Info label="Confirmation date" value={voucher.confirmationDate} />
-        <Info label="Activity" value={voucher.activityName} />
-        <Info label="Date from/to" value={[voucher.dateFrom, voucher.dateTo].filter(Boolean).join(" - ")} />
-        <Info label="Modality" value={voucher.modalityName} />
-        <Info label="Destination" value={voucher.destinationName} />
-        <Info label="Selected language" value={voucher.selectedLanguage} />
-        <Info label="Selected session" value={voucher.selectedSession} />
-        <Info label="Holder" value={`${voucher.holder?.name || ""} ${voucher.holder?.surname || ""}`.trim()} />
-        <Info label="Children ages" value={voucher.childrenAges?.join(", ")} />
-        <Info label="Provider" value={voucher.providerInfo || voucher.supplierInfo} />
+      <div className="border-b border-orange-200 pb-5">
+        <p className="text-xs font-black uppercase tracking-normal text-slate-500">HOTLENO</p>
+        <h2 className="mt-1 text-2xl font-black">Activity Booking Voucher</h2>
+        <p className="mt-2 text-sm font-bold text-slate-600">
+          This voucher is generated by HOTLENO for the customer.
+        </p>
       </div>
 
-      <TextBlock title="Pax distribution" text={voucher.paxes?.map((pax) => `Age ${pax.age}`).join("، ")} />
-      <TextBlock title="Contract remarks / redeem information" text={listValue([...(voucher.contractRemarks || []), ...(voucher.redeemInformation || [])])} />
-      <TextBlock
-        title="Cancellation policies"
-        text={voucher.cancellationPolicies
-          ?.map((policy) =>
-            policy.amount !== undefined && policy.currency
-              ? `${policy.amount} ${policy.currency} from ${policy.from || "-"}`
-              : policy.description || "Cancellation policy available",
-          )
-          .join("، ")}
-      />
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        <Info label="HOTLENO reference" value={voucher.clientReference} />
+        <Info label="Hotelbeds reference" value={voucher.bookingReference} />
+        <Info label="Activity / service" value={voucher.activityName} />
+        <Info label="Destination / city" value={voucher.destinationName} />
+        <Info label="Date" value={joinValues([voucher.dateFrom, voucher.dateTo])} />
+        <Info label="Modality" value={voucher.modalityName} />
+        <Info label="Meeting / pickup" value={voucher.meetingPoint || voucher.pickupInfo} />
+        <Info label="Lead passenger" value={formatHolder(voucher)} />
+        <Info label="Pax distribution" value={formatPax(voucher.paxes)} />
+        <Info label="Customer contact" value={formatContact(voucher)} />
+        <Info label="Session" value={voucher.selectedSession} />
+        <Info label="Language" value={voucher.selectedLanguage} />
+        <Info label="Provider" value={voucher.providerInfo || voucher.supplierInfo} />
+        <Info label="Children ages" value={voucher.childrenAges?.length ? voucher.childrenAges.join(", ") : undefined} />
+      </div>
+
+      <TextBlock title="Questions and answers" text={formatAnswers(voucher.answers)} />
+      <TextBlock title="Redeem information" text={joinValues(voucher.redeemInformation)} />
+      <TextBlock title="Contract remarks" text={joinValues(voucher.contractRemarks)} />
+      <TextBlock title="Cancellation policy" text={formatPolicies(voucher.cancellationPolicies)} />
+
+      <p className="mt-5 rounded-2xl bg-white p-4 text-sm font-black text-[#0F172A]">
+        For assistance, contact HOTLENO support and quote the HOTLENO reference shown above.
+      </p>
     </section>
   );
 }
 
 function Info({ label, value }: { label: string; value?: string }) {
+  if (!clean(value)) return null;
+
   return (
     <div className="rounded-2xl bg-white p-4">
-      <p className="text-xs font-black uppercase tracking-normal text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 font-black">{value || "-"}</p>
+      <p className="text-xs font-black uppercase tracking-normal text-slate-500">{label}</p>
+      <p className="mt-1 font-black">{value}</p>
     </div>
   );
 }
 
 function TextBlock({ title, text }: { title: string; text?: string }) {
-  if (!text) return null;
+  if (!clean(text)) return null;
 
   return (
     <div className="mt-5 rounded-2xl bg-white p-4">

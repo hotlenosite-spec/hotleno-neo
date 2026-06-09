@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -104,11 +104,13 @@ function getCustomerStatusLabel(booking: Booking, t: ReturnType<typeof useTransl
 
 export default function AccountBookingDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const t = useTranslations("account");
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const bookingId = params.bookingId as string;
+  const locale = params.locale as string;
 
   const loadBooking = useCallback(async () => {
     await Promise.resolve();
@@ -276,6 +278,15 @@ export default function AccountBookingDetailsPage() {
                 {t("actions.cancel")}
               </Button>
             )}
+            {String(booking.supplier || "").toLowerCase().includes("hotelbeds") ? (
+              <Button
+                type="button"
+                className="w-full bg-[#0F172A] text-white hover:bg-slate-800"
+                onClick={() => router.push(`/${locale}/account/bookings/${bookingId}/voucher`)}
+              >
+                View / print voucher
+              </Button>
+            ) : null}
           </CardContent>
         </Card>
       </div>

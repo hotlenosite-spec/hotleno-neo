@@ -195,6 +195,11 @@ export interface ActivityVoucher {
   providerInfo?: string;
   selectedLanguage?: string;
   selectedSession?: string;
+  meetingPoint?: string;
+  pickupInfo?: string;
+  answers?: ActivityAnswer[];
+  customerEmail?: string;
+  customerPhone?: string;
   cancellationPolicies?: ActivityCancellationPolicy[];
   officialVouchers?: ActivityVoucherFile[];
   raw?: unknown;

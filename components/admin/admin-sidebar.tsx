@@ -161,6 +161,7 @@ export function AdminSidebar() {
     { title: t("notifications"), href: adminPath("/admin/notifications"), icon: NotificationIcon, permission: "dashboard.view" },
     { title: t("support"), href: adminPath("/admin/support"), icon: HandshakeIcon, permission: "support.view" },
     { title: t("suppliersControl"), href: adminPath("/admin/suppliers"), icon: SettingsIcon, permission: "suppliers.view" },
+    { title: "Hotelbeds", href: adminPath("/admin/hotelbeds/certification"), icon: BuildingIcon, permission: "suppliers.view" },
     { title: t("pricing"), href: adminPath("/admin/pricing"), icon: ChartIcon, permission: "pricing.view" },
     { title: t("logs"), href: adminPath("/admin/logs"), icon: ChartIcon, permission: "logs.view" },
     { title: t("blog"), href: adminPath("/admin/blog"), icon: ChartIcon },

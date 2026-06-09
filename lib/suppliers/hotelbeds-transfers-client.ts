@@ -753,10 +753,18 @@ export function mapVoucherData(
   const booking = asRecord(record.booking || asArray(record.bookings)[0]);
   const transfer = getFirstTransferFromPayload(payload);
   const pickupInformation = asRecord(transfer.pickupInformation);
+  const pickup = asRecord(pickupInformation.pickup);
   const vehicle = asRecord(transfer.vehicle);
   const category = asRecord(transfer.category);
   const content = asRecord(transfer.content);
+  const transferType = asRecord(transfer.transferType);
   const checkPickupInfo = getCheckPickupInfo(transfer);
+  const requestPassengers = isPassengerArray(request?.passengers)
+    ? request?.passengers
+    : undefined;
+  const adults = requestPassengers?.filter((pax) => pax.type !== "CH" && pax.type !== "IN").length;
+  const children = requestPassengers?.filter((pax) => pax.type === "CH").length;
+  const infants = requestPassengers?.filter((pax) => pax.type === "IN").length;
 
   return {
     supplier: "hotelbeds-transfers",
@@ -766,17 +774,30 @@ export function mapVoucherData(
     serviceName:
       getFirstString(transfer.name, vehicle.name, content.name) ||
       "Hotelbeds Transfers service",
+    transferType: getFirstString(transferType.name, transferType.code, transfer.transferType),
+    categoryName: getFirstString(category.name, category.code),
     vehicleName: getFirstString(vehicle.name),
     vehicleType: getFirstString(category.name, transfer.transferType),
     pickup: mapLocationFromPickupInfo(pickupInformation, "from"),
     dropoff: mapLocationFromPickupInfo(pickupInformation, "to"),
+    serviceDate: getFirstString(pickupInformation.date),
+    transportTime: getFirstString(pickupInformation.time),
     pickupDateTime: getFirstString(pickupInformation.date, transfer.pickupDateTime),
     pickupTime: getFirstString(pickupInformation.time, transfer.pickupTime),
     mustCheckPickupTime: checkPickupInfo.mustCheckPickupTime,
     checkPickupInfo: checkPickupInfo.checkPickup.description,
-    meetingPoint: getFirstString(asRecord(pickupInformation.pickup).description),
+    pickupDescription: getFirstString(pickup.description),
+    meetingPoint: getFirstString(pickup.description),
     holder: request ? normalizeHolder(request) : undefined,
     passengers: request ? normalizeBookingPassengers(request) : undefined,
+    paxDistribution:
+      adults !== undefined
+        ? {
+            adults,
+            children,
+            infants,
+          }
+        : undefined,
     optionalExtras: mapOptionalExtras(transfer.extras || request?.services?.[0]?.extras),
     cancellationPolicies: mapCancellationPolicies(
       transfer.cancellationPolicies || transfer.cancelPolicies,

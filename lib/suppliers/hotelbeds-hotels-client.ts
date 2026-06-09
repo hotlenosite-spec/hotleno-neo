@@ -145,15 +145,17 @@ function buildAvailabilityBody(request: HotelbedsHotelAvailabilityRequest) {
 
 function buildBookingBody(request: HotelbedsHotelBookingRequest) {
   const rateKey = request.finalRateKey || request.rateKey;
+  const roomIds = [...new Set(request.guests.map((guest) => guest.roomId || 1))];
 
   return {
     clientReference: toHotelbedsClientReference(request.clientReference),
     holder: request.holder,
-    rooms: [
-      {
+    rooms: roomIds.map((roomId) => ({
         rateKey,
-        paxes: request.guests.map((guest, index) => ({
-          roomId: 1,
+        paxes: request.guests
+          .filter((guest) => (guest.roomId || 1) === roomId)
+          .map((guest, index) => ({
+          roomId,
           type: guest.type || "AD",
           name: guest.name,
           surname: guest.surname,
@@ -161,8 +163,7 @@ function buildBookingBody(request: HotelbedsHotelBookingRequest) {
           ...(guest.age ? { age: guest.age } : {}),
           id: index + 1,
         })),
-      },
-    ],
+      })),
     ...(request.remark ? { remark: request.remark } : {}),
   };
 }
@@ -170,20 +171,51 @@ function buildBookingBody(request: HotelbedsHotelBookingRequest) {
 function mapVoucher(payload: unknown): HotelbedsHotelVoucher {
   const booking = asRecord(asRecord(payload).booking || payload);
   const hotel = asRecord(booking.hotel);
-  const room = asRecord(asArray(hotel.rooms)[0]);
+  const roomItems = asArray(hotel.rooms);
+  const room = asRecord(roomItems[0]);
   const rate = asRecord(asArray(room.rates)[0]);
   const holder = asRecord(booking.holder);
+  const totalNet = asArray(room.rates).reduce<number>((sum, item) => {
+    const itemRate = asRecord(item);
+    const net = Number(itemRate.net || itemRate.sellingRate || itemRate.amount || 0);
+    return Number.isFinite(net) ? sum + net : sum;
+  }, 0);
 
   return {
     supplier: "hotelbeds-accommodation",
+    hotlenoReference: asString(booking.clientReference),
     bookingReference:
       asString(booking.reference) || asString(booking.bookingReference),
     hotelName: asString(hotel.name),
+    hotelAddress:
+      asString(hotel.address) ||
+      asString(asRecord(hotel.address).content) ||
+      asString(asRecord(hotel.destination).name),
     checkIn: asString(hotel.checkIn),
     checkOut: asString(hotel.checkOut),
     roomName: asString(room.name) || asString(room.code),
     boardName: asString(rate.boardName) || asString(rate.boardCode),
     holderName: [holder.name, holder.surname].filter(Boolean).join(" "),
+    rooms: roomItems.map((item) => {
+      const roomRecord = asRecord(item);
+      const roomRate = asRecord(asArray(roomRecord.rates)[0]);
+      const paxes = asArray(roomRecord.paxes);
+      return {
+        name: asString(roomRecord.name) || asString(roomRecord.code),
+        board: asString(roomRate.boardName) || asString(roomRate.boardCode),
+        adults: paxes.filter((pax) => asRecord(pax).type !== "CH").length,
+        children: paxes.filter((pax) => asRecord(pax).type === "CH").length,
+        childAges: paxes
+          .map((pax) => Number(asRecord(pax).age))
+          .filter((age): age is number => Number.isFinite(age) && age < 18),
+        guestNames: paxes
+          .map((pax) => {
+            const record = asRecord(pax);
+            return [record.name, record.surname].filter(Boolean).join(" ");
+          })
+          .filter(Boolean),
+      };
+    }),
     guestNames: asArray(room.paxes).map((pax) => {
       const record = asRecord(pax);
       return [record.name, record.surname].filter(Boolean).join(" ");
@@ -196,6 +228,8 @@ function mapVoucher(payload: unknown): HotelbedsHotelVoucher {
     remarks: asArray(booking.remark || booking.remarks)
       .map((item) => asString(item) || asString(asRecord(item).text))
       .filter((item): item is string => Boolean(item)),
+    amount: totalNet || undefined,
+    currency: asString(rate.currency) || asString(rate.currencyCode) || asString(booking.currency),
     status: asString(booking.status),
   };
 }

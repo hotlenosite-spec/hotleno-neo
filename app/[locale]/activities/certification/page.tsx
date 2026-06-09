@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActivityVoucher } from "@/components/activities/activity-voucher";
 import type {
   ActivityBookingResponse,
   ActivityCertificationScenario,
@@ -461,6 +462,8 @@ export default function ActivitiesCertificationPage() {
                     {state.voucherLogged ? " تم تسجيل معلومات الفاتشر." : ""}
                   </div>
                 ) : null}
+
+                {state.booking?.voucher ? <ActivityVoucher voucher={state.booking.voucher} /> : null}
               </CardContent>
             </Card>
           );
