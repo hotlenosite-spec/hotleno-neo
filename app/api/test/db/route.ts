@@ -3,18 +3,21 @@ import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 
 export async function GET(_req: NextRequest) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   try {
-    console.log("Testing database connection...");
+    console.info("[test/db] Testing database connection...");
     await dbConnect();
-    console.log("Database connected");
+    console.info("[test/db] Database connected");
 
     const userCount = await User.countDocuments();
-    console.log("User count:", userCount);
+    console.info("[test/db] User count: %d", userCount);
 
     const users = await User.find()
       .select("name email role createdAt")
       .limit(5);
-    console.log("Sample users:", users);
 
     return NextResponse.json({
       success: true,

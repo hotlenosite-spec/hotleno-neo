@@ -8,6 +8,8 @@ import {
   updateUserLastLogin,
   validatePassword,
 } from '@/lib/firebase-store';
+import { updateStaffLastLogin } from '@/lib/staff-store';
+import { getStaffAccessForUser } from '@/lib/staff-permissions';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -62,6 +64,14 @@ export async function POST(req: NextRequest) {
 
     const updatedUser = await updateUserLastLogin(user.id);
     const authenticatedUser = updatedUser ?? user;
+    if (authenticatedUser.role === 'admin') {
+      await updateStaffLastLogin(authenticatedUser.id, new Date()).catch(() => undefined);
+    }
+    const staffAccess = await getStaffAccessForUser(
+      authenticatedUser.id,
+      authenticatedUser.role,
+      authenticatedUser.email,
+    );
     
     // Generate token
     const token = generateToken({
@@ -74,7 +84,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: publicUser(authenticatedUser),
+      user: {
+        ...publicUser(authenticatedUser),
+        staffRole: staffAccess?.role,
+        permissions: staffAccess?.permissions || [],
+        staffStatus: staffAccess?.status,
+      },
       token,
     });
     

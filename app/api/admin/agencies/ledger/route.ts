@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Document } from "mongodb";
-import { verifyToken } from "@/lib/jwt";
 import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
-import { getUserById } from "@/lib/firebase-store";
+import { requireStaffPermission } from "@/lib/staff-permissions";
 
 type StringIdDocument = Document & { _id: string };
 
 const AGENCY_LEDGER_TYPES = ["credit", "debit", "payment", "refund", "adjustment"] as const;
 const AGENCY_LEDGER_STATUSES = ["pending", "posted", "void", "cancelled"] as const;
-
-async function requireAdmin(req: NextRequest) {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) return { error: "No token provided", status: 401 } as const;
-
-  const decoded = verifyToken(token);
-  const user = await getUserById(decoded.userId);
-  if (!user || user.role !== "admin") {
-    return { error: "Unauthorized - Admin access required", status: 403 } as const;
-  }
-
-  return { user };
-}
 
 function isAllowed(value: string, allowed: readonly string[]) {
   return allowed.includes(value);
@@ -28,9 +14,8 @@ function isAllowed(value: string, allowed: readonly string[]) {
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireAdmin(req);
-    if ("error" in auth) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!(await requireStaffPermission(req, "agencies.view"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);

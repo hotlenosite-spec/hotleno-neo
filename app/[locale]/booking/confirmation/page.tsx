@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import {
 
 export default function BookingConfirmationPage() {
   const router = useRouter();
+  const t = useTranslations("bookingConfirmation");
   const _locale = useLocale();
   const _searchParams = useSearchParams();
   const isDevPreviewAllPages = isDevPreviewAllPagesEnabled();
@@ -120,15 +121,13 @@ export default function BookingConfirmationPage() {
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <Card className="border-dashed">
           <CardContent className="space-y-4 py-12 text-center">
-            <Badge variant="secondary">معاينة المطور</Badge>
+            <Badge variant="secondary">{t("devPreview")}</Badge>
             <HugeiconsIcon icon={AlertCircleIcon} className="mx-auto h-12 w-12 text-amber-500" />
-            <h2 className="text-xl font-bold">تأكيد الحجز يحتاج بيانات حجز</h2>
+            <h2 className="text-xl font-bold">{t("devPreviewTitle")}</h2>
             <p className="mx-auto max-w-2xl text-muted-foreground">
-              هذه الصفحة مفتوحة للمعاينة المحلية فقط. لا يتم عرض تأكيد حجز وهمي
-              لأن الصفحة الحقيقية تقرأ `bookingConfirmation` من localStorage بعد
-              مسار الحجز.
+              {t("devPreviewDescription")}
             </p>
-            <Button onClick={() => router.push('/')}>العودة للرئيسية</Button>
+            <Button onClick={() => router.push('/')}>{t("backHome")}</Button>
           </CardContent>
         </Card>
       </div>
@@ -141,9 +140,9 @@ export default function BookingConfirmationPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <HugeiconsIcon icon={AlertCircleIcon} className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">لم يتم العثور على الحجز</h2>
-            <p className="text-muted-foreground mb-6">تعذر جلب تفاصيل الحجز</p>
-            <Button onClick={() => router.push('/')}>العودة للرئيسية</Button>
+            <h2 className="text-xl font-bold mb-2">{t("notFoundTitle")}</h2>
+            <p className="text-muted-foreground mb-6">{t("notFoundDescription")}</p>
+            <Button onClick={() => router.push('/')}>{t("backHome")}</Button>
           </CardContent>
         </Card>
       </div>
@@ -175,14 +174,14 @@ export default function BookingConfirmationPage() {
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold mb-1">
-                {isConfirmed ? 'تم تأكيد الحجز!' : isPending ? 'تم إرسال الحجز' : 'حالة الحجز'}
+                {isConfirmed ? t("confirmedTitle") : isPending ? t("sentTitle") : t("statusTitle")}
               </h1>
               <p className="text-muted-foreground">
                 {isConfirmed 
-                  ? 'تم تأكيد حجزك. راجع بريدك الإلكتروني للتفاصيل.'
+                  ? t("confirmedDescription")
                   : isPending 
-                    ? 'حجزك قيد المعالجة. ستصلك رسالة التأكيد قريبًا.'
-                    : 'يرجى مراجعة حالة الحجز لمزيد من التفاصيل.'
+                    ? t("pendingDescription")
+                    : t("statusDescription")
                 }
               </p>
             </div>
@@ -199,24 +198,24 @@ export default function BookingConfirmationPage() {
           {/* Booking Reference */}
           <Card>
             <CardHeader>
-              <CardTitle>تفاصيل الحجز</CardTitle>
+              <CardTitle>{t("bookingDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">رقم الحجز</p>
+                  <p className="text-sm text-muted-foreground">{t("bookingNumber")}</p>
                   <p className="font-mono font-semibold text-lg">{booking.BookingReference}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">مرجعك</p>
+                  <p className="text-sm text-muted-foreground">{t("yourReference")}</p>
                   <p className="font-semibold">{booking.YourReference}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">تاريخ الحجز</p>
+                  <p className="text-sm text-muted-foreground">{t("bookingDate")}</p>
                   <p>{new Date(booking.BookingDate).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">الفندق</p>
+                  <p className="text-sm text-muted-foreground">{t("hotel")}</p>
                   <p className="font-semibold">{booking.HotelName}</p>
                 </div>
               </div>
@@ -225,11 +224,11 @@ export default function BookingConfirmationPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">تسجيل الدخول</p>
+                  <p className="text-sm text-muted-foreground">{t("checkIn")}</p>
                   <p className="font-semibold">{new Date(booking.CheckInDate).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">تسجيل الخروج</p>
+                  <p className="text-sm text-muted-foreground">{t("checkOut")}</p>
                   <p className="font-semibold">{new Date(booking.CheckOutDate).toLocaleDateString()}</p>
                 </div>
               </div>
@@ -237,13 +236,13 @@ export default function BookingConfirmationPage() {
               <Separator />
 
               <div>
-                <p className="text-sm text-muted-foreground mb-2">تفاصيل الغرفة</p>
+                <p className="text-sm text-muted-foreground mb-2">{t("roomDetails")}</p>
                 {booking.Rooms?.map((room, idx) => (
                   <div key={idx} className="flex justify-between py-2">
                     <span>{room.RoomName}</span>
                     <span className="text-muted-foreground">
-                      {room.Adults} بالغ
-                      {room.Children > 0 && `، ${room.Children} طفل`}
+                      {t("adultCount", { count: room.Adults })}
+                      {room.Children > 0 && `، ${t("childCount", { count: room.Children })}`}
                     </span>
                   </div>
                 ))}
@@ -253,7 +252,7 @@ export default function BookingConfirmationPage() {
                 <>
                   <Separator />
                   <div>
-                    <p className="text-sm text-muted-foreground">النزيل الرئيسي</p>
+                    <p className="text-sm text-muted-foreground">{t("leadGuest")}</p>
                     <p className="font-semibold">{booking.LeadGuest}</p>
                   </div>
                 </>
@@ -265,17 +264,17 @@ export default function BookingConfirmationPage() {
           {contactInfo && (
             <Card>
               <CardHeader>
-                <CardTitle>معلومات التواصل</CardTitle>
+                <CardTitle>{t("contactInfo")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">البريد الإلكتروني</p>
+                    <p className="text-sm text-muted-foreground">{t("email")}</p>
                     <p>{contactInfo.email}</p>
                   </div>
                   {contactInfo.phone && (
                     <div>
-                      <p className="text-sm text-muted-foreground">الهاتف</p>
+                      <p className="text-sm text-muted-foreground">{t("phone")}</p>
                       <p>{contactInfo.phone}</p>
                     </div>
                   )}
@@ -288,7 +287,7 @@ export default function BookingConfirmationPage() {
           {((booking.Alerts && booking.Alerts.length > 0) || (booking.Restrictions && booking.Restrictions.length > 0)) && (
             <Card>
               <CardHeader>
-                <CardTitle>معلومات مهمة</CardTitle>
+                <CardTitle>{t("importantInfo")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {booking.Alerts?.map((alert, idx) => (
@@ -313,18 +312,18 @@ export default function BookingConfirmationPage() {
           {/* Price Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>ملخص السعر</CardTitle>
+              <CardTitle>{t("priceSummary")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">السعر الإجمالي</span>
+                  <span className="text-muted-foreground">{t("totalPrice")}</span>
                   <span className="font-bold text-xl">
                     {formatCurrency(booking.TotalPrice, booking.Currency)}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  ستتم معالجة الدفع حسب سياسة الفندق
+                  {t("paymentPolicy")}
                 </p>
               </div>
             </CardContent>
@@ -339,7 +338,7 @@ export default function BookingConfirmationPage() {
                 onClick={handlePrint}
               >
                 <HugeiconsIcon icon={PrinterIcon} className="mr-2 h-4 w-4" />
-                طباعة التأكيد
+                {t("printConfirmation")}
               </Button>
               <Button 
                 variant="outline" 
@@ -347,15 +346,15 @@ export default function BookingConfirmationPage() {
                 onClick={() => {
                   if (navigator.share) {
                     navigator.share({
-                      title: `تأكيد الحجز - ${booking.HotelName}`,
-                      text: `حجزي في ${booking.HotelName}`,
+                      title: t("shareTitle", { hotel: booking.HotelName }),
+                      text: t("shareText", { hotel: booking.HotelName }),
                       url: window.location.href,
                     });
                   }
                 }}
               >
                 <HugeiconsIcon icon={Share08Icon} className="mr-2 h-4 w-4" />
-                مشاركة الحجز
+                {t("shareBooking")}
               </Button>
               <Button 
                 variant="outline" 
@@ -363,7 +362,7 @@ export default function BookingConfirmationPage() {
                 onClick={() => router.push('/')}
               >
                 <HugeiconsIcon icon={Home01Icon} className="mr-2 h-4 w-4" />
-                العودة للرئيسية
+                {t("backHome")}
               </Button>
             </CardContent>
           </Card>
@@ -371,12 +370,12 @@ export default function BookingConfirmationPage() {
           {/* Need Help */}
           <Card className="bg-muted">
             <CardContent className="p-4">
-              <h4 className="font-semibold mb-2">هل تحتاج مساعدة؟</h4>
+              <h4 className="font-semibold mb-2">{t("needHelpTitle")}</h4>
               <p className="text-sm text-muted-foreground mb-3">
-                إذا كانت لديك أي أسئلة حول حجزك، يرجى التواصل مع فريق الدعم.
+                {t("needHelpDescription")}
               </p>
               <Button variant="link" className="p-0 h-auto">
-                تواصل مع الدعم
+                {t("contactSupport")}
               </Button>
             </CardContent>
           </Card>
@@ -385,9 +384,9 @@ export default function BookingConfirmationPage() {
 
       {/* Print-only footer */}
       <div className="hidden print:block mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-        <p>تأكيد حجز Hotleno</p>
-        <p>رقم الحجز: {booking.BookingReference}</p>
-        <p>تمت الطباعة في {new Date().toLocaleString()}</p>
+        <p>{t("printFooterTitle")}</p>
+        <p>{t("printFooterBookingNumber", { reference: booking.BookingReference })}</p>
+        <p>{t("printedAt", { date: new Date().toLocaleString() })}</p>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import type { Document } from "mongodb";
 import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { getUserById } from "@/lib/firebase-store";
 import { verifyToken } from "@/lib/jwt";
+import { requireStaffPermission } from "@/lib/staff-permissions";
 
 type BookingDocument = Document & {
   _id: string;
@@ -26,6 +27,9 @@ export async function GET(
   { params }: { params: Promise<{ bookingId: string }> },
 ) {
   try {
+    if (!(await requireStaffPermission(req, "bookings.view"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const auth = await requireAdmin(req);
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });

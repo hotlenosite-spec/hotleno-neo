@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { getUserById, publicUser } from '@/lib/firebase-store';
+import { getStaffAccessForUser } from '@/lib/staff-permissions';
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,9 +24,16 @@ export async function GET(req: NextRequest) {
       );
     }
     
+    const staffAccess = await getStaffAccessForUser(user.id, user.role, user.email);
+
     return NextResponse.json({
       success: true,
-      user: publicUser(user),
+      user: {
+        ...publicUser(user),
+        staffRole: staffAccess?.role,
+        permissions: staffAccess?.permissions || [],
+        staffStatus: staffAccess?.status,
+      },
     });
     
   } catch (_error) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CountrySelect } from "@/components/shared/country-select";
 import { useAuth } from "@/components/providers/auth-provider";
 import { AuthDialog } from "@/components/features/auth/auth-dialog";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -26,8 +27,17 @@ import {
   AlertCircleIcon,
   CheckmarkCircle02Icon,
   ArrowLeftIcon,
+  CreditCardIcon,
+  CustomerServiceIcon,
+  Shield02Icon,
+  UserGroupIcon,
+  AiPhoneIcon,
+  PassportIcon,
+  NoteIcon,
+  BedIcon,
 } from "@hugeicons/core-free-icons";
 import { formatCurrency } from "@/hooks/use-hotels-enhanced";
+import { countries, getCountryByCode } from "@/lib/data/countries";
 import type { BookingRoom } from "@/types/travellanda";
 import {
   isDevPreviewAllPagesEnabled,
@@ -48,7 +58,7 @@ interface Traveler {
   dateOfBirth?: string;
   age?: number;
   nationality?: string;
-  documentType?: "passport" | "national_id" | "iqama";
+  documentType?: "passport" | "national_id" | "residence_permit" | "iqama";
   documentNumber?: string;
   passportExpiryDate?: string;
   phone?: string;
@@ -64,7 +74,7 @@ interface SavedTraveler {
   dateOfBirth?: string;
   birthDate?: string;
   nationality?: string;
-  documentType?: "passport" | "national_id" | "iqama";
+  documentType?: "passport" | "national_id" | "residence_permit" | "iqama";
   documentNumber?: string;
   passportNumber?: string;
   nationalId?: string;
@@ -118,24 +128,18 @@ interface BookingData {
   };
 }
 
-const TITLES: { value: Title; label: string }[] = [
-  { value: "Mr", label: "Mr" },
-  { value: "Mrs", label: "Mrs" },
-  { value: "Miss", label: "Miss" },
-  { value: "Ms", label: "Ms" },
-  { value: "Dr", label: "Dr" },
-  { value: "Child", label: "Child" },
-];
+const TITLES: Title[] = ["Mr", "Mrs", "Miss", "Ms", "Dr", "Child"];
 
 const DOCUMENT_TYPES = [
-  { value: "passport", label: "Passport" },
-  { value: "national_id", label: "National ID" },
-  { value: "iqama", label: "Iqama" },
+  { value: "passport" },
+  { value: "national_id" },
+  { value: "residence_permit" },
 ] as const;
 
 export default function CheckoutPage() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("checkout");
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const isDevPreviewAllPages = isDevPreviewAllPagesEnabled();
   const isStripeCheckoutEnabled =
@@ -149,7 +153,12 @@ export default function CheckoutPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [contactInfo, setContactInfo] = useState({
     email: "",
-    phone: "",
+    phoneCountryCode: "SA",
+    phoneNumber: "",
+    nationality: "SA",
+    countryOfResidence: "SA",
+    documentType: "passport",
+    documentNumber: "",
     specialRequests: "",
   });
 
@@ -196,7 +205,7 @@ export default function CheckoutPage() {
           lastName: "",
           gender: "",
           dateOfBirth: "",
-          nationality: "",
+          nationality: "SA",
           documentType: "passport",
           documentNumber: "",
           passportExpiryDate: "",
@@ -216,7 +225,7 @@ export default function CheckoutPage() {
           gender: "",
           dateOfBirth: "",
           age: Number.isFinite(childAge) ? childAge : undefined,
-          nationality: "",
+          nationality: "SA",
           documentType: "passport",
           documentNumber: "",
           passportExpiryDate: "",
@@ -279,7 +288,10 @@ export default function CheckoutPage() {
       gender: saved.gender || "",
       dateOfBirth: saved.dateOfBirth || saved.birthDate || "",
       nationality: saved.nationality || "",
-      documentType: saved.documentType || "passport",
+      documentType:
+        saved.documentType === "iqama"
+          ? "residence_permit"
+          : saved.documentType || "passport",
       documentNumber: saved.documentNumber || saved.passportNumber || saved.nationalId || "",
       passportExpiryDate: saved.passportExpiryDate || "",
       phone: saved.phone || "",
@@ -288,20 +300,26 @@ export default function CheckoutPage() {
     setTravelers(updatedTravelers);
   };
 
+  const getCombinedPhone = () => {
+    const phoneCode =
+      getCountryByCode(contactInfo.phoneCountryCode)?.phoneCode || "";
+    return `${phoneCode}${contactInfo.phoneNumber.trim()}`;
+  };
+
   const validateForm = (): boolean => {
     for (const traveler of travelers) {
       if (!traveler.firstName.trim() || !traveler.lastName.trim()) {
-        setError("Please fill in all traveler names");
+        setError(t("errors.travelerNames"));
         return false;
       }
 
       if (!traveler.nationality?.trim()) {
-        setError("Please provide nationality for every traveler");
+        setError(t("errors.travelerNationality"));
         return false;
       }
 
       if (!traveler.documentNumber?.trim()) {
-        setError("Please provide document number for every traveler");
+        setError(t("errors.travelerDocumentNumber"));
         return false;
       }
 
@@ -310,16 +328,16 @@ export default function CheckoutPage() {
         traveler.age === undefined &&
         !traveler.dateOfBirth
       ) {
-        setError("Please provide each child age or date of birth");
+        setError(t("errors.childAge"));
         return false;
       }
 
       if (traveler.travelerType === "adult") {
         const travelerEmail = traveler.email?.trim() || contactInfo.email.trim();
-        const travelerPhone = traveler.phone?.trim() || contactInfo.phone.trim();
+        const travelerPhone = traveler.phone?.trim() || getCombinedPhone();
 
         if (!travelerEmail || !travelerPhone) {
-          setError("Please provide phone and email for adult travelers");
+          setError(t("errors.adultContact"));
           return false;
         }
       }
@@ -327,18 +345,33 @@ export default function CheckoutPage() {
 
     // Check contact info
     if (!contactInfo.email.trim()) {
-      setError("Please provide an email address");
+      setError(t("errors.emailRequired"));
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(contactInfo.email)) {
-      setError("Please provide a valid email address");
+      setError(t("errors.emailInvalid"));
       return false;
     }
 
-    if (!contactInfo.phone.trim()) {
-      setError("Please provide a phone number");
+    if (!contactInfo.phoneCountryCode || !contactInfo.phoneNumber.trim()) {
+      setError(t("errors.phoneRequired"));
+      return false;
+    }
+
+    if (!contactInfo.nationality) {
+      setError(t("errors.nationalityRequired"));
+      return false;
+    }
+
+    if (!contactInfo.countryOfResidence) {
+      setError(t("errors.residenceRequired"));
+      return false;
+    }
+
+    if (!contactInfo.documentType || !contactInfo.documentNumber.trim()) {
+      setError(t("errors.documentRequired"));
       return false;
     }
 
@@ -357,7 +390,7 @@ export default function CheckoutPage() {
 
     try {
       if (!bookingData) {
-        setError("Booking data is missing");
+        setError(t("errors.bookingDataMissing"));
         return;
       }
 
@@ -398,10 +431,11 @@ export default function CheckoutPage() {
 
       const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error("Please sign in to complete your booking");
+        throw new Error(t("errors.signInRequired"));
       }
 
       const leadGuest = travelers.find((t) => t.travelerType === "adult");
+      const combinedPhone = getCombinedPhone();
       const quickTravelers = travelers.filter(
         (traveler) => !traveler.savedTravelerId && traveler.firstName.trim() && traveler.lastName.trim(),
       );
@@ -423,8 +457,8 @@ export default function CheckoutPage() {
               documentType: traveler.documentType,
               documentNumber: traveler.documentNumber,
               passportExpiryDate: traveler.passportExpiryDate,
-              phone: traveler.phone,
-              email: traveler.email,
+              phone: traveler.phone || (traveler.travelerType === "adult" ? combinedPhone : ""),
+              email: traveler.email || (traveler.travelerType === "adult" ? contactInfo.email : ""),
             }),
           }).catch(() => null),
         ),
@@ -446,7 +480,7 @@ export default function CheckoutPage() {
         passportExpiryDate: traveler.passportExpiryDate || "",
         phone:
           traveler.phone ||
-          (traveler.travelerType === "adult" ? contactInfo.phone : ""),
+          (traveler.travelerType === "adult" ? combinedPhone : ""),
         email:
           traveler.email ||
           (traveler.travelerType === "adult" ? contactInfo.email : ""),
@@ -509,7 +543,7 @@ export default function CheckoutPage() {
           ? `${leadGuest.title || "Mr"} ${leadGuest.firstName} ${leadGuest.lastName}`
           : "Guest",
         contactEmail: contactInfo.email,
-        contactPhone: contactInfo.phone,
+        contactPhone: combinedPhone,
         totalPrice,
         currency: bookingData.hotel.selectedOption.Currency,
         status: "pending_payment",
@@ -526,6 +560,20 @@ export default function CheckoutPage() {
           checkoutFlow: "internal_booking_before_payment",
           stripeMetadataReady: true,
           supplierTotalFare,
+          customerDetails: {
+            firstName: leadGuest?.firstName?.trim() || "",
+            lastName: leadGuest?.lastName?.trim() || "",
+            email: contactInfo.email,
+            phoneCountryCode: contactInfo.phoneCountryCode,
+            phoneCode: getCountryByCode(contactInfo.phoneCountryCode)?.phoneCode || "",
+            phoneNumber: contactInfo.phoneNumber,
+            phone: combinedPhone,
+            nationality: contactInfo.nationality,
+            countryOfResidence: contactInfo.countryOfResidence,
+            documentType: contactInfo.documentType,
+            documentNumber: contactInfo.documentNumber,
+            specialRequests: contactInfo.specialRequests,
+          },
         },
       };
 
@@ -540,14 +588,17 @@ export default function CheckoutPage() {
 
       if (!bookingResponse.ok) {
         const data = await bookingResponse.json().catch(() => null);
-        throw new Error(data?.error || "Failed to create booking");
+        if (process.env.NODE_ENV !== "production" && data?.error) {
+          console.warn("[checkout] Booking creation failed:", data.error);
+        }
+        throw new Error(t("errors.bookingFailed"));
       }
 
       const bookingResult = await bookingResponse.json();
       const bookingId = bookingResult.booking?._id;
 
       if (!bookingId) {
-        throw new Error("Booking was created without a booking ID");
+        throw new Error(t("errors.bookingIdMissing"));
       }
 
       const pendingPaymentCheckout = {
@@ -570,15 +621,11 @@ export default function CheckoutPage() {
       if (!isStripeCheckoutEnabled) {
         const bookingStatus = bookingResult.booking?.bookingStatus || "";
         if (bookingStatus === "supplier_booking_confirmed") {
-          setNotice(`Booking created with ID ${bookingId}. Your booking is confirmed.`);
+          setNotice(t("notices.confirmed", { bookingId }));
         } else if (bookingStatus === "supplier_booking_failed") {
-          setNotice(
-            `Booking created with ID ${bookingId}. We could not confirm it automatically and will contact you.`,
-          );
+          setNotice(t("notices.failed", { bookingId }));
         } else {
-          setNotice(
-            `Booking created with ID ${bookingId}. Payment checkout is not enabled yet.`,
-          );
+          setNotice(t("notices.paymentDisabled", { bookingId }));
         }
         return;
       }
@@ -599,25 +646,27 @@ export default function CheckoutPage() {
 
       if (!checkoutResponse.ok) {
         const data = await checkoutResponse.json().catch(() => null);
-        throw new Error(data?.error || "Failed to start payment");
+        throw new Error(data?.error || t("errors.paymentStartFailed"));
       }
 
       const checkout = await checkoutResponse.json();
       if (!checkout.url) {
-        throw new Error("Payment session did not return a checkout URL");
+        throw new Error(t("errors.paymentUrlMissing"));
       }
 
       window.location.href = checkout.url;
     } catch (error) {
-      console.error("Booking error:", error);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Booking error:", error);
+      }
       if (error instanceof Error && error.name === "AbortError") {
         setError(
-          "Booking request timed out. Please try again or contact support.",
+          t("errors.timeout"),
         );
       } else if (error instanceof Error) {
-        setError(error.message || "Booking failed. Please try again.");
+        setError(error.message || t("errors.bookingFailed"));
       } else {
-        setError("Booking failed. Please try again.");
+        setError(t("errors.bookingFailed"));
       }
     } finally {
       setSubmitting(false);
@@ -691,7 +740,7 @@ export default function CheckoutPage() {
   const totalPrice = selectedOption
     ? (selectedOption.Price + (selectedOption.Taxes || 0)) * nights
     : 0;
-  const formatAge = (age: number) => `${age} year${age === 1 ? "" : "s"}`;
+  const formatAge = (age: number) => `${age} ${age === 1 ? t("year") : t("years")}`;
   const getRoomChildAges = (roomIndex: number) => {
     const childrenPerRoom = bookingData?.searchParams.guests.children || 0;
     return (bookingData?.searchParams.guests.childrenAges || [])
@@ -702,16 +751,16 @@ export default function CheckoutPage() {
   const renderTravelerDocumentFields = (travelerIndex: number) => (
     <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
       <div>
-        <Label htmlFor={`gender-${travelerIndex}`}>Gender</Label>
+        <Label htmlFor={`gender-${travelerIndex}`}>{t("gender")}</Label>
         <Input
           id={`gender-${travelerIndex}`}
           value={travelers[travelerIndex]?.gender || ""}
           onChange={(e) => updateTraveler(travelerIndex, "gender", e.target.value)}
-          placeholder="Gender"
+          placeholder={t("gender")}
         />
       </div>
       <div>
-        <Label htmlFor={`dob-${travelerIndex}`}>Date of birth</Label>
+        <Label htmlFor={`dob-${travelerIndex}`}>{t("dateOfBirth")}</Label>
         <Input
           id={`dob-${travelerIndex}`}
           type="date"
@@ -721,17 +770,16 @@ export default function CheckoutPage() {
       </div>
       <div>
         <Label htmlFor={`nationality-${travelerIndex}`}>
-          Nationality <span className="text-red-500">*</span>
+          {t("nationality")} <span className="text-red-500">*</span>
         </Label>
-        <Input
-          id={`nationality-${travelerIndex}`}
+        <CountrySelect
+          mode="nationality"
           value={travelers[travelerIndex]?.nationality || ""}
-          onChange={(e) => updateTraveler(travelerIndex, "nationality", e.target.value)}
-          placeholder="Nationality"
+          onChange={(value) => updateTraveler(travelerIndex, "nationality", value)}
         />
       </div>
       <div>
-        <Label htmlFor={`documentType-${travelerIndex}`}>Document type</Label>
+        <Label htmlFor={`documentType-${travelerIndex}`}>{t("documentType")}</Label>
         <Select
           value={travelers[travelerIndex]?.documentType || "passport"}
           onValueChange={(value) => updateTraveler(travelerIndex, "documentType", value)}
@@ -742,7 +790,7 @@ export default function CheckoutPage() {
           <SelectContent>
             {DOCUMENT_TYPES.map((type) => (
               <SelectItem key={type.value} value={type.value}>
-                {type.label}
+                {t(`documentTypes.${type.value}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -750,18 +798,18 @@ export default function CheckoutPage() {
       </div>
       <div>
         <Label htmlFor={`documentNumber-${travelerIndex}`}>
-          Document number <span className="text-red-500">*</span>
+          {t("documentNumber")} <span className="text-red-500">*</span>
         </Label>
         <Input
           id={`documentNumber-${travelerIndex}`}
           value={travelers[travelerIndex]?.documentNumber || ""}
           onChange={(e) => updateTraveler(travelerIndex, "documentNumber", e.target.value)}
-          placeholder="Document number"
+          placeholder={t("documentNumber")}
         />
       </div>
       {(travelers[travelerIndex]?.documentType || "passport") === "passport" && (
         <div>
-          <Label htmlFor={`passportExpiryDate-${travelerIndex}`}>Passport expiry date</Label>
+          <Label htmlFor={`passportExpiryDate-${travelerIndex}`}>{t("passportExpiryDate")}</Label>
           <Input
             id={`passportExpiryDate-${travelerIndex}`}
             type="date"
@@ -771,23 +819,23 @@ export default function CheckoutPage() {
         </div>
       )}
       <div>
-        <Label htmlFor={`travelerPhone-${travelerIndex}`}>Phone</Label>
+        <Label htmlFor={`travelerPhone-${travelerIndex}`}>{t("phoneNumber")}</Label>
         <Input
           id={`travelerPhone-${travelerIndex}`}
           type="tel"
           value={travelers[travelerIndex]?.phone || ""}
           onChange={(e) => updateTraveler(travelerIndex, "phone", e.target.value)}
-          placeholder="+966..."
+          placeholder={t("phoneNumber")}
         />
       </div>
       <div>
-        <Label htmlFor={`travelerEmail-${travelerIndex}`}>Email</Label>
+        <Label htmlFor={`travelerEmail-${travelerIndex}`}>{t("email")}</Label>
         <Input
           id={`travelerEmail-${travelerIndex}`}
           type="email"
           value={travelers[travelerIndex]?.email || ""}
           onChange={(e) => updateTraveler(travelerIndex, "email", e.target.value)}
-          placeholder="traveler@email.com"
+          placeholder={t("emailPlaceholder")}
         />
       </div>
     </div>
@@ -795,14 +843,14 @@ export default function CheckoutPage() {
 
   const renderSavedTravelerPicker = (travelerIndex: number) => (
     <div className="mb-3">
-      <Label>Saved traveler</Label>
+      <Label>{t("savedTraveler")}</Label>
       {savedTravelers.length ? (
         <Select
           value={travelers[travelerIndex]?.savedTravelerId || ""}
           onValueChange={(value) => applySavedTraveler(travelerIndex, value)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Choose saved traveler" />
+            <SelectValue placeholder={t("chooseSavedTraveler")} />
           </SelectTrigger>
           <SelectContent>
             {savedTravelers.map((traveler) => (
@@ -814,26 +862,26 @@ export default function CheckoutPage() {
         </Select>
       ) : (
         <div className="rounded-md border bg-muted p-3 text-sm text-muted-foreground">
-          No saved travelers yet. Add quick traveler details below or manage saved travelers from your account.
+          {t("noSavedTravelers")}
         </div>
       )}
     </div>
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto overflow-x-clip px-4 py-8">
       <Button
         variant="ghost"
         className="mb-6 -ml-2"
         onClick={() => router.back()}
       >
         <HugeiconsIcon icon={ArrowLeftIcon} className="mr-2 h-4 w-4" />
-        Back to Review
+        {t("backToReview")}
       </Button>
 
-      <h1 className="text-3xl font-bold mb-2">Complete Your Booking</h1>
-      <p className="text-muted-foreground mb-8">
-        Enter traveler details to finalize your reservation
+      <h1 className="mb-2 text-3xl font-black text-[#0F172A]">{t("title")}</h1>
+      <p className="mb-8 text-sm font-medium text-muted-foreground">
+        {t("description")}
       </p>
 
       {error && (
@@ -850,30 +898,36 @@ export default function CheckoutPage() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Left Column - Traveler Details */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Traveler Information */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <HugeiconsIcon
-                  icon={CheckmarkCircle02Icon}
-                  className="h-5 w-5 text-green-500"
-                />
-                <h3 className="text-xl font-bold">Traveler Information</h3>
+          <Card className="overflow-hidden border-slate-200 shadow-sm">
+            <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-[#F97316]">
+                  <HugeiconsIcon icon={UserGroupIcon} className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="font-black text-[#0F172A]">{t("travelerInformation")}</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t("travelerInformationHelp")}
+                  </p>
+                </div>
               </div>
-
+            </div>
+            <CardContent className="p-6">
               <div className="space-y-6">
                 {Array.from({
                   length: bookingData?.searchParams.guests.rooms || 1,
                 }).map((_, roomIndex) => (
                   <div
                     key={roomIndex}
-                    className="border-b last:border-0 pb-6 last:pb-0"
+                    className="border-b border-slate-100 pb-6 last:border-0 last:pb-0"
                   >
-                    <h4 className="font-semibold mb-4 text-muted-foreground">
-                      Room {roomIndex + 1}
+                    <h4 className="mb-4 flex items-center gap-2 font-black text-[#0F172A]">
+                      <HugeiconsIcon icon={BedIcon} className="h-4 w-4 text-[#F97316]" />
+                      {t("room")} {roomIndex + 1}
                       {selectedOption?.Rooms?.[roomIndex]?.RoomName && (
                         <span className="font-normal">
                           {" "}
@@ -896,15 +950,18 @@ export default function CheckoutPage() {
                       if (travelerIndex === -1) return null;
 
                       return (
-                        <div key={`adult-${adultIndex}`} className="mb-6">
-                          <p className="font-medium mb-3 text-sm">
-                            Adult {adultIndex + 1}
+                        <div
+                          key={`adult-${adultIndex}`}
+                          className="mb-5 rounded-2xl border border-slate-100 bg-slate-50/60 p-4"
+                        >
+                          <p className="mb-3 text-sm font-black text-slate-800">
+                            {t("adult")} {adultIndex + 1}
                           </p>
                           {renderSavedTravelerPicker(travelerIndex)}
-                          <div className="grid grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
                             <div>
                               <Label htmlFor={`title-${travelerIndex}`}>
-                                Title
+                                {t("titleField")}
                               </Label>
                               <Select
                                 value={travelers[travelerIndex]?.title || "Mr"}
@@ -916,20 +973,20 @@ export default function CheckoutPage() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {TITLES.map((title) => (
+                                  {TITLES.filter((title) => title !== "Child").map((title) => (
                                     <SelectItem
-                                      key={title.value}
-                                      value={title.value}
+                                      key={title}
+                                      value={title}
                                     >
-                                      {title.label}
+                                      {t(`titles.${title}`)}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="col-span-3">
+                            <div className="sm:col-span-3">
                               <Label htmlFor={`firstName-${travelerIndex}`}>
-                                First Name{" "}
+                                {t("firstName")}{" "}
                                 <span className="text-red-500">*</span>
                               </Label>
                               <Input
@@ -944,13 +1001,13 @@ export default function CheckoutPage() {
                                     e.target.value,
                                   )
                                 }
-                                placeholder="First name"
+                                placeholder={t("firstName")}
                               />
                             </div>
                           </div>
                           <div className="mt-3">
                             <Label htmlFor={`lastName-${travelerIndex}`}>
-                              Last Name <span className="text-red-500">*</span>
+                              {t("lastName")} <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`lastName-${travelerIndex}`}
@@ -962,7 +1019,7 @@ export default function CheckoutPage() {
                                   e.target.value,
                                 )
                               }
-                              placeholder="Last name"
+                              placeholder={t("lastName")}
                             />
                           </div>
                           {renderTravelerDocumentFields(travelerIndex)}
@@ -984,14 +1041,17 @@ export default function CheckoutPage() {
                       if (travelerIndex === -1) return null;
 
                       return (
-                        <div key={`child-${childIndex}`} className="mb-6">
-                          <p className="font-medium mb-3 text-sm">
-                            Child {childIndex + 1}
+                        <div
+                          key={`child-${childIndex}`}
+                          className="mb-5 rounded-2xl border border-slate-100 bg-slate-50/60 p-4"
+                        >
+                          <p className="mb-3 text-sm font-black text-slate-800">
+                            {t("child")} {childIndex + 1}
                             {bookingData?.searchParams.guests.childrenAges[
                               childIndex
                             ] && (
                               <Badge variant="secondary" className="ml-2">
-                                Age:{" "}
+                                {t("age")}:{" "}
                                 {
                                   bookingData.searchParams.guests.childrenAges[
                                     childIndex
@@ -1006,7 +1066,7 @@ export default function CheckoutPage() {
                               <Label
                                 htmlFor={`child-firstName-${travelerIndex}`}
                               >
-                                First Name
+                                {t("firstName")}
                               </Label>
                               <Input
                                 id={`child-firstName-${travelerIndex}`}
@@ -1020,14 +1080,14 @@ export default function CheckoutPage() {
                                     e.target.value,
                                   )
                                 }
-                                placeholder="First name"
+                                placeholder={t("firstName")}
                               />
                             </div>
                             <div>
                               <Label
                                 htmlFor={`child-lastName-${travelerIndex}`}
                               >
-                                Last Name
+                                {t("lastName")}
                               </Label>
                               <Input
                                 id={`child-lastName-${travelerIndex}`}
@@ -1039,12 +1099,12 @@ export default function CheckoutPage() {
                                     e.target.value,
                                   )
                                 }
-                                placeholder="Last name"
+                                placeholder={t("lastName")}
                               />
                             </div>
                             <div>
                               <Label htmlFor={`child-age-${travelerIndex}`}>
-                                Age <span className="text-red-500">*</span>
+                                {t("age")} <span className="text-red-500">*</span>
                               </Label>
                               <Input
                                 id={`child-age-${travelerIndex}`}
@@ -1063,7 +1123,7 @@ export default function CheckoutPage() {
                                     e.target.value,
                                   )
                                 }
-                                placeholder="Age"
+                                placeholder={t("age")}
                               />
                             </div>
                           </div>
@@ -1077,96 +1137,234 @@ export default function CheckoutPage() {
             </CardContent>
           </Card>
 
-          {/* Contact Information */}
-          <Card>
+          {/* Customer details */}
+          <Card className="overflow-hidden border-slate-200 shadow-sm">
+            <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
+              <h3 className="font-black text-[#0F172A]">{t("customerDetails")}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{t("customerDetailsHelp")}</p>
+            </div>
             <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-4">Contact Information</h3>
+              <div className="space-y-6">
+                <section>
+                  <SectionTitle icon={UserGroupIcon}>
+                    {t("leadTravelerSection")}
+                  </SectionTitle>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600">
+                    {travelers.find((traveler) => traveler.travelerType === "adult")
+                      ? t("leadTravelerHint")
+                      : t("leadTravelerMissing")}
+                  </div>
+                </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <Label htmlFor="email">
-                    Email Address <span className="text-red-500">*</span>
+                <section>
+                  <SectionTitle icon={AiPhoneIcon}>
+                    {t("contactSection")}
+                  </SectionTitle>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_.7fr_1fr]">
+                    <div>
+                      <Label htmlFor="email">
+                        {t("email")} <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={contactInfo.email}
+                        onChange={(e) =>
+                          setContactInfo((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                        placeholder={t("emailPlaceholder")}
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t("emailHelp")}
+                      </p>
+                    </div>
+                    <div>
+                      <Label>
+                        {t("phoneCountryCode")} <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={contactInfo.phoneCountryCode}
+                        onValueChange={(value) =>
+                          setContactInfo((prev) => ({
+                            ...prev,
+                            phoneCountryCode: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countries.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              {country.phoneCode} · {country.code}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="phoneNumber">
+                        {t("phoneNumber")} <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="phoneNumber"
+                        type="tel"
+                        value={contactInfo.phoneNumber}
+                        onChange={(e) =>
+                          setContactInfo((prev) => ({
+                            ...prev,
+                            phoneNumber: e.target.value,
+                          }))
+                        }
+                        placeholder={t("phoneNumberPlaceholder")}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <SectionTitle icon={Shield02Icon}>
+                    {t("nationalityResidenceSection")}
+                  </SectionTitle>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <Label>
+                        {t("nationality")} <span className="text-red-500">*</span>
+                      </Label>
+                      <CountrySelect
+                        mode="nationality"
+                        value={contactInfo.nationality}
+                        onChange={(value) =>
+                          setContactInfo((prev) => ({ ...prev, nationality: value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>
+                        {t("countryOfResidence")} <span className="text-red-500">*</span>
+                      </Label>
+                      <CountrySelect
+                        mode="country"
+                        value={contactInfo.countryOfResidence}
+                        onChange={(value) =>
+                          setContactInfo((prev) => ({
+                            ...prev,
+                            countryOfResidence: value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <SectionTitle icon={PassportIcon}>
+                    {t("documentSection")}
+                  </SectionTitle>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <Label>
+                        {t("documentType")} <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={contactInfo.documentType}
+                        onValueChange={(value) =>
+                          setContactInfo((prev) => ({
+                            ...prev,
+                            documentType: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DOCUMENT_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {t(`documentTypes.${type.value}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="documentNumber">
+                        {t("documentNumber")} <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="documentNumber"
+                        value={contactInfo.documentNumber}
+                        onChange={(e) =>
+                          setContactInfo((prev) => ({
+                            ...prev,
+                            documentNumber: e.target.value,
+                          }))
+                        }
+                        placeholder={t("documentNumber")}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <SectionTitle icon={NoteIcon}>
+                    {t("specialRequestsSection")}
+                  </SectionTitle>
+                  <Label htmlFor="specialRequests">
+                    {t("specialRequests")}
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={contactInfo.email}
+                  <Textarea
+                    id="specialRequests"
+                    value={contactInfo.specialRequests}
                     onChange={(e) =>
                       setContactInfo((prev) => ({
                         ...prev,
-                        email: e.target.value,
+                        specialRequests: e.target.value,
                       }))
                     }
-                    placeholder="your@email.com"
+                    placeholder={t("specialRequestsPlaceholder")}
+                    rows={4}
+                    className="resize-none rounded-xl border-slate-200"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Booking confirmation will be sent here
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {t("specialRequestsHelp")}
                   </p>
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={contactInfo.phone}
-                    onChange={(e) =>
-                      setContactInfo((prev) => ({
-                        ...prev,
-                        phone: e.target.value,
-                      }))
-                    }
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="specialRequests">
-                  Special Requests (Optional)
-                </Label>
-                <Textarea
-                  id="specialRequests"
-                  value={contactInfo.specialRequests}
-                  onChange={(e) =>
-                    setContactInfo((prev) => ({
-                      ...prev,
-                      specialRequests: e.target.value,
-                    }))
-                  }
-                  placeholder="Any special requests or requirements... (e.g., early check-in, specific room location)"
-                  rows={3}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Special requests are subject to availability and cannot be
-                  guaranteed
-                </p>
+                </section>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Right Column - Booking Summary */}
-        <div>
-          <Card className="sticky top-8">
+        <div className="min-w-0">
+          <Card className="sticky top-8 overflow-hidden border-slate-200 shadow-lg shadow-slate-950/5">
+            <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
+              <h3 className="text-lg font-black text-[#0F172A]">{t("bookingSummary")}</h3>
+            </div>
             <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-4">Booking Summary</h3>
 
               <div className="mb-4">
-                <h4 className="font-bold">{bookingData?.hotel.HotelName}</h4>
-                <p className="text-muted-foreground text-sm">
-                  {selectedOption?.RoomType}
+                <h4 className="font-black leading-6 text-[#0F172A]">{bookingData?.hotel.HotelName}</h4>
+                <p className="mt-1 text-sm font-bold text-slate-700">
+                  {selectedOption?.RoomType || selectedOption?.roomName || t("roomDetails")}
                 </p>
-                <p className="text-muted-foreground text-sm">
-                  {selectedOption?.BoardType}
-                </p>
+                {selectedOption?.BoardType && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {selectedOption.BoardType}
+                  </p>
+                )}
               </div>
 
               <Separator className="my-4" />
 
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Check-in</span>
-                  <span>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">{t("checkIn")}</span>
+                  <span className="text-end font-bold text-[#0F172A]">
                     {bookingData?.searchParams?.dates?.checkIn
                       ? new Date(
                           bookingData.searchParams.dates.checkIn,
@@ -1174,9 +1372,9 @@ export default function CheckoutPage() {
                       : "-"}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Check-out</span>
-                  <span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">{t("checkOut")}</span>
+                  <span className="text-end font-bold text-[#0F172A]">
                     {bookingData?.searchParams?.dates?.checkOut
                       ? new Date(
                           bookingData.searchParams.dates.checkOut,
@@ -1184,25 +1382,25 @@ export default function CheckoutPage() {
                       : "-"}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span>
-                    {nights} night{nights !== 1 ? "s" : ""}
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">{t("duration")}</span>
+                  <span className="text-end font-bold text-[#0F172A]">
+                    {nights} {nights === 1 ? t("night") : t("nights")}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Guests</span>
-                  <span>
-                    {bookingData?.searchParams?.guests?.adults ?? 0} Adult
-                    {(bookingData?.searchParams?.guests?.adults ?? 0) !== 1
-                      ? "s"
-                      : ""}
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">{t("guests")}</span>
+                  <span className="text-end font-bold text-[#0F172A]">
+                    {bookingData?.searchParams?.guests?.adults ?? 0} {t("adult")}
                     {(bookingData?.searchParams?.guests?.children ?? 0) > 0 &&
-                      `, ${bookingData!.searchParams.guests.children} Child`}
+                      `, ${bookingData!.searchParams.guests.children} ${t("child")}`}
                   </span>
                 </div>
                 <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
-                  <p className="mb-2 font-semibold text-slate-700">Room details</p>
+                  <p className="mb-2 flex items-center gap-2 font-black text-[#0F172A]">
+                    <HugeiconsIcon icon={BedIcon} className="h-4 w-4 text-[#F97316]" />
+                    {t("roomDetails")}
+                  </p>
                   <div className="space-y-2 text-slate-600">
                     {Array.from({
                       length: bookingData?.searchParams.guests.rooms || 1,
@@ -1212,16 +1410,16 @@ export default function CheckoutPage() {
                       return (
                         <div key={roomIndex}>
                           <p className="font-medium text-slate-800">
-                            Room {roomIndex + 1}
+                            {t("room")} {roomIndex + 1}
                           </p>
                           <p>
-                            Adults: {bookingData?.searchParams.guests.adults || 0}
+                            {t("adults")}: {bookingData?.searchParams.guests.adults || 0}
                             {", "}
-                            Children: {bookingData?.searchParams.guests.children || 0}
+                            {t("children")}: {bookingData?.searchParams.guests.children || 0}
                           </p>
                           {(bookingData?.searchParams.guests.children || 0) > 0 ? (
                             <p>
-                              Child ages:{" "}
+                              {t("childAges")}:{" "}
                               {roomChildAges.length
                                 ? roomChildAges.map(formatAge).join(", ")
                                 : "-"}
@@ -1237,15 +1435,15 @@ export default function CheckoutPage() {
               <Separator className="my-4" />
 
               <div className="space-y-3">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between gap-4 text-sm">
                   <span className="text-muted-foreground">
                     {formatCurrency(
                       selectedOption?.Price || 0,
                       selectedOption?.Currency || "USD",
                     )}{" "}
-                    x {nights} nights
+                    x {nights} {nights === 1 ? t("night") : t("nights")}
                   </span>
-                  <span>
+                  <span className="font-bold text-[#0F172A]">
                     {formatCurrency(
                       (selectedOption?.Price || 0) * nights,
                       selectedOption?.Currency || "USD",
@@ -1256,11 +1454,11 @@ export default function CheckoutPage() {
                   "Taxes" in selectedOption &&
                   selectedOption.Taxes !== undefined &&
                   selectedOption.Taxes > 0 && (
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between gap-4 text-sm">
                       <span className="text-muted-foreground">
-                        Taxes & fees
+                        {t("taxesFees")}
                       </span>
-                      <span>
+                      <span className="font-bold text-[#0F172A]">
                         {formatCurrency(
                           selectedOption.Taxes,
                           selectedOption.Currency ?? "USD",
@@ -1269,9 +1467,9 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 <Separator />
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
-                  <span>
+                <div className="flex justify-between gap-4 text-lg font-black text-[#0F172A]">
+                  <span>{t("total")}</span>
+                  <span className="text-[#F97316]">
                     {formatCurrency(
                       totalPrice,
                       selectedOption?.Currency ?? "USD",
@@ -1280,30 +1478,74 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-muted-foreground">
+                {t("feesNotice")}
+              </p>
+
               <Button
-                className="w-full mt-6"
+                className="mt-6 w-full bg-[#F97316] font-black text-white shadow-lg shadow-orange-500/20 hover:bg-[#EA580C]"
                 size="lg"
                 onClick={handleSubmit}
                 disabled={submitting}
               >
                 {submitting ? (
                   <>
-                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                    Processing...
+                    <div className="me-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    {t("processing")}
                   </>
                 ) : (
-                  "Complete Booking"
+                  t("completeBooking")
                 )}
               </Button>
 
-              <p className="text-xs text-muted-foreground text-center mt-4">
-                By completing this booking, you agree to our Terms of Service
-                and Privacy Policy
+              <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
+                {t("termsNotice")}
               </p>
             </CardContent>
+            <div className="border-t border-slate-100 bg-slate-50 px-5 py-4">
+              <div className="grid gap-3">
+                <TrustItem icon={Shield02Icon} text={t("trust.protectedData")} />
+                <TrustItem icon={CreditCardIcon} text={t("trust.securePayment")} />
+                <TrustItem icon={CustomerServiceIcon} text={t("trust.supportAfterBooking")} />
+              </div>
+            </div>
           </Card>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SectionTitle({
+  icon,
+  children,
+}: {
+  icon: typeof Shield02Icon;
+  children: React.ReactNode;
+}) {
+  return (
+    <h4 className="mb-3 flex items-center gap-2 text-sm font-black text-[#0F172A]">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F97316]">
+        <HugeiconsIcon icon={icon} className="h-4 w-4" />
+      </span>
+      {children}
+    </h4>
+  );
+}
+
+function TrustItem({
+  icon,
+  text,
+}: {
+  icon: typeof Shield02Icon;
+  text: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F97316]">
+        <HugeiconsIcon icon={icon} className="h-4 w-4" />
+      </span>
+      <span>{text}</span>
     </div>
   );
 }

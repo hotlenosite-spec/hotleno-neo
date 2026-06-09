@@ -4,6 +4,7 @@ import { z } from "zod";
 import { verifyToken } from "@/lib/jwt";
 import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { createLog, getUserById } from "@/lib/firebase-store";
+import { requireStaffPermission } from "@/lib/staff-permissions";
 
 type StringIdDocument = Document & { _id: string };
 
@@ -45,6 +46,9 @@ function matchesProperty(property: Record<string, unknown>, partner: Record<stri
 
 export async function GET(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, "suppliers.view"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const adminUser = await getAdminUser(req);
     if (!adminUser) {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 });
@@ -122,6 +126,9 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, "suppliers.manage"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const adminUser = await getAdminUser(req);
     if (!adminUser) {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 403 });

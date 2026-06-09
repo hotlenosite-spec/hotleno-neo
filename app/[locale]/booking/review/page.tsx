@@ -20,7 +20,15 @@ import {
 import { BookingBreadcrumb } from "@/components/booking/booking-breadcrumb";
 import { shouldSkipTravellandaForTbo } from "@/lib/hotels/tbo-mode";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { LeftTriangleIcon, CheckmarkCircleIcon } from "@hugeicons/core-free-icons";
+import {
+  LeftTriangleIcon,
+  CreditCardIcon,
+  CustomerServiceIcon,
+  Shield02Icon,
+  Calendar03Icon,
+  BedIcon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 
 export default function ReviewPage() {
   const router = useRouter();
@@ -72,11 +80,11 @@ interface PoliciesData {
 const createSupplierFallbackPolicies = useCallback((): PoliciesData => {
   return {
     CancellationPolicy: {
-      Description: "سياسة الإلغاء حسب شروط المزود",
+      Description: t("booking.supplierPolicy"),
     },
-    ImportantInformation: ["سياسة الإلغاء حسب شروط المزود"],
+    ImportantInformation: [t("booking.supplierPolicy")],
   };
-}, []);
+}, [t]);
 
 function toNumber(value: unknown) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -231,16 +239,11 @@ interface TravelerForm {
   email: string;
 }
 
-const TITLES: { value: Title; label: string }[] = [
-  { value: "Mr", label: "Mr" },
-  { value: "Mrs", label: "Mrs" },
-  { value: "Ms", label: "Ms" },
-  { value: "Miss", label: "Miss" },
-];
+const TITLES: Title[] = ["Mr", "Mrs", "Ms", "Miss"];
 
 const DOCUMENT_TYPES = [
-  { value: "passport", label: "Passport" },
-  { value: "national_id", label: "National ID" },
+  "passport",
+  "national_id",
 ] as const;
 
   const [searchParams, setSearchParams] = useState<SearchParamsData | null>(null);
@@ -322,7 +325,8 @@ const DOCUMENT_TYPES = [
         const bookingDataRaw = localStorage.getItem('bookingData');
 
         if (!savedSearch || !selectedOption) {
-          router.push('/');
+          setError(t("booking.missingDataDescription"));
+          setLoading(false);
           return;
         }
 
@@ -386,7 +390,7 @@ const DOCUMENT_TYPES = [
         const data = await response.json();
         setPolicies(data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        setError(t("booking.loadErrorDescription"));
       } finally {
         setLoading(false);
       }
@@ -403,25 +407,25 @@ const DOCUMENT_TYPES = [
   const validateTravelers = () => {
     for (const traveler of travelers) {
       if (!traveler.firstName.trim() || !traveler.lastName.trim()) {
-        setError("Please enter first and last name for every traveler");
+        setError(t("checkout.errors.travelerNames"));
         return false;
       }
       if (!traveler.nationality.trim()) {
-        setError("Please enter nationality for every traveler");
+        setError(t("checkout.errors.travelerNationality"));
         return false;
       }
       if (!traveler.documentNumber.trim()) {
-        setError("Please enter document number for every traveler");
+        setError(t("checkout.errors.travelerDocumentNumber"));
         return false;
       }
       if (traveler.travelerType === "adult") {
         if (!traveler.phone.trim() || !traveler.email.trim()) {
-          setError("Please enter phone and email for every adult traveler");
+          setError(t("checkout.errors.adultContact"));
           return false;
         }
       }
       if (traveler.travelerType === "child" && traveler.age === undefined) {
-        setError("Please enter age for every child traveler");
+        setError(t("checkout.errors.childAge"));
         return false;
       }
     }
@@ -438,7 +442,7 @@ const DOCUMENT_TYPES = [
 
     const token = localStorage.getItem("token");
     if (!token) {
-      setError("Please sign in to complete your booking");
+      setError(t("checkout.errors.signInRequired"));
       return;
     }
 
@@ -546,16 +550,14 @@ const DOCUMENT_TYPES = [
 
       const bookingStatus = result?.booking?.bookingStatus || "";
       if (bookingStatus === "supplier_booking_confirmed") {
-        setNotice(`Booking created with ID ${bookingReference}. Your booking is confirmed.`);
+        setNotice(t("checkout.notices.confirmed", { bookingId: bookingReference }));
       } else if (bookingStatus === "supplier_booking_failed") {
-        setNotice(
-          `Booking created with ID ${bookingReference}. We could not confirm it automatically and will contact you.`,
-        );
+        setNotice(t("checkout.notices.failed", { bookingId: bookingReference }));
       } else {
-        setNotice(`Booking created with ID ${bookingReference}.`);
+        setNotice(t("booking.requestCreated", { bookingId: bookingReference }));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create booking");
+      setError(t("checkout.errors.bookingFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -563,10 +565,10 @@ const DOCUMENT_TYPES = [
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-8 w-1/3 mb-8" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
+      <div className="container mx-auto overflow-x-clip px-4 py-8">
+        <Skeleton className="mb-8 h-8 w-1/3" />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
             <Skeleton className="h-48 w-full" />
             <Skeleton className="h-48 w-full" />
           </div>
@@ -579,10 +581,23 @@ const DOCUMENT_TYPES = [
   if (error && !hotel) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="py-8 text-center">
-            <div className="text-red-500 mb-4">{error}</div>
-            <Button onClick={() => router.push('/')}>{t('hotels.newSearch')}</Button>
+        <Card className="border-slate-200 shadow-sm">
+          <CardContent className="px-6 py-14 text-center">
+            <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
+              <HugeiconsIcon icon={LeftTriangleIcon} className="h-7 w-7" />
+            </span>
+            <h1 className="text-xl font-black text-[#0F172A]">
+              {t("booking.missingDataTitle")}
+            </h1>
+            <p className="mx-auto mb-6 mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
+              {error || t("booking.missingDataDescription")}
+            </p>
+            <Button
+              onClick={() => router.push('/')}
+              className="bg-[#F97316] font-black text-white hover:bg-[#EA580C]"
+            >
+              {t('hotels.newSearch')}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -606,12 +621,12 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
       : "-";
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto overflow-x-clip px-4 py-8">
       <div className="mb-6">
         <BookingBreadcrumb currentStep="review" hotelName={hotel?.HotelName} />
       </div>
-      <h1 className="text-3xl font-bold mb-2">{t('booking.reviewPolicies')}</h1>
-      <p className="text-muted-foreground mb-8">
+      <h1 className="mb-2 text-3xl font-black text-[#0F172A]">{t('booking.reviewPolicies')}</h1>
+      <p className="mb-8 text-sm font-medium text-muted-foreground">
         {t('booking.reviewDescription')}
       </p>
 
@@ -627,50 +642,69 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Left Column - Booking Details */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Hotel Summary */}
-          <Card>
+          <Card className="overflow-hidden border-slate-200 shadow-sm">
+            <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
+              <h2 className="font-black text-[#0F172A]">{t("booking.hotelSummary")}</h2>
+            </div>
             <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold">{hotel?.HotelName}</h3>
-                  <p className="text-muted-foreground">{hotel?.RoomType}</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {hotel?.BoardType}
+              <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                <div className="min-w-0">
+                  <h3 className="text-xl font-black text-[#0F172A]">{hotel?.HotelName}</h3>
+                  <p className="mt-1 font-bold text-slate-700">
+                    {hotel?.RoomType || hotel?.roomName || t("hotels.standardRoom")}
                   </p>
+                  {hotel?.BoardType && (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {hotel.BoardType}
+                    </p>
+                  )}
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">
+                <div className="shrink-0 rounded-xl bg-orange-50 px-4 py-3 text-end">
+                  <p className="text-2xl font-black text-[#F97316]">
                     {hotel?.Currency} {hotel?.Price}
                   </p>
-                  <p className="text-sm text-muted-foreground">{t('hotels.perNight')}</p>
+                  <p className="text-xs font-bold text-slate-600">{t('hotels.perNight')}</p>
                 </div>
               </div>
 
               <Separator className="my-4" />
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="font-medium">{t('booking.checkIn')}</p>
-                  <p className="text-muted-foreground">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="flex items-center gap-2 font-black text-[#0F172A]">
+                    <HugeiconsIcon icon={Calendar03Icon} className="h-4 w-4 text-[#F97316]" />
+                    {t('booking.checkIn')}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-600">
                     {searchParams?.dates.checkIn && new Date(searchParams.dates.checkIn).toLocaleDateString()}
                   </p>
-                  <p className="text-sm text-muted-foreground">{t('hotelDetails.checkInTime')}</p>
                 </div>
-                <div>
-                  <p className="font-medium">{t('booking.checkOut')}</p>
-                  <p className="text-muted-foreground">
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="flex items-center gap-2 font-black text-[#0F172A]">
+                    <HugeiconsIcon icon={Calendar03Icon} className="h-4 w-4 text-[#F97316]" />
+                    {t('booking.checkOut')}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-600">
                     {searchParams?.dates.checkOut && new Date(searchParams.dates.checkOut).toLocaleDateString()}
                   </p>
-                  <p className="text-sm text-muted-foreground">{t('hotelDetails.checkOutTime')}</p>
                 </div>
               </div>
 
-              <div className="mt-4">
-                <p className="font-medium">{t('hotelDetails.guests')}</p>
-                <p className="text-muted-foreground">
+              <div className="mt-4 rounded-xl border border-slate-100 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="flex items-center gap-2 font-black text-[#0F172A]">
+                    <HugeiconsIcon icon={UserGroupIcon} className="h-4 w-4 text-[#F97316]" />
+                    {t('hotelDetails.guests')}
+                  </p>
+                  <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-[#F97316]">
+                    {nights} {nights === 1 ? t("hotels.night") : t("hotels.nights")}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
                   {searchParams?.guests.adults} {t('hotelDetails.adults')}
                   {searchParams?.guests.children && searchParams.guests.children > 0 && 
                     `, ${searchParams.guests.children} ${t('search.children')}`
@@ -679,7 +713,7 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                     `, ${searchParams.guests.rooms} ${t('search.rooms')}`
                   }
                 </p>
-                <div className="mt-3 space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
+                <div className="mt-3 space-y-2 rounded-xl bg-slate-50 p-3 text-sm">
                   {Array.from({ length: guestRooms }).map((_, roomIndex) => {
                     const roomChildAges = childAges.slice(
                       roomIndex * (searchParams?.guests.children || 0),
@@ -688,14 +722,17 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
 
                     return (
                       <div key={roomIndex} className="text-slate-700">
-                        <p className="font-bold">Room {roomIndex + 1}</p>
+                        <p className="flex items-center gap-2 font-bold">
+                          <HugeiconsIcon icon={BedIcon} className="h-4 w-4 text-[#F97316]" />
+                          {t("booking.room")} {roomIndex + 1}
+                        </p>
                         <p>
-                          Adults: {searchParams?.guests.adults || 0}
+                          {t("hotelDetails.adults")}: {searchParams?.guests.adults || 0}
                           {", "}
-                          Children: {searchParams?.guests.children || 0}
+                          {t("hotelDetails.children")}: {searchParams?.guests.children || 0}
                         </p>
                         {(searchParams?.guests.children || 0) > 0 ? (
-                          <p>Child ages: {formatChildAges(roomChildAges)}</p>
+                          <p>{t("booking.childAges")}: {formatChildAges(roomChildAges)}</p>
                         ) : null}
                       </div>
                     );
@@ -705,17 +742,21 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-slate-200 shadow-sm">
             <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-4">بيانات المسافرين</h3>
+              <h3 className="mb-2 text-xl font-black text-[#0F172A]">{t("booking.travelersInformation")}</h3>
+              <p className="mb-5 text-sm text-muted-foreground">
+                {t("booking.travelersDescription")}
+              </p>
               <div className="space-y-6">
                 {Array.from({ length: guestRooms }).map((_, roomIndex) => (
                   <div
                     key={roomIndex}
                     className="border-b pb-6 last:border-0 last:pb-0"
                   >
-                    <h4 className="mb-4 font-semibold text-muted-foreground">
-                      Room {roomIndex + 1}
+                    <h4 className="mb-4 flex items-center gap-2 font-black text-[#0F172A]">
+                      <HugeiconsIcon icon={BedIcon} className="h-4 w-4 text-[#F97316]" />
+                      {t("booking.room")} {roomIndex + 1}
                     </h4>
 
                     <div className="space-y-5">
@@ -732,14 +773,14 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                           >
                             <p className="mb-3 font-bold text-slate-800">
                               {traveler.travelerType === "adult"
-                                ? `Adult ${traveler.index + 1}`
-                                : `Child ${traveler.index + 1} - Age ${traveler.age ?? "-"}`}
+                                ? `${t("booking.adult")} ${traveler.index + 1}`
+                                : `${t("booking.child")} ${traveler.index + 1} - ${t("booking.age")} ${traveler.age ?? "-"}`}
                             </p>
 
                             <div className="grid gap-3 md:grid-cols-2">
                               {traveler.travelerType === "adult" ? (
                                 <div>
-                                  <Label>Title</Label>
+                                  <Label>{t("booking.title")}</Label>
                                   <Select
                                     value={traveler.title || "Mr"}
                                     onValueChange={(value) =>
@@ -751,8 +792,8 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                     </SelectTrigger>
                                     <SelectContent>
                                       {TITLES.map((title) => (
-                                        <SelectItem key={title.value} value={title.value}>
-                                          {title.label}
+                                        <SelectItem key={title} value={title}>
+                                          {t(`booking.titles.${title}`)}
                                         </SelectItem>
                                       ))}
                                     </SelectContent>
@@ -762,7 +803,7 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
 
                               <div>
                                 <Label>
-                                  First name <span className="text-red-500">*</span>
+                                  {t("booking.firstName")} <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   value={traveler.firstName}
@@ -773,13 +814,13 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                       event.target.value,
                                     )
                                   }
-                                  placeholder="First name"
+                                  placeholder={t("booking.firstName")}
                                 />
                               </div>
 
                               <div>
                                 <Label>
-                                  Last name <span className="text-red-500">*</span>
+                                  {t("booking.lastName")} <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   value={traveler.lastName}
@@ -790,14 +831,14 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                       event.target.value,
                                     )
                                   }
-                                  placeholder="Last name"
+                                  placeholder={t("booking.lastName")}
                                 />
                               </div>
 
                               {traveler.travelerType === "child" ? (
                                 <div>
                                   <Label>
-                                    Age <span className="text-red-500">*</span>
+                                    {t("booking.age")} <span className="text-red-500">*</span>
                                   </Label>
                                   <Input
                                     type="number"
@@ -815,14 +856,14 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                         event.target.value,
                                       )
                                     }
-                                    placeholder="Age"
+                                    placeholder={t("booking.age")}
                                   />
                                 </div>
                               ) : null}
 
                               <div>
                                 <Label>
-                                  Nationality <span className="text-red-500">*</span>
+                                  {t("booking.nationality")} <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   value={traveler.nationality}
@@ -838,7 +879,7 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                               </div>
 
                               <div>
-                                <Label>Document type</Label>
+                                <Label>{t("booking.documentType")}</Label>
                                 <Select
                                   value={traveler.documentType}
                                   onValueChange={(value) =>
@@ -854,8 +895,8 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                   </SelectTrigger>
                                   <SelectContent>
                                     {DOCUMENT_TYPES.map((type) => (
-                                      <SelectItem key={type.value} value={type.value}>
-                                        {type.label}
+                                      <SelectItem key={type} value={type}>
+                                        {t(`booking.documentTypes.${type}`)}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -864,7 +905,7 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
 
                               <div>
                                 <Label>
-                                  Document number <span className="text-red-500">*</span>
+                                  {t("booking.documentNumber")} <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   value={traveler.documentNumber}
@@ -875,7 +916,7 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                       event.target.value,
                                     )
                                   }
-                                  placeholder="Document number"
+                                  placeholder={t("booking.documentNumber")}
                                 />
                               </div>
 
@@ -883,7 +924,7 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                 <>
                                   <div>
                                     <Label>
-                                      Phone <span className="text-red-500">*</span>
+                                      {t("booking.phone")} <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
                                       value={traveler.phone}
@@ -894,12 +935,12 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                           event.target.value,
                                         )
                                       }
-                                      placeholder="+966..."
+                                      placeholder={t("booking.phonePlaceholder")}
                                     />
                                   </div>
                                   <div>
                                     <Label>
-                                      Email <span className="text-red-500">*</span>
+                                      {t("booking.email")} <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
                                       type="email"
@@ -911,7 +952,7 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                                           event.target.value,
                                         )
                                       }
-                                      placeholder="guest@email.com"
+                                      placeholder={t("booking.emailPlaceholder")}
                                     />
                                   </div>
                                 </>
@@ -927,9 +968,9 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
           </Card>
 
           {/* Policies */}
-          <Card>
+          <Card className="border-slate-200 shadow-sm">
             <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-4">{t('booking.importantPolicies')}</h3>
+              <h3 className="mb-4 text-xl font-black text-[#0F172A]">{t('booking.importantPolicies')}</h3>
               
               {policies?.CancellationPolicy && (
                 <div className="mb-6">
@@ -993,20 +1034,22 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
         </div>
 
         {/* Right Column - Price Summary */}
-        <div>
-          <Card className="sticky top-8">
+        <div className="min-w-0">
+          <Card className="sticky top-8 overflow-hidden border-slate-200 shadow-lg shadow-slate-950/5">
+            <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
+              <h3 className="text-lg font-black text-[#0F172A]">{t('booking.priceSummary')}</h3>
+            </div>
             <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-4">{t('booking.priceSummary')}</h3>
               
-              <div className="space-y-3">
-                <div className="flex justify-between">
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between gap-4">
                   <span>{t('booking.roomPrice')} ({nights} {t('hotels.nights')})</span>
-                  <span>{hotel?.Currency} {nightlyPrice * nights}</span>
+                  <span className="font-bold text-[#0F172A]">{hotel?.Currency} {nightlyPrice * nights}</span>
                 </div>
                 
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-4">
                   <span>{t('hotelDetails.taxesFees')}</span>
-                  <span>{hotel?.Currency} {taxes}</span>
+                  <span className="font-bold text-[#0F172A]">{hotel?.Currency} {taxes}</span>
                 </div>
 
                 {policies?.CityTax && (
@@ -1018,35 +1061,53 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
 
                 <Separator className="my-2" />
 
-                <div className="flex justify-between font-bold text-lg">
+                <div className="flex justify-between gap-4 text-lg font-black text-[#0F172A]">
                   <span>{t('booking.total')}</span>
-                  <span>
+                  <span className="text-[#F97316]">
                     {hotel?.Currency} {totalPrice}
                   </span>
                 </div>
               </div>
 
+              <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-muted-foreground">
+                {t("booking.taxNotice")}
+              </p>
+
               <Button 
-                className="w-full mt-6" 
+                className="mt-6 w-full bg-[#F97316] font-black text-white shadow-lg shadow-orange-500/20 hover:bg-[#EA580C]" 
                 size="lg"
                 onClick={handleContinue}
                 disabled={!acceptedTerms || submitting}
               >
-                {submitting ? "Processing..." : "تأكيد الحجز"}
+                {submitting ? t("booking.processing") : t("booking.confirmBooking")}
               </Button>
 
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-2 text-green-700">
-                  <HugeiconsIcon icon={CheckmarkCircleIcon} className="h-5 w-5" />
-                  <p className="text-sm font-medium">
-                    {t('booking.bestPriceGuaranteed')}
-                  </p>
-                </div>
+              <div className="mt-5 grid gap-3 border-t border-slate-100 pt-5">
+                <TrustItem icon={CreditCardIcon} text={t("booking.trust.securePayment")} />
+                <TrustItem icon={Shield02Icon} text={t("booking.trust.protectedData")} />
+                <TrustItem icon={CustomerServiceIcon} text={t("booking.trust.customerSupport")} />
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TrustItem({
+  icon,
+  text,
+}: {
+  icon: typeof Shield02Icon;
+  text: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F97316]">
+        <HugeiconsIcon icon={icon} className="h-4 w-4" />
+      </span>
+      <span>{text}</span>
     </div>
   );
 }

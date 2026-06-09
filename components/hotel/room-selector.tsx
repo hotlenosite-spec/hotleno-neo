@@ -65,15 +65,19 @@ function RoomOptionCard({
   
   return (
     <Card 
-      className={`transition-all duration-200 cursor-pointer hover:shadow-md ${
-        isSelected ? 'ring-2 ring-primary border-primary bg-primary/5' : ''
+      className={`cursor-pointer border-slate-200 transition-all duration-200 hover:border-orange-200 hover:shadow-md ${
+        isSelected ? 'border-[#F97316] bg-orange-50/50 ring-2 ring-[#F97316]' : 'bg-white'
       }`}
       onClick={onSelect}
     >
-      <CardContent className="p-4">
-        <div className="flex flex-col md:flex-row md:items-start gap-4">
+      <CardContent className="p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start">
           {/* Selection Indicator */}
-          <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 mt-1 shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-gray-300'}">
+          <div
+            className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+              isSelected ? 'border-[#F97316] bg-[#F97316]' : 'border-slate-300 bg-white'
+            }`}
+          >
             {isSelected && (
               <div className="w-3 h-3 rounded-full bg-white" />
             )}
@@ -81,17 +85,21 @@ function RoomOptionCard({
 
           {/* Room Details */}
           <div className="flex-1">
-            <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-              <div>
-                <h4 className="font-semibold text-lg">{option.RoomType || option.RoomName}</h4>
-                <p className="text-sm text-muted-foreground">{option.BoardType}</p>
+            <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h4 className="text-lg font-black text-[#0F172A]">
+                  {option.RoomType || option.RoomName || t("hotels.standardRoom")}
+                </h4>
+                {option.BoardType && (
+                  <p className="mt-1 text-sm text-muted-foreground">{option.BoardType}</p>
+                )}
               </div>
               
-              <div className="text-right">
-                <div className="text-2xl font-bold text-primary">
+              <div className="text-end">
+                <div className="text-2xl font-black text-[#F97316]">
                   {formatCurrency(totalPrice, safeCurrency)}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground">
                   {formatCurrency(pricePerNight, safeCurrency)} {t('hotels.perNight')}
                 </p>
               </div>
@@ -100,12 +108,12 @@ function RoomOptionCard({
             {/* Room Configuration */}
             <div className="flex flex-wrap gap-2 mb-3">
               {option.Rooms.map((room, idx) => (
-                <Badge key={idx} variant="secondary" className="flex items-center gap-1">
+                <Badge key={idx} variant="secondary" className="flex max-w-full items-center gap-1 py-1.5">
                   <HugeiconsIcon icon={BedIcon} className="h-3 w-3" />
                   {room.RoomName}
                   <span className="text-xs">
                     ({room.NumAdults} <HugeiconsIcon icon={UserIcon} className="h-3 w-3 inline" />
-                    {room.NumChildren > 0 && ` + ${room.NumChildren} child`})
+                    {room.NumChildren > 0 && ` + ${room.NumChildren} ${t("hotelDetails.children")}`})
                   </span>
                 </Badge>
               ))}
@@ -186,8 +194,8 @@ export function RoomSelector({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-xl font-bold mb-2">{t('hotelDetails.selectYourRoom')}</h3>
-        <p className="text-muted-foreground">
+        <h3 className="mb-2 text-2xl font-black text-[#0F172A]">{t('hotelDetails.selectYourRoom')}</h3>
+        <p className="text-sm text-muted-foreground">
           {t('hotelDetails.roomOptions', { count: options.length, nights })}
         </p>
       </div>

@@ -3,6 +3,99 @@
     "title": "Hotleno - Hotel Booking Platform",
     "description": "Find and book the perfect hotel for your next trip"
   },
+  "homePage": {
+    "heroBadge": "HOTLENO travel",
+    "heroTitle": "Find the right stay for every journey",
+    "heroSubtitle": "Search hotel options from trusted travel providers and plan your stay with confidence.",
+    "plannerCta": "Plan your trip by budget",
+    "blogCta": "Explore travel guides",
+    "benefits": {
+      "trustedBooking": "Trusted hotel booking",
+      "customerSupport": "Customer support",
+      "securePayment": "Secure payment options",
+      "trustedProviders": "Trusted travel providers"
+    },
+    "services": {
+      "transfers": {
+        "title": "Airport transfers",
+        "description": "Plan a smoother journey between the airport and your accommodation. Transfer options are being prepared for launch.",
+        "cta": "Explore transfers"
+      },
+      "activities": {
+        "title": "Activities and experiences",
+        "description": "Discover tours and experiences that add more to your trip. Activity booking options are being prepared for launch.",
+        "cta": "Explore activities"
+      }
+    },
+    "destinations": {
+      "title": "Popular destinations",
+      "description": "Explore inspiring cities and start a fresh hotel search for your travel dates.",
+      "explore": "Explore stays",
+      "items": {
+        "dubai": {
+          "city": "Dubai",
+          "country": "United Arab Emirates"
+        },
+        "istanbul": {
+          "city": "Istanbul",
+          "country": "Turkey"
+        },
+        "riyadh": {
+          "city": "Riyadh",
+          "country": "Saudi Arabia"
+        },
+        "london": {
+          "city": "London",
+          "country": "United Kingdom"
+        }
+      }
+    },
+    "why": {
+      "title": "Why plan with HOTLENO?",
+      "description": "A clear booking experience designed around the essentials of your trip.",
+      "items": {
+        "support": {
+          "title": "Helpful customer support",
+          "description": "Get assistance with your account and booking journey when you need it."
+        },
+        "simpleBooking": {
+          "title": "Simple booking journey",
+          "description": "Move from search to reservation through clear, focused steps."
+        },
+        "secureExperience": {
+          "title": "Security-minded experience",
+          "description": "Account and booking flows are built with careful handling of your information."
+        },
+        "hotelOptions": {
+          "title": "Useful hotel options",
+          "description": "Compare available stays and choose what fits your plans."
+        }
+      }
+    },
+    "inspiration": {
+      "title": "Stay inspiration",
+      "description": "Ideas to help you choose the setting and style of your next stay. Availability and prices appear after you search.",
+      "cta": "Search available stays",
+      "items": {
+        "waterfront": {
+          "title": "Waterfront stays",
+          "description": "Hotels close to marinas, beaches, and lively promenades."
+        },
+        "heritage": {
+          "title": "Heritage city stays",
+          "description": "Places that keep you close to historic streets and cultural landmarks."
+        },
+        "city": {
+          "title": "Modern city hotels",
+          "description": "Practical stays near business districts, dining, and shopping."
+        },
+        "central": {
+          "title": "Central neighborhood stays",
+          "description": "Convenient options for exploring the city from a well-connected base."
+        }
+      }
+    }
+  },
   "navigation": {
     "home": "Home",
     "about": "About",
@@ -18,7 +111,15 @@
     "english": "English",
     "arabic": "Arabic",
     "menu": "Menu",
-    "back": "Back"
+    "back": "Back",
+    "hotels": "Hotels",
+    "flights": "Flights",
+    "services": "Services",
+    "activities": "Activities",
+    "blog": "Blog",
+    "todayDeals": "Today deals",
+    "adminPlatform": "Booking management platform",
+    "openMenu": "Open menu"
   },
   "auth": {
     "signIn": "Sign In",
@@ -73,7 +174,190 @@
     "countries": "Countries",
     "cities": "Cities",
     "selectDestination": "Please select a destination",
-    "flightsComingSoon": "Flights (Coming Soon)"
+    "flightsComingSoon": "Flights (Coming Soon)",
+    "heroTitle": "Start your trip now",
+    "heroSubtitle": "Compare top options and book with confidence.",
+    "destinationPrompt": "Where do you want to go?",
+    "destinationPlaceholder": "Type a city, country, or hotel name",
+    "roomsAndGuests": "Rooms and guests",
+    "searchNow": "Search now",
+    "freeCancellation": "Free cancellation",
+    "tabs": {
+      "hotels": "Hotels",
+      "flights": "Flights",
+      "services": "Services"
+    },
+    "suggestionTypes": {
+      "hotel": "Hotel",
+      "destination": "Destination",
+      "country": "Country",
+      "zone": "Zone"
+    },
+    "autocomplete": {
+      "fetchFailed": "Unable to load destinations",
+      "loading": "Loading suggestions...",
+      "empty": "No matching results",
+      "tboNormalSearch": "TBO Normal Search",
+      "hotelbedsResults": "Hotelbeds results"
+    }
+  },
+  "currency": {
+    "select": "Select currency",
+    "heading": "Currencies",
+    "searchPlaceholder": "Search currency...",
+    "empty": "No currency found"
+  },
+  "searchResults": {
+    "title": "Hotel Search Results",
+    "subtitle": "{count} properties from the current search",
+    "newSearch": "New search",
+    "editSearch": "Edit search",
+    "searchSummary": "Your search",
+    "destination": "Destination",
+    "selectedDestination": "Selected destination",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "nightsLabel": "Nights",
+    "night": "night",
+    "nights": "nights",
+    "guestsRooms": "Guests & rooms",
+    "rooms": "rooms",
+    "adults": "adults",
+    "children": "children",
+    "missingDates": "Please select check-in and check-out dates.",
+    "supplierError": "Unable to load hotel availability.",
+    "loadError": "Unable to load hotel results.",
+    "errorTitle": "Unable to load results",
+    "errorDescription": "We could not complete this search right now. Please review your dates and destination, then try again.",
+    "loadingTitle": "Finding available stays",
+    "loadingDescription": "Checking current hotel availability for your search.",
+    "backToSearch": "Back to search",
+    "emptyTitle": "No hotels available",
+    "emptyDescription": "No hotels are available for these dates. Try changing your dates or destination.",
+    "resultsCount": "{count} results",
+    "taxNotice": "Some taxes and fees may not be included and can depend on the hotel.",
+    "currencyChangeNotice": "To update prices in the new currency, please search again.",
+    "filters": "Filters",
+    "filteredEmptyTitle": "No hotels match these filters",
+    "filteredEmptyDescription": "Try clearing filters or adjusting your search.",
+    "clearFilters": "Clear filters",
+    "sort": {
+      "priceLow": "Lowest price",
+      "priceHigh": "Highest price",
+      "ratingHigh": "Highest rating",
+      "value": "Best value"
+    }
+  },
+  "checkout": {
+    "title": "Complete Your Booking",
+    "description": "Enter traveler details to finalize your reservation",
+    "backToReview": "Back to Review",
+    "travelerInformation": "Traveler Information",
+    "travelerInformationHelp": "Add each traveler exactly as shown on their travel document.",
+    "customerDetails": "Customer Details",
+    "customerDetailsHelp": "Contact and document details used to complete this booking.",
+    "leadTravelerSection": "Lead traveler",
+    "leadTravelerHint": "The first adult traveler is used as the lead traveler for this booking.",
+    "leadTravelerMissing": "Add at least one adult traveler to continue.",
+    "contactSection": "Contact information",
+    "nationalityResidenceSection": "Nationality and residence",
+    "documentSection": "Document details",
+    "specialRequestsSection": "Special requests",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "emailHelp": "Booking confirmation will be sent here.",
+    "phoneCountryCode": "Phone code",
+    "phoneNumber": "Phone number",
+    "phoneNumberPlaceholder": "5xxxxxxxx",
+    "nationality": "Nationality",
+    "countryOfResidence": "Country of residence",
+    "documentType": "Document type",
+    "documentNumber": "Document number",
+    "passportExpiryDate": "Passport expiry date",
+    "gender": "Gender",
+    "dateOfBirth": "Date of birth",
+    "age": "Age",
+    "adult": "Adult",
+    "child": "Child",
+    "adults": "Adults",
+    "children": "Children",
+    "room": "Room",
+    "year": "year",
+    "years": "years",
+    "savedTraveler": "Saved traveler",
+    "chooseSavedTraveler": "Choose saved traveler",
+    "noSavedTravelers": "No saved travelers yet. Add quick traveler details below or manage saved travelers from your account.",
+    "selectNationality": "Select nationality",
+    "selectCountry": "Select country",
+    "searchNationality": "Search nationality...",
+    "searchCountry": "Search country...",
+    "noCountries": "No countries found",
+    "nationalities": "Nationalities",
+    "countries": "Countries",
+    "specialRequests": "Special Requests (Optional)",
+    "specialRequestsPlaceholder": "Any special requests or requirements, such as early check-in or room location.",
+    "specialRequestsHelp": "Special requests are subject to availability and cannot be guaranteed.",
+    "titleField": "Title",
+    "bookingSummary": "Booking Summary",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "duration": "Duration",
+    "night": "night",
+    "nights": "nights",
+    "guests": "Guests",
+    "roomDetails": "Room details",
+    "childAges": "Child ages",
+    "taxesFees": "Taxes & fees",
+    "total": "Total",
+    "feesNotice": "Some hotel taxes or fees may be confirmed during the booking process. No amount is added unless it is included in the booking data.",
+    "processing": "Processing...",
+    "completeBooking": "Complete Booking",
+    "termsNotice": "By completing this booking, you agree to our Terms of Service and Privacy Policy.",
+    "documentTypes": {
+      "passport": "Passport",
+      "national_id": "National ID",
+      "residence_permit": "Residence Permit"
+    },
+    "titles": {
+      "Mr": "Mr",
+      "Mrs": "Mrs",
+      "Miss": "Miss",
+      "Ms": "Ms",
+      "Dr": "Dr",
+      "Child": "Child"
+    },
+    "trust": {
+      "protectedData": "Your information is handled securely",
+      "securePayment": "Secure payment options",
+      "supportAfterBooking": "Customer support is available after booking"
+    },
+    "errors": {
+      "travelerNames": "Please fill in all traveler names.",
+      "travelerNationality": "Please provide nationality for every traveler.",
+      "travelerDocumentNumber": "Please provide document number for every traveler.",
+      "childAge": "Please provide each child age or date of birth.",
+      "adultContact": "Please provide phone and email for adult travelers.",
+      "emailRequired": "Please provide an email address.",
+      "emailInvalid": "Please provide a valid email address.",
+      "phoneRequired": "Please provide phone country code and phone number.",
+      "nationalityRequired": "Please select nationality.",
+      "residenceRequired": "Please select country of residence.",
+      "documentRequired": "Please provide document type and document number.",
+      "bookingDataMissing": "Booking data is missing.",
+      "signInRequired": "Please sign in to complete your booking.",
+      "bookingIdMissing": "Booking was created without a booking ID.",
+      "paymentStartFailed": "Failed to start payment.",
+      "paymentUrlMissing": "Payment session did not return a checkout URL.",
+      "timeout": "Booking request timed out. Please try again or contact support.",
+      "bookingFailed": "Booking failed. Please try again."
+    },
+    "notices": {
+      "confirmed": "Booking created with ID {bookingId}. Your booking is confirmed.",
+      "failed": "Booking created with ID {bookingId}. We could not confirm it automatically and will contact you.",
+      "paymentDisabled": "Booking created with ID {bookingId}. Payment checkout is not enabled yet."
+    }
   },
   "common": {
     "notImplemented": "not implemented yet"
@@ -86,11 +370,21 @@
     "night": "night",
     "perNight": "/ night",
     "total": "Total",
+    "totalStayPrice": "Total stay price",
+    "priceReturnedBySupplier": "Price returned by supplier",
+    "availabilityNotice": "Price shown is based on current availability",
+    "locationUnavailable": "Location details unavailable",
+    "taxNotice": "May not include some hotel taxes and fees.",
     "for": "for",
     "viewDetails": "View Details",
     "bestPriceGuarantee": "Best price guarantee",
     "photos": "photos",
     "noImage": "No image available",
+    "imagesMayBeUnavailable": "Hotel photos are not available for this result.",
+    "imagePosition": "{hotel} - Image {current} of {total}",
+    "closeGallery": "Close image gallery",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
     "starHotel": "Star Hotel",
     "standardRoom": "Standard Room",
     "available": "Available",
@@ -129,6 +423,15 @@
     "amenities": "Amenities",
     "mealPlan": "Meal Plan",
     "freeCancellationOnly": "Free Cancellation Only",
+    "min": "Min",
+    "max": "Max",
+    "boardTypes": {
+      "roomOnly": "Room Only",
+      "bedAndBreakfast": "Bed & Breakfast",
+      "halfBoard": "Half Board",
+      "fullBoard": "Full Board",
+      "allInclusive": "All Inclusive"
+    },
     "showing": "Showing",
     "of": "of",
     "clearAll": "Clear All",
@@ -140,6 +443,7 @@
   },
   "hotelDetails": {
     "errorLoading": "Error Loading Hotel",
+    "errorDescription": "We could not load this hotel right now. Please try again or return to the search results.",
     "notFound": "Hotel not found",
     "backToResults": "Back to Results",
     "aboutHotel": "About This Hotel",
@@ -147,7 +451,9 @@
     "facilities": "Facilities",
     "hotelFacilities": "Hotel Facilities",
     "noFacilities": "No facilities information available.",
+    "noDescription": "A hotel description is not available for this result.",
     "location": "Location",
+    "locationUnavailable": "Location details are not available.",
     "address": "Address",
     "city": "City",
     "country": "Country",
@@ -157,22 +463,32 @@
     "roomOptions": "{count} room options available for {nights, plural, one {# night} other {# nights}}",
     "loadingPolicies": "Loading cancellation policies...",
     "bookNow": "Book Now",
+    "bookingSummary": "Your selected stay",
     "wontBeCharged": "You won't be charged yet",
     "selectRoomToContinue": "Select a room to continue",
     "noRoomsAvailable": "No rooms available for selected dates",
     "modifySearch": "Modify Search",
     "taxesFees": "Taxes & fees",
+    "taxNotice": "Some hotel taxes or fees may be confirmed during the booking process.",
     "freeCancellationUntil": "Free cancellation until",
     "checkInTime": "From 2:00 PM",
     "checkOutTime": "Until 12:00 PM",
     "guests": "Guests",
     "adults": "Adults",
     "children": "Children",
-    "rooms": "Rooms"
+    "rooms": "Rooms",
+    "trust": {
+      "securePayment": "Secure payment options",
+      "customerSupport": "Customer support is available",
+      "supplierConfirmation": "Booking confirmation depends on current supplier availability"
+    }
   },
   "booking": {
     "reviewPolicies": "Review & Policies",
     "reviewDescription": "Please review your booking details and accept the terms",
+    "missingDataTitle": "Booking details are unavailable",
+    "missingDataDescription": "We could not find the booking details needed for this review. Please return to search and select your stay again.",
+    "loadErrorDescription": "We could not load the booking review. Please return to search and try again.",
     "hotelSummary": "Hotel Summary",
     "checkIn": "Check-in",
     "checkOut": "Check-out",
@@ -184,6 +500,7 @@
     "termsDescription": "By proceeding, I acknowledge that I have read and agree to the cancellation policy, privacy policy, and terms of service.",
     "priceSummary": "Price Summary",
     "roomPrice": "Room price",
+    "taxNotice": "Some hotel taxes or fees may be confirmed during the booking process. No additional amount is added here unless it is provided in the booking data.",
     "cityTax": "City tax (pay at hotel)",
     "total": "Total",
     "continueToCheckout": "Continue to Checkout",
@@ -203,7 +520,85 @@
     "completed": "Completed",
     "rejected": "Rejected",
     "review": "Review",
-    "checkout": "Checkout"
+    "checkout": "Checkout",
+    "supplierPolicy": "Cancellation policy depends on supplier terms",
+    "travelersInformation": "Traveler details",
+    "travelersDescription": "Enter the required details for every traveler exactly as shown on their travel document.",
+    "room": "Room",
+    "adult": "Adult",
+    "child": "Child",
+    "childAges": "Child ages",
+    "age": "Age",
+    "title": "Title",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "nationality": "Nationality",
+    "documentType": "Document type",
+    "documentNumber": "Document number",
+    "phone": "Phone",
+    "email": "Email",
+    "emailPlaceholder": "guest@example.com",
+    "phonePlaceholder": "Phone number",
+    "requestCreated": "Booking request {bookingId} has been created.",
+    "titles": {
+      "Mr": "Mr",
+      "Mrs": "Mrs",
+      "Ms": "Ms",
+      "Miss": "Miss"
+    },
+    "documentTypes": {
+      "passport": "Passport",
+      "national_id": "National ID"
+    },
+    "trust": {
+      "securePayment": "Secure payment options",
+      "protectedData": "Your information is handled securely",
+      "customerSupport": "Customer support is available"
+    },
+    "processing": "Processing...",
+    "confirmBooking": "Confirm booking"
+  },
+  "bookingConfirmation": {
+    "devPreview": "Developer preview",
+    "devPreviewTitle": "Booking confirmation needs booking data",
+    "devPreviewDescription": "This page is available for local preview only. A fake booking confirmation is not shown because the real page reads bookingConfirmation from localStorage after the booking flow.",
+    "backHome": "Back to home",
+    "notFoundTitle": "Booking not found",
+    "notFoundDescription": "Unable to load booking details",
+    "confirmedTitle": "Booking confirmed!",
+    "sentTitle": "Booking submitted",
+    "statusTitle": "Booking status",
+    "confirmedDescription": "Your booking has been confirmed. Check your email for details.",
+    "pendingDescription": "Your booking is being processed. You will receive confirmation soon.",
+    "statusDescription": "Please review the booking status for more details.",
+    "bookingDetails": "Booking details",
+    "bookingNumber": "Booking number",
+    "yourReference": "Your reference",
+    "bookingDate": "Booking date",
+    "hotel": "Hotel",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "roomDetails": "Room details",
+    "adultCount": "{count} adult",
+    "childCount": "{count} child",
+    "leadGuest": "Lead guest",
+    "contactInfo": "Contact information",
+    "email": "Email",
+    "phone": "Phone",
+    "importantInfo": "Important information",
+    "priceSummary": "Price summary",
+    "totalPrice": "Total price",
+    "paymentPolicy": "Payment will be processed according to the hotel policy.",
+    "printConfirmation": "Print confirmation",
+    "shareTitle": "Booking confirmation - {hotel}",
+    "shareText": "My booking at {hotel}",
+    "shareBooking": "Share booking",
+    "needHelpTitle": "Need help?",
+    "needHelpDescription": "If you have any questions about your booking, please contact our support team.",
+    "contactSupport": "Contact support",
+    "printFooterTitle": "Hotleno booking confirmation",
+    "printFooterBookingNumber": "Booking number: {reference}",
+    "printedAt": "Printed at {date}"
   },
   "profile": {
     "overview": "Overview",
@@ -307,7 +702,40 @@
     "manageYourBusiness": "Manage your business",
     "dashboard": "Dashboard",
     "users": "Users",
+    "customers": "Customers",
+    "staff": "Staff",
+    "notifications": "Notifications",
     "settings": "Settings",
+    "hotels": "Hotels",
+    "agencies": "Agencies",
+    "affiliates": "Affiliates",
+    "payments": "Payments",
+    "viewPaymentDetails": "View details",
+    "paymentDetails": "Payment details",
+    "paymentDetailsDescription": "Review the recorded payment information.",
+    "paymentId": "Payment ID",
+    "bookingReference": "Booking reference",
+    "customer": "Customer",
+    "paymentMethod": "Payment method",
+    "amount": "Amount",
+    "paymentStatus": "Status",
+    "paymentProvider": "Payment provider",
+    "paymentDate": "Payment date",
+    "paymentStatus_succeeded": "Succeeded",
+    "paymentStatus_pending": "Pending",
+    "paymentStatus_failed": "Failed",
+    "paymentStatus_refund_required": "Refund required",
+    "suppliersControl": "Suppliers Control",
+    "pricing": "Pricing",
+    "logs": "Logs",
+    "blog": "Blog",
+    "hotlenoAdmin": "Hotleno Admin",
+    "globalSearchPlaceholder": "Search bookings, hotels, users...",
+    "systemOperational": "System operational",
+    "today": "Today",
+    "travelOperations": "Clean travel operations",
+    "operationalDashboard": "Operational dashboard",
+    "reviewOperations": "Review operations",
     "backToSite": "Back to Site",
     "profile": "Profile",
     "logout": "Logout",
@@ -330,11 +758,26 @@
     "completed": "Completed",
     "rejected": "Rejected",
     "manageAllBookings": "Manage all hotel bookings",
+    "bookingsControl": "HOTLENO booking operations",
+    "resultsCountLabel": "Results",
+    "pages": "Pages",
+    "room": "Room",
+    "viewDetails": "View details",
+    "bookingFilterAll": "All",
+    "bookingFilterConfirmed": "Confirmed",
+    "bookingFilterCancelled": "Cancelled",
+    "bookingFilterFailed": "Booking failed",
+    "bookingFilterCancelFailed": "Cancellation failed",
+    "bookingFilterReview": "Needs review",
+    "bookingFilterArchive": "Archive / TBO tests",
     "searchBookings": "Search by reference, hotel, or guest...",
     "filterByStatus": "Filter by Status",
     "allStatuses": "All Statuses",
     "allBookings": "All Bookings",
     "noBookingsFound": "No bookings found",
+    "noBookingsDescription": "No bookings match the current search and filters. Adjust the filters to review other records.",
+    "bookingsLoadErrorTitle": "Bookings could not be loaded",
+    "bookingsLoadErrorDescription": "The booking list is temporarily unavailable. Try again without changing any booking data.",
     "failedToFetchBookings": "Failed to fetch bookings",
     "statusUpdated": "Status updated successfully",
     "failedToUpdateStatus": "Failed to update status",
@@ -349,11 +792,16 @@
     "guest": "Guest",
     "onRequest": "On Request",
     "manageAllUsers": "Manage all registered users",
+    "usersControl": "HOTLENO user management",
+    "inactive": "Inactive",
     "searchUsers": "Search by name or email...",
     "filterByRole": "Filter by Role",
     "allRoles": "All Roles",
     "allUsers": "All Users",
     "noUsersFound": "No users found",
+    "noUsersDescription": "No user records match the current search and role filter.",
+    "usersLoadErrorTitle": "Users could not be loaded",
+    "usersLoadErrorDescription": "The user list is temporarily unavailable. Please try again.",
     "failedToFetchUsers": "Failed to fetch users",
     "roleUpdated": "Role updated successfully",
     "failedToUpdateRole": "Failed to update role",
@@ -377,7 +825,93 @@
     "nationalId": "National ID",
     "passportNumber": "Passport number",
     "passportExpiryDate": "Passport expiry date",
-    "edit": "Edit"
+    "edit": "Edit",
+    "support": "Support",
+    "supportCenterLabel": "HOTLENO Support Center",
+    "manageSupportTickets": "Manage customer conversations and support requests",
+    "totalTickets": "Total tickets",
+    "openTickets": "Active tickets",
+    "resolvedTickets": "Completed tickets",
+    "urgentTickets": "Urgent tickets",
+    "waitingAdmin": "Waiting for admin",
+    "allSupportTickets": "All support tickets",
+    "completedTickets": "Resolved and closed",
+    "requireAttention": "Require follow-up",
+    "needImmediate": "Need immediate attention",
+    "searchSupportTickets": "Search by ticket, customer, email, or booking...",
+    "filterByPriority": "Filter by priority",
+    "allPriorities": "All priorities",
+    "filterByCategory": "Filter by category",
+    "allCategories": "All categories",
+    "allTickets": "All tickets",
+    "noTicketsFound": "No support tickets found",
+    "noTicketsDescription": "No support tickets match the selected filters.",
+    "supportLoadErrorTitle": "Support tickets could not be loaded",
+    "supportLoadErrorDescription": "The support queue is temporarily unavailable. Please try again.",
+    "messages": "messages",
+    "assignedTo": "Assigned to",
+    "supportFailedToFetch": "Failed to load support tickets",
+    "retry": "Try again",
+    "openConversation": "Open conversation",
+    "paymentsControl": "HOTLENO payment operations",
+    "paymentsDescription": "Review payment records, pending states, and transactions that require attention.",
+    "paymentsNeedReview": "Needs review",
+    "totalPaymentOperations": "Total operations",
+    "allPaymentOperations": "All recorded payment operations",
+    "totalPaymentAmount": "Total amount",
+    "recordedPayments": "Total recorded payments",
+    "successfulPayments": "Successful payments",
+    "completedPayments": "Completed operations",
+    "failedOrRefundRequired": "Failed or refund required",
+    "searchPayments": "Search by payment ID, booking, customer, or status...",
+    "paymentsList": "Payment records",
+    "paymentDate": "Date",
+    "dashboardLoadErrorTitle": "Dashboard data could not be loaded",
+    "dashboardLoadErrorDescription": "Operational statistics are temporarily unavailable. Try again without changing any records.",
+    "noPaymentsFound": "No payment records found",
+    "noPaymentsDescription": "Payment records will appear here when they become available.",
+    "noPaymentsSearchDescription": "No payment records match your search. Try another reference or customer.",
+    "clearSearch": "Clear search",
+    "supportTicketNotFound": "Support ticket not found",
+    "ticketUpdated": "Ticket updated successfully",
+    "failedToUpdateTicket": "Failed to update ticket",
+    "backToSupportTickets": "Back to support tickets",
+    "customerId": "Customer ID",
+    "conversation": "Conversation",
+    "replyToCustomer": "Reply to customer",
+    "replyPlaceholder": "Write a clear response to the customer...",
+    "sendingReply": "Sending...",
+    "sendReply": "Send reply",
+    "supportReplySent": "Reply sent successfully",
+    "supportReplyFailed": "Failed to send reply",
+    "adminReplyRequiresReopen": "Reopen the ticket before sending another reply.",
+    "reopenedByCustomerMessage": "The customer reopened this ticket.",
+    "ticketManagement": "Ticket management",
+    "priority": "Priority",
+    "category": "Category",
+    "bookingId": "Booking ID",
+    "bookingReference": "Booking reference",
+    "viewRelatedBooking": "View related booking",
+    "assigneePlaceholder": "Admin user ID or email",
+    "invalidAdminAssignee": "Select a valid administrator account or leave the assignment empty",
+    "savingChanges": "Saving...",
+    "saveChanges": "Save changes",
+    "statusOpen": "Open",
+    "statusWaitingCustomer": "Waiting for customer",
+    "statusWaitingAdmin": "Waiting for admin",
+    "statusWaitingSupplier": "Waiting for supplier",
+    "statusResolved": "Resolved",
+    "statusClosed": "Closed",
+    "priorityLow": "Low",
+    "priorityNormal": "Normal",
+    "priorityHigh": "High",
+    "priorityUrgent": "Urgent",
+    "categoryBookingIssue": "Booking issue",
+    "categoryPaymentIssue": "Payment issue",
+    "categoryCancellationRefund": "Cancellation or refund",
+    "categoryHotelIssue": "Hotel issue",
+    "categoryAccountIssue": "Account issue",
+    "categoryGeneral": "General"
   },
   "support": {
     "support": "Support",
@@ -396,23 +930,39 @@
     "categoryTechnical": "Technical Support",
     "categoryAccount": "Account Help",
     "categoryOther": "Other",
+    "categoryBookingIssue": "Booking issue",
+    "categoryPaymentIssue": "Payment issue",
+    "categoryCancellationRefund": "Cancellation or refund",
+    "categoryHotelIssue": "Hotel issue",
+    "categoryAccountIssue": "Account issue",
+    "categoryGeneral": "General",
     "priority": "Priority",
     "selectPriority": "Select priority",
     "low": "Low",
     "medium": "Medium",
     "high": "High",
     "urgent": "Urgent",
+    "priorityLow": "Low",
+    "priorityNormal": "Normal",
+    "priorityHigh": "High",
+    "priorityUrgent": "Urgent",
     "optional": "optional",
     "bookingReference": "Booking Reference",
     "bookingRefPlaceholder": "e.g., HTL-123456 (if applicable)",
     "message": "Message",
     "messagePlaceholder": "Describe your issue in detail...",
     "create": "Create Ticket",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "requiredFields": "Complete the required ticket details",
     "ticketCreated": "Ticket created successfully",
     "failedToCreateTicket": "Failed to create ticket",
     "failedToFetchTickets": "Failed to fetch tickets",
     "noTicketsYet": "No tickets yet",
     "createFirstTicket": "Create your first support ticket to get help",
+    "ticketsLoadErrorTitle": "Your support tickets could not be loaded",
+    "ticketsLoadErrorDescription": "Your support history is temporarily unavailable. Try again, or create a new request when the connection is restored.",
+    "retry": "Try again",
     "ticketNumber": "Ticket #",
     "categoryLabel": "Category",
     "lastUpdated": "Last updated",
@@ -427,13 +977,32 @@
     "ticketClosed": "Ticket closed successfully",
     "failedToCloseTicket": "Failed to close ticket",
     "ticketClosedMessage": "This ticket has been closed. If you need further assistance, please create a new ticket.",
+    "reopenTicket": "Reopen ticket",
+    "reopeningTicket": "Reopening...",
+    "ticketReopened": "Ticket reopened successfully",
+    "failedToReopenTicket": "Failed to reopen ticket",
+    "closedReplyNotAllowed": "You cannot reply to a closed ticket. Reopen it first.",
+    "resolvedReplyNotAllowed": "You cannot reply to a resolved ticket. Reopen it first.",
+    "reopenedByCustomerMessage": "The customer reopened this ticket.",
     "open": "Open",
     "inProgress": "In Progress",
     "waiting": "Waiting for Reply",
     "resolved": "Resolved",
     "closed": "Closed",
+    "statusOpen": "Open",
+    "statusWaitingCustomer": "Waiting for your reply",
+    "statusWaitingAdmin": "Waiting for support",
+    "statusWaitingSupplier": "Waiting for an external update",
+    "statusResolved": "Resolved",
+    "statusClosed": "Closed",
     "failedToSendMessage": "Failed to send message",
-    "errorOccurred": "An error occurred"
+    "messageSent": "Message sent",
+    "sending": "Sending...",
+    "closing": "Closing...",
+    "errorOccurred": "An error occurred",
+    "signInRequired": "Sign in to contact support",
+    "signInRequiredDescription": "Support tickets are linked securely to your account.",
+    "signIn": "Sign in"
   },
   "blog": {
     "blog": "Blog",
@@ -640,6 +1209,670 @@
           "nav6": "Privacy Policy"
         },
         "copyright": "Hotleno LLC"
+      }
+    }
+  },
+  "adminCustomers": {
+    "eyebrow": "B2C customer operations",
+    "title": "Customer management",
+    "description": "Review customer activity, bookings, payments, and support history while keeping sensitive identity documents private.",
+    "total": "Customers",
+    "search": "Search",
+    "searchPlaceholder": "Search by name, email, or phone",
+    "unknownName": "Unnamed customer",
+    "viewDetails": "View details",
+    "previous": "Previous",
+    "next": "Next",
+    "pagination": "Page {page} of {pages}",
+    "filters": {
+      "allTypes": "All customer types",
+      "allStatuses": "All account statuses"
+    },
+    "types": {
+      "normal": "Normal",
+      "vip": "VIP"
+    },
+    "statuses": {
+      "active": "Active",
+      "blocked": "Blocked"
+    },
+    "columns": {
+      "customer": "Customer",
+      "phone": "Phone",
+      "type": "Type",
+      "status": "Account status",
+      "bookings": "Bookings",
+      "lastActivity": "Last activity",
+      "registeredAt": "Registered",
+      "actions": "Actions"
+    },
+    "states": {
+      "errorTitle": "Customers could not be loaded",
+      "errorDescription": "Customer data is temporarily unavailable. Try again.",
+      "emptyTitle": "No customers found",
+      "emptyDescription": "No B2C customers match the current search and filters.",
+      "detailErrorTitle": "Customer details could not be loaded",
+      "detailErrorDescription": "The customer may be unavailable or you may not have permission to view this record.",
+      "retry": "Try again"
+    },
+    "detail": {
+      "back": "Back to customers",
+      "bookingCount": "Bookings",
+      "paymentCount": "Payments",
+      "ticketCount": "Tickets",
+      "profile": "Customer profile",
+      "email": "Email",
+      "lastLogin": "Last login",
+      "lastUpdated": "Last updated",
+      "bookings": "Bookings",
+      "noBookings": "No bookings are available for this customer",
+      "hotelBooking": "Hotel booking",
+      "payments": "Payments",
+      "noPayments": "No payment records are available",
+      "paymentRecord": "Payment record",
+      "supportTickets": "Support tickets",
+      "noTickets": "No support tickets are available",
+      "supportTicket": "Support ticket",
+      "accountManagement": "Account management",
+      "customerType": "Customer type",
+      "accountStatus": "Account status",
+      "internalNotes": "Internal notes",
+      "notesPlaceholder": "Add an operational note visible to authorized staff only",
+      "notesPrivacy": "Internal notes are not shown to the customer. Do not store identity documents or payment secrets here.",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saved": "Customer settings updated",
+      "saveFailed": "Customer settings could not be updated",
+      "readOnly": "You have view access only. Customer management permission is required to make changes."
+    }
+  },
+  "adminStaff": {
+    "eyebrow": "Access and permissions",
+    "title": "Staff management",
+    "description": "Manage internal staff accounts, roles, access status, and operational permissions.",
+    "total": "Staff",
+    "active": "Active",
+    "superAdmins": "Super admins",
+    "staffList": "Staff accounts",
+    "staffListDescription": "Only authorized administrators can create or change staff access.",
+    "addStaff": "Add staff member",
+    "fetchFailed": "Staff accounts could not be loaded",
+    "saveFailed": "Staff changes could not be saved",
+    "loadErrorTitle": "Staff accounts could not be loaded",
+    "loadErrorDescription": "The staff directory is temporarily unavailable. Please try again.",
+    "retry": "Try again",
+    "emptyTitle": "No staff accounts",
+    "emptyDescription": "Create the first staff account to assign operational access.",
+    "permissionCount": "{count} permissions",
+    "lastLogin": "Last login",
+    "edit": "Edit access",
+    "createTitle": "Add staff member",
+    "createDescription": "Create an internal login and assign only the permissions required for the role.",
+    "editTitle": "Edit staff access",
+    "editDescription": "Update the internal role, status, and operational permissions.",
+    "name": "Name",
+    "email": "Email",
+    "temporaryPassword": "Temporary password",
+    "role": "Internal role",
+    "status": "Account status",
+    "permissionsTitle": "Permissions",
+    "permissionsDescription": "Role defaults can be adjusted for this staff member.",
+    "requiredFields": "Complete the required staff details",
+    "cancel": "Cancel",
+    "save": "Save access",
+    "saving": "Saving...",
+    "created": "Staff account created",
+    "updated": "Staff access updated",
+    "statuses": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "roles": {
+      "super_admin": "Super admin",
+      "admin": "Admin",
+      "support": "Support",
+      "finance": "Finance",
+      "sales": "Sales",
+      "content_manager": "Content manager"
+    },
+    "permissions": {
+      "dashboard_view": "View dashboard",
+      "bookings_view": "View bookings",
+      "bookings_manage": "Manage bookings",
+      "payments_view": "View payments",
+      "payments_manage": "Manage payments",
+      "support_view": "View support tickets",
+      "support_manage": "Manage support tickets",
+      "customers_view": "View customers",
+      "customers_manage": "Manage customers",
+      "agencies_view": "View agencies",
+      "agencies_manage": "Manage agencies",
+      "suppliers_view": "View suppliers",
+      "suppliers_manage": "Manage suppliers",
+      "pricing_view": "View pricing",
+      "pricing_manage": "Manage pricing",
+      "reports_view": "View reports",
+      "users_view": "View staff",
+      "users_manage": "Manage staff",
+      "settings_view": "View settings",
+      "settings_manage": "Manage settings",
+      "logs_view": "View logs"
+    },
+    "errors": {
+      "forbidden": "You do not have permission to manage staff",
+      "invalid_staff_data": "Review the staff details and try again",
+      "staff_exists": "A staff account already exists for this email",
+      "email_in_use": "This email belongs to a non-admin account",
+      "super_admin_management_forbidden": "Only a super admin can manage super admin access",
+      "last_super_admin_required": "The last active super admin cannot be suspended or downgraded",
+      "staff_not_found": "The staff account was not found",
+      "staff_create_failed": "The staff account could not be created",
+      "staff_update_failed": "The staff account could not be updated",
+      "save_failed": "The staff changes could not be saved"
+    }
+  },
+  "adminAgencies": {
+    "eyebrow": "B2B distribution",
+    "title": "Agency management",
+    "description": "Manage agency profiles, commercial controls, credit settings, staff access, and internal API credentials.",
+    "total": "Agencies",
+    "addAgency": "Add agency",
+    "readOnly": "You can view agency data, but agencies.manage permission is required to change it.",
+    "searchPlaceholder": "Search by agency name, email, phone, country, or city",
+    "allStatuses": "All statuses",
+    "search": "Search",
+    "listTitle": "B2B agencies",
+    "loadErrorTitle": "Agencies could not be loaded",
+    "loadErrorDescription": "The agency directory is temporarily unavailable. Try again.",
+    "retry": "Try again",
+    "emptyTitle": "No agencies",
+    "emptyDescription": "Create the first B2B agency when its commercial information is ready.",
+    "location": "Location",
+    "markup": "Markup",
+    "commission": "Commission",
+    "creditLimit": "Credit limit",
+    "walletBalance": "Wallet balance",
+    "apiEnabled": "API enabled",
+    "apiDisabled": "API disabled",
+    "edit": "Edit",
+    "details": "Details",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}",
+    "createTitle": "Add B2B agency",
+    "editTitle": "Edit agency",
+    "formDescription": "Maintain internal commercial and operational information for this agency.",
+    "created": "The agency was created.",
+    "updated": "The agency was updated.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "apiEnabledHelp": "This flag prepares internal API access only. No external API integration is activated here.",
+    "backToAgencies": "Back to agencies",
+    "detailLoadError": "Agency details could not be loaded",
+    "detailLoadErrorDescription": "The agency record is unavailable or you do not have permission to view it.",
+    "agencyData": "Agency information",
+    "saveAgency": "Save agency changes",
+    "creditSettings": "Credit and commercial settings",
+    "apiSettings": "API settings",
+    "apiStatus": "API status",
+    "apiKeyPrefix": "Key prefix",
+    "generateApiKey": "Generate API key",
+    "regenerateApiKey": "Regenerate API key",
+    "disableApiKey": "Disable API key",
+    "apiNotIntegrated": "The key is stored for future internal API access. Usage billing and external API connectivity are not enabled.",
+    "apiGenerateConfirm": "Generate a new API key? Any previous key will stop working.",
+    "apiDisableConfirm": "Disable API access for this agency?",
+    "apiDisabledSuccess": "Agency API access was disabled.",
+    "apiKeyCreatedTitle": "API key created",
+    "apiKeyCreatedDescription": "This key is shown once. Store it securely because HOTLENO only keeps its hash.",
+    "copyApiKey": "Copy key",
+    "done": "Done",
+    "agencyStaff": "Agency staff",
+    "agencyStaffDescription": "Manage internal agency staff records and operational permissions.",
+    "addStaff": "Add staff member",
+    "staffEmptyTitle": "No agency staff",
+    "staffEmptyDescription": "No staff records have been added to this agency.",
+    "addStaffTitle": "Add agency staff member",
+    "editStaffTitle": "Edit agency staff member",
+    "staffFormDescription": "Assign the staff role, access status, and internal agency permissions.",
+    "staffCreated": "The agency staff member was added.",
+    "staffUpdated": "The agency staff member was updated.",
+    "permissionCount": "{count} permissions",
+    "agencyBookings": "Agency bookings",
+    "bookingsEmptyTitle": "No agency bookings",
+    "bookingsEmptyDescription": "Bookings linked to this agency will appear here when available.",
+    "statuses": {
+      "pending": "Pending",
+      "active": "Active",
+      "suspended": "Suspended",
+      "rejected": "Rejected"
+    },
+    "staffRoles": {
+      "owner": "Owner",
+      "manager": "Manager",
+      "agent": "Agent",
+      "accountant": "Accountant"
+    },
+    "staffStatuses": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "staffPermissions": {
+      "bookings_view": "View bookings",
+      "bookings_create": "Create bookings",
+      "bookings_manage": "Manage bookings",
+      "wallet_view": "View wallet",
+      "reports_view": "View reports",
+      "staff_view": "View agency staff",
+      "staff_manage": "Manage agency staff"
+    },
+    "fields": {
+      "name": "Legal name",
+      "commercialName": "Commercial name",
+      "email": "Email",
+      "phone": "Phone",
+      "country": "Country",
+      "city": "City",
+      "status": "Status",
+      "currency": "Currency",
+      "commissionRate": "Commission rate (%)",
+      "markupRate": "Markup rate (%)",
+      "creditLimit": "Credit limit",
+      "walletBalance": "Wallet balance",
+      "apiEnabled": "API access enabled",
+      "notes": "Internal notes",
+      "staffName": "Name",
+      "staffEmail": "Email",
+      "staffRole": "Role",
+      "staffStatus": "Status",
+      "permissions": "Permissions"
+    },
+    "errors": {
+      "required": "Complete the required agency fields.",
+      "forbidden": "You do not have permission to manage agencies.",
+      "invalid_agency": "Review the agency information.",
+      "agency_not_found": "The agency was not found.",
+      "agency_create_failed": "The agency could not be created.",
+      "agency_update_failed": "The agency could not be updated.",
+      "saveFailed": "Agency changes could not be saved.",
+      "staffRequired": "Enter the staff name and email.",
+      "invalid_agency_staff": "Review the agency staff information.",
+      "agency_staff_exists": "A staff member with this email already exists in the agency.",
+      "agency_staff_not_found": "The agency staff member was not found.",
+      "agency_staff_create_failed": "The agency staff member could not be created.",
+      "agency_staff_update_failed": "The agency staff member could not be updated.",
+      "staffSaveFailed": "Agency staff changes could not be saved.",
+      "apiKeyCreateFailed": "The API key could not be created.",
+      "apiKeyDisableFailed": "API access could not be disabled."
+    }
+  },
+  "adminPricing": {
+    "eyebrow": "Profit controls",
+    "title": "Pricing rules",
+    "description": "Prepare internal markup and profit rules for B2C, B2B, suppliers, and agencies without changing live supplier prices.",
+    "totalRules": "Rules",
+    "activeRules": "Active",
+    "addRule": "Add pricing rule",
+    "noticeTitle": "Preview and configuration only",
+    "notice": "These rules are stored for internal planning and administration. They are not applied to hotel search, booking totals, supplier payloads, or customer prices.",
+    "readOnly": "You can view pricing rules, but pricing.manage permission is required to change them.",
+    "rulesList": "Configured rules",
+    "rulesListDescription": "Rules are evaluated here by priority for administration only.",
+    "loadErrorTitle": "Pricing rules could not be loaded",
+    "loadErrorDescription": "The pricing configuration is temporarily unavailable. Try again.",
+    "retry": "Try again",
+    "emptyTitle": "No pricing rules",
+    "emptyDescription": "Create the first rule when your commercial pricing policy is ready.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "markup": "Markup",
+    "priority": "Priority",
+    "supplierCode": "Supplier code",
+    "agencyId": "Agency ID",
+    "profitLimits": "Profit range: minimum {min}, maximum {max}",
+    "edit": "Edit",
+    "archive": "Archive",
+    "archiveConfirm": "Archive the rule “{name}”? It will be disabled and removed from the active list.",
+    "archived": "The pricing rule was archived.",
+    "created": "The pricing rule was created.",
+    "updated": "The pricing rule was updated.",
+    "createTitle": "Add pricing rule",
+    "editTitle": "Edit pricing rule",
+    "formDescription": "Configure the rule and review its theoretical calculation before saving.",
+    "name": "Rule name",
+    "scope": "Rule scope",
+    "markupType": "Markup type",
+    "markupValue": "Markup value",
+    "minProfit": "Minimum profit",
+    "maxProfit": "Maximum profit",
+    "enabledHelp": "Disabled rules remain stored but are not considered active.",
+    "notes": "Internal notes",
+    "previewTitle": "Theoretical preview",
+    "previewDescription": "Use a sample base price to understand this rule without changing any live price.",
+    "basePrice": "Base price",
+    "estimatedProfit": "Estimated profit",
+    "estimatedSellingPrice": "Estimated selling price",
+    "previewDisclaimer": "This preview has no currency conversion and is not used by search or booking.",
+    "cancel": "Cancel",
+    "save": "Save rule",
+    "saving": "Saving...",
+    "scopes": {
+      "global": "Global markup",
+      "b2c": "B2C markup",
+      "b2b": "B2B markup",
+      "supplier": "Supplier markup",
+      "agency": "Agency markup"
+    },
+    "markupTypes": {
+      "percentage": "Percentage",
+      "fixed": "Fixed amount"
+    },
+    "errors": {
+      "nameRequired": "Enter a rule name.",
+      "supplierRequired": "Enter the supplier code for this rule.",
+      "agencyRequired": "Enter the agency ID for this rule.",
+      "profitRange": "Minimum profit cannot exceed maximum profit.",
+      "forbidden": "You do not have permission to manage pricing.",
+      "invalid_pricing_rule": "Review the pricing rule fields.",
+      "pricing_rule_not_found": "The pricing rule was not found.",
+      "pricing_create_failed": "The pricing rule could not be created.",
+      "pricing_update_failed": "The pricing rule could not be updated.",
+      "pricing_archive_failed": "The pricing rule could not be archived.",
+      "saveFailed": "The pricing rule could not be saved.",
+      "archiveFailed": "The pricing rule could not be archived."
+    }
+  },
+  "adminSuppliers": {
+    "eyebrow": "Internal supplier settings",
+    "title": "Supplier management",
+    "description": "Manage internal operational settings for current and planned travel suppliers from one controlled workspace.",
+    "refresh": "Refresh",
+    "retry": "Try again",
+    "integrationNoticeTitle": "Administrative settings only",
+    "integrationNotice": "These settings are stored for internal administration. They are not yet applied to supplier search, booking, or connectivity flows.",
+    "readOnlyNotice": "You can view supplier settings, but suppliers.manage permission is required to change them.",
+    "saved": "{supplier} settings were saved.",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "emptyTitle": "No supplier settings",
+    "emptyDescription": "Supplier settings will appear here when the database is available.",
+    "notesPlaceholder": "Add an internal operational note without credentials or sensitive information.",
+    "noLastError": "No recorded error",
+    "lastUpdated": "Last updated: {date}",
+    "notUpdated": "Not updated yet",
+    "summary": {
+      "total": "Configured suppliers",
+      "active": "Active suppliers",
+      "search": "Search enabled",
+      "booking": "Booking enabled"
+    },
+    "fields": {
+      "enabled": "Supplier enabled",
+      "searchEnabled": "Search enabled",
+      "bookingEnabled": "Booking enabled",
+      "status": "Operational status",
+      "priority": "Priority",
+      "timeoutMs": "Timeout (ms)",
+      "markupPercent": "Markup (%)",
+      "notes": "Internal notes",
+      "lastError": "Last recorded error"
+    },
+    "statuses": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "maintenance": "Maintenance"
+    },
+    "errors": {
+      "load": "Supplier settings could not be loaded.",
+      "save": "Supplier settings could not be saved."
+    }
+  },
+  "adminNotifications": {
+    "title": "Notifications",
+    "pageTitle": "Admin notifications",
+    "pageDescription": "{count} unread notifications",
+    "bellLabel": "Open notifications",
+    "unreadCount": "{count} unread",
+    "markAllRead": "Mark all as read",
+    "viewAll": "View all notifications",
+    "loading": "Loading notifications...",
+    "loadError": "Notifications could not be loaded.",
+    "retry": "Try again",
+    "empty": "No notifications",
+    "emptyDescription": "Operational updates will appear here when an action needs your attention.",
+    "filters": {
+      "all": "All",
+      "unread": "Unread",
+      "read": "Read"
+    },
+    "types": {
+      "booking_created": {
+        "title": "New booking created",
+        "message": "Booking {reference} was created for {customer}."
+      },
+      "booking_failed": {
+        "title": "Booking confirmation failed",
+        "message": "Booking {reference} needs review after supplier confirmation failed."
+      },
+      "payment_received": {
+        "title": "Payment received",
+        "message": "Payment was recorded for booking {reference}."
+      },
+      "payment_failed": {
+        "title": "Payment failed",
+        "message": "Payment for booking {reference} could not be completed."
+      },
+      "support_ticket_created": {
+        "title": "New support ticket",
+        "message": "Ticket {reference} was created by {customer}."
+      },
+      "support_ticket_replied": {
+        "title": "Customer replied",
+        "message": "{customer} replied to ticket {reference}."
+      },
+      "manual_review_required": {
+        "title": "Manual review required",
+        "message": "Booking {reference} requires an operational review."
+      },
+      "user_created": {
+        "title": "New user account",
+        "message": "A new user account was created for {customer}."
+      },
+      "system_warning": {
+        "title": "System warning",
+        "message": "An operational warning requires attention."
+      }
+    }
+  },
+  "footer": {
+    "description": "A hotel booking and travel services platform that brings trusted travel options together in one clear experience.",
+    "company": "HOTLENO",
+    "about": "About us",
+    "blog": "Travel blog",
+    "legal": "Legal",
+    "terms": "Terms and conditions",
+    "privacy": "Privacy policy",
+    "cancellationRefund": "Cancellation and refund policy",
+    "help": "Help",
+    "supportCenter": "Support center",
+    "contact": "Contact us",
+    "manageBookings": "Manage bookings",
+    "needHelp": "Need help? Visit the support center",
+    "rights": "All rights reserved."
+  },
+  "legal": {
+    "common": {
+      "onThisPage": "On this page"
+    },
+    "about": {
+      "title": "About HOTLENO",
+      "description": "HOTLENO helps travelers search for hotel availability and manage their bookings through a clear, multilingual experience.",
+      "notice": "Hotel availability, prices, room details, and final booking conditions are supplied by participating hotels and travel providers and may change before confirmation.",
+      "sections": {
+        "whatWeDo": {
+          "title": "What we do",
+          "body": "We provide a digital platform for finding hotel options, reviewing available room rates, and managing booking requests. Our focus is to make travel planning easier to understand and manage."
+        },
+        "howItWorks": {
+          "title": "How the platform works",
+          "body": "Search results combine availability and booking information received from connected travel providers. Customers review the applicable room, price, guest, and cancellation details before submitting a booking."
+        },
+        "providerAvailability": {
+          "title": "Hotel and provider availability",
+          "body": "HOTLENO does not own or operate the listed hotels. Availability, content, confirmation, and property services remain subject to the relevant hotel and travel provider."
+        },
+        "customerCare": {
+          "title": "Customer care",
+          "body": "Registered customers can use the support center to ask about a booking, cancellation request, payment issue, or account. Support requests are tracked so the conversation remains available in the customer account."
+        },
+        "responsibleInformation": {
+          "title": "Clear travel information",
+          "body": "We aim to present supplier information accurately and without unsupported promises. Customers should review the final rate conditions, traveler information, and property policies shown during booking."
+        }
+      }
+    },
+    "contact": {
+      "title": "Contact us",
+      "description": "Use the HOTLENO support center for booking, account, cancellation, and payment-related assistance.",
+      "notice": "For faster assistance, include the HOTLENO booking reference when your request relates to an existing booking. Do not include passwords or full payment card information in a support message.",
+      "ctaTitle": "Start a support request",
+      "ctaDescription": "Sign in to create a ticket and keep every response together in your account.",
+      "ctaAction": "Open support center",
+      "sections": {
+        "supportTickets": {
+          "title": "Support tickets",
+          "body": "The support center is the primary contact channel available on HOTLENO. It allows signed-in customers to create a request, follow its status, and exchange messages with the support team."
+        },
+        "bookingHelp": {
+          "title": "Booking assistance",
+          "body": "For an existing booking, provide the booking reference and a concise description of the issue. Hotel changes, cancellations, and refunds remain subject to the booked rate and provider conditions."
+        },
+        "accountHelp": {
+          "title": "Account assistance",
+          "body": "You can contact support for help with profile information, access to your bookings, saved travelers, or other account-related questions."
+        },
+        "responseTimes": {
+          "title": "Responses and updates",
+          "body": "Requests are reviewed according to their urgency and available information. Response times can vary when a hotel, payment processor, or travel provider must be contacted."
+        },
+        "urgentIssues": {
+          "title": "Time-sensitive requests",
+          "body": "If your check-in is close, clearly state the travel date and booking reference in the subject and message. Creating duplicate tickets may slow the review of the same request."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "description": "This policy explains the general types of information HOTLENO processes to provide accounts, bookings, and customer support.",
+      "notice": "This policy describes HOTLENO's current platform practices in general terms. Specific processing may also depend on the hotel, travel provider, or payment service involved in a booking.",
+      "sections": {
+        "informationCollected": {
+          "title": "Information we collect",
+          "body": "We may process account details, contact information, traveler information, booking records, support messages, and technical information needed to operate and protect the service."
+        },
+        "informationUse": {
+          "title": "How information is used",
+          "body": "Information is used to provide account features, process booking requests, communicate booking updates, respond to support requests, maintain service security, and comply with applicable obligations."
+        },
+        "informationSharing": {
+          "title": "When information is shared",
+          "body": "Booking information may be shared with the relevant hotel, travel provider, payment service, or operational service provider when needed to complete or support the requested service. We do not publish traveler document details publicly."
+        },
+        "retention": {
+          "title": "Data retention",
+          "body": "Records are retained for as long as reasonably needed for bookings, account support, security, dispute handling, and legal or operational requirements. Retention periods may differ by record type."
+        },
+        "security": {
+          "title": "Security",
+          "body": "We apply reasonable technical and organizational safeguards to protect platform information. No online service can guarantee absolute security, so customers should also protect their account credentials."
+        },
+        "yourChoices": {
+          "title": "Your choices",
+          "body": "Customers can review certain profile and booking information through their account and may contact support to request help with correcting or managing account information, subject to verification and applicable requirements."
+        },
+        "cookies": {
+          "title": "Cookies and local preferences",
+          "body": "The platform may use cookies or browser storage for essential sessions, language, currency display preferences, and other features needed for a consistent experience."
+        },
+        "updates": {
+          "title": "Policy updates",
+          "body": "We may update this policy as the platform or applicable requirements change. The current version will remain available on this page."
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms and conditions",
+      "description": "These terms describe the general rules for using HOTLENO and submitting hotel booking requests through the platform.",
+      "notice": "The rate rules, hotel policies, and provider conditions displayed for a specific booking form part of that booking. Review them before confirmation because they may be more specific than these general terms.",
+      "sections": {
+        "usingPlatform": {
+          "title": "Using HOTLENO",
+          "body": "You must provide accurate information and use the platform only for lawful travel-related purposes. You are responsible for activity performed through your account and for keeping your sign-in details secure."
+        },
+        "bookingConfirmation": {
+          "title": "Booking confirmation",
+          "body": "Submitting a request does not guarantee a booking until the relevant confirmation is issued. Availability and rate conditions can change while a request is being processed."
+        },
+        "pricesAndPayment": {
+          "title": "Prices and payment",
+          "body": "Prices are shown in the currency and format available for the booking. Included or excluded taxes, fees, and payment requirements should be reviewed in the booking summary and rate conditions before confirmation."
+        },
+        "changesAndCancellation": {
+          "title": "Changes and cancellations",
+          "body": "Eligibility for a change, cancellation, or refund depends on the selected rate, hotel policy, provider rules, timing, and booking status. Some bookings are non-refundable or cannot be changed."
+        },
+        "userResponsibilities": {
+          "title": "Traveler responsibilities",
+          "body": "You are responsible for entering correct traveler names, contact details, dates, and any required document information. You must also check travel, entry, health, and identification requirements for the destination."
+        },
+        "serviceAvailability": {
+          "title": "Service availability",
+          "body": "We work to keep the platform available, but access may occasionally be interrupted by maintenance, provider systems, network conditions, or events outside our reasonable control."
+        },
+        "liability": {
+          "title": "Hotels and third-party services",
+          "body": "Hotels and travel providers are responsible for delivering the accommodation or service they confirm. HOTLENO facilitates access to booking services and support but does not operate the properties."
+        },
+        "updates": {
+          "title": "Updates to these terms",
+          "body": "These terms may be updated to reflect platform or regulatory changes. Continued use of the platform is subject to the version available at the time of use."
+        }
+      }
+    },
+    "cancellationRefund": {
+      "title": "Cancellation and refund policy",
+      "description": "This policy explains how cancellation requests and eligible refunds are handled for hotel bookings made through HOTLENO.",
+      "notice": "The cancellation conditions displayed for the selected room and rate take priority. They may include deadlines, penalties, non-refundable terms, or hotel-specific restrictions.",
+      "sections": {
+        "rateConditions": {
+          "title": "Rate conditions",
+          "body": "Each room rate can have different cancellation and amendment rules. Review the applicable conditions before booking, especially the cancellation deadline and any penalty amount."
+        },
+        "requestingCancellation": {
+          "title": "Requesting a cancellation",
+          "body": "Signed-in customers can request help from their booking page or the support center. A cancellation request is not complete until its status is confirmed by HOTLENO and, where required, the relevant provider."
+        },
+        "supplierProcessing": {
+          "title": "Hotel and provider processing",
+          "body": "Some cancellation requests must be sent to the hotel or travel provider. Processing time and final approval depend on their systems, rules, and the booking status."
+        },
+        "refundEligibility": {
+          "title": "Refund eligibility",
+          "body": "A refund is available only when permitted by the rate conditions and confirmed cancellation outcome. Any applicable cancellation penalty or used portion of a service may be deducted."
+        },
+        "nonRefundableBookings": {
+          "title": "Non-refundable bookings",
+          "body": "A non-refundable booking may not qualify for a refund after confirmation. Exceptional requests can be reviewed, but approval is not guaranteed and remains subject to the hotel or provider."
+        },
+        "refundTiming": {
+          "title": "Refund timing",
+          "body": "Approved refunds may require additional processing time by the payment provider and the customer's financial institution. HOTLENO does not promise a fixed completion date when external processing is involved."
+        },
+        "support": {
+          "title": "Getting help",
+          "body": "If the displayed status is unclear or travel is approaching, create a support ticket and include the booking reference. The support team can review the internal booking and provider status."
+        }
       }
     }
   }

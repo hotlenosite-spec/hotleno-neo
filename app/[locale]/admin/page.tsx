@@ -5,6 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ContentState } from "@/components/shared/content-state";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Calendar01Icon,
@@ -42,32 +44,32 @@ type DashboardIcon =
 const dashboardCopy = {
   en: {
     title: "Admin Dashboard",
-    description: "A clean overview of Hotleno operations",
+    description: "A clear operational overview of HOTLENO",
     totalBookings: "Total Bookings",
     activeBookings: "active bookings",
     reviewRequired: "need review",
     revenue: "Revenue",
     fromSystemData: "from system data",
     activeHotels: "Active Hotels",
-    notConnected: "Not connected to live data",
-    conversionRate: "Conversion Rate",
-    fromBookingsUsers: "from bookings and users",
+    notConnected: "No verified data is available for this metric",
+    conversionRate: "Bookings per User",
+    fromBookingsUsers: "calculated from bookings and users",
     pendingPayments: "Pending Payments",
     activeUsers: "Active Users",
     alerts: "Alerts and required actions",
-    noAlertData: "No alert data available",
-    connectAlerts: "Connect alerts API later",
+    noAlertData: "No operational alerts available",
+    connectAlerts: "Alerts will appear here when verified data is available.",
     noPaymentData: "No pending payment data",
-    connectPayments: "Connect payments API later",
+    connectPayments: "Review the payments page for available records.",
     noSupplierData: "No supplier API error data",
-    connectSuppliers: "Connect supplier APIs later",
+    connectSuppliers: "Verified supplier status appears here when available.",
     regionDistribution: "Bookings by Region",
     bookingTrend: "Booking Trend",
     daily: "Daily",
     last30: "Last 30 days",
     bookingCount: "Booking count",
     recentBookings: "Recent Bookings",
-    noBookings: "No real bookings yet",
+    noBookings: "No bookings are available to display yet",
     bookingRef: "Booking Ref",
     hotelDestination: "Hotel / Destination",
     amount: "Amount",
@@ -76,7 +78,7 @@ const dashboardCopy = {
     apiUnavailable: "API status unavailable",
     viewDetails: "View details",
     regions: ["Middle East", "Europe", "Asia", "Africa", "Americas"],
-    chartPlaceholder: "Connect daily booking data to display the real chart",
+    chartPlaceholder: "There is not enough daily data to display a trend",
     confirmed: "Confirmed",
     pendingPayment: "Pending payment",
     waitingSupplier: "Awaiting supplier",
@@ -124,13 +126,56 @@ const dashboardCopy = {
   },
 };
 
+const dashboardCopyAr = {
+  title: "لوحة تحكم الأدمن",
+  description: "نظرة تشغيلية واضحة على أداء منصة HOTLENO",
+  totalBookings: "إجمالي الحجوزات",
+  activeBookings: "حجوزات نشطة",
+  reviewRequired: "تحتاج مراجعة",
+  revenue: "الإيرادات المؤكدة",
+  fromSystemData: "من بيانات النظام",
+  activeHotels: "الفنادق النشطة",
+  notConnected: "لا تتوفر بيانات لهذه الإحصائية",
+  conversionRate: "معدل الحجوزات للمستخدمين",
+  fromBookingsUsers: "محسوب من الحجوزات والمستخدمين",
+  pendingPayments: "المدفوعات المعلقة",
+  activeUsers: "إجمالي المستخدمين",
+  alerts: "التنبيهات والإجراءات المطلوبة",
+  noAlertData: "لا توجد تنبيهات تشغيلية",
+  connectAlerts: "ستظهر التنبيهات هنا عند توفر بيانات فعلية.",
+  noPaymentData: "لا توجد بيانات مدفوعات معلقة",
+  connectPayments: "راجع صفحة المدفوعات للاطلاع على السجلات المتاحة.",
+  noSupplierData: "لا توجد بيانات أعطال متاحة",
+  connectSuppliers: "تظهر حالات الموردين المؤكدة فقط عند توفرها.",
+  regionDistribution: "توزيع الحجوزات حسب المنطقة",
+  bookingTrend: "اتجاه الحجوزات",
+  daily: "يومي",
+  last30: "آخر 30 يومًا",
+  bookingCount: "عدد الحجوزات",
+  recentBookings: "آخر الحجوزات",
+  noBookings: "لا توجد حجوزات لعرضها حتى الآن",
+  bookingRef: "مرجع الحجز",
+  hotelDestination: "الفندق / الوجهة",
+  amount: "المبلغ",
+  status: "الحالة",
+  supplierStatus: "حالة الموردين والربط",
+  apiUnavailable: "لا تتوفر حالة مؤكدة",
+  viewDetails: "عرض التفاصيل",
+  regions: ["الشرق الأوسط", "أوروبا", "آسيا", "أفريقيا", "الأمريكتان"],
+  chartPlaceholder: "لا تتوفر بيانات يومية كافية لعرض الاتجاه",
+  confirmed: "مؤكد",
+  pendingPayment: "بانتظار الدفع",
+  waitingSupplier: "بانتظار المورد",
+};
+
 export default function AdminDashboardPage() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const isAr = locale === "ar";
-  const c = isAr ? dashboardCopy.ar : dashboardCopy.en;
+  const c = isAr ? dashboardCopyAr : dashboardCopy.en;
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -138,6 +183,8 @@ export default function AdminDashboardPage() {
 
   const fetchStats = async () => {
     try {
+      setLoading(true);
+      setLoadError(false);
       const token = localStorage.getItem("token");
       const response = await fetch("/api/admin/stats", {
         headers: {
@@ -148,9 +195,12 @@ export default function AdminDashboardPage() {
       if (response.ok) {
         const data = await response.json();
         setStats(data);
+      } else {
+        setLoadError(true);
       }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -210,6 +260,21 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return <DashboardSkeleton />;
+  }
+
+  if (loadError || !stats) {
+    return (
+      <ContentState
+        type="error"
+        title={t("dashboardLoadErrorTitle")}
+        description={t("dashboardLoadErrorDescription")}
+        action={
+          <Button variant="outline" onClick={fetchStats}>
+            {t("retry")}
+          </Button>
+        }
+      />
+    );
   }
 
   const conversionRate =

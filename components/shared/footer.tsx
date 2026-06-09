@@ -1,40 +1,40 @@
+"use client";
+
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function Footer() {
   const locale = useLocale();
-  const isAr = locale === "ar";
+  const t = useTranslations("footer");
 
   const groups = [
     {
-      title: isAr ? "معلومات" : "Information",
+      title: t("company"),
       links: [
-        { title: isAr ? "من نحن" : "About", href: `/${locale}/services` },
-        { title: isAr ? "المدونة" : "Blog", href: `/${locale}/blog` },
-        { title: isAr ? "الشروط" : "Terms", href: `/${locale}/terms` },
-        { title: isAr ? "الخصوصية" : "Privacy", href: `/${locale}/privacy` },
+        { title: t("about"), href: `/${locale}/about` },
+        { title: t("blog"), href: `/${locale}/blog` },
       ],
     },
     {
-      title: isAr ? "الدعم" : "Support",
+      title: t("legal"),
       links: [
-        { title: isAr ? "مركز الدعم" : "Support center", href: `/${locale}/support` },
-        { title: isAr ? "تواصل معنا" : "Contact", href: `/${locale}/support` },
+        { title: t("terms"), href: `/${locale}/terms` },
+        { title: t("privacy"), href: `/${locale}/privacy` },
+        {
+          title: t("cancellationRefund"),
+          href: `/${locale}/cancellation-refund`,
+        },
       ],
     },
     {
-      title: isAr ? "تابعنا" : "Follow us",
+      title: t("help"),
       links: [
-        { title: "Instagram", href: `/${locale}` },
-        { title: "X", href: `/${locale}` },
-        { title: "LinkedIn", href: `/${locale}` },
-      ],
-    },
-    {
-      title: isAr ? "حمّل تطبيقنا" : "Get the app",
-      links: [
-        { title: "iOS", href: `/${locale}` },
-        { title: "Android", href: `/${locale}` },
+        { title: t("supportCenter"), href: `/${locale}/support` },
+        { title: t("contact"), href: `/${locale}/contact` },
+        {
+          title: t("manageBookings"),
+          href: `/${locale}/account/bookings`,
+        },
       ],
     },
   ];
@@ -48,16 +48,20 @@ export default function Footer() {
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F97316] text-lg font-black text-white">
                 H
               </span>
-              <span className="text-2xl font-black">Hotleno</span>
+              <span className="text-2xl font-black">HOTLENO</span>
             </div>
             <p className="mt-4 max-w-md text-sm leading-7 text-slate-300">
-              {isAr
-                ? "منصة سفر ذكية تجمع الفنادق والطيران والخدمات في تجربة حجز واحدة سهلة وسريعة."
-                : "A clean and simple travel platform for hotels and services worldwide."}
+              {t("description")}
             </p>
+            <Link
+              href={`/${locale}/support`}
+              className="mt-5 inline-flex text-sm font-bold text-orange-400 transition hover:text-orange-300"
+            >
+              {t("needHelp")}
+            </Link>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-8 sm:grid-cols-3">
             {groups.map((group) => (
               <div key={group.title}>
                 <h3 className="text-sm font-black text-white">{group.title}</h3>
@@ -78,8 +82,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-white/10 pt-6 text-sm text-slate-400">
-          © {new Date().getFullYear()} Hotleno LTD.{" "}
-          {isAr ? "جميع الحقوق محفوظة." : "All rights reserved."}
+          © {new Date().getFullYear()} HOTLENO. {t("rights")}
         </div>
       </div>
     </footer>

@@ -1,92 +1,86 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import SearchForm from "@/components/search/search-form";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  AirplaneTakeOff01Icon,
+  Car01Icon,
+  CreditCardIcon,
+  CustomerServiceIcon,
   Hotel01Icon,
+  Shield02Icon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
+import { buildLocalizedMetadata } from "@/lib/seo";
+
+type HomePageProps = {
+  params: Promise<{ locale: string }>;
+};
+
+export async function generateMetadata({ params }: HomePageProps) {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+
+  return buildLocalizedMetadata({
+    locale,
+    title: isAr
+      ? "حجز الفنادق وإدارة رحلتك بسهولة"
+      : "Hotel Search and Booking Management",
+    description: isAr
+      ? "HOTLENO منصة حجز فنادق تساعدك على البحث والمقارنة وإدارة حجوزاتك بسهولة."
+      : "Search hotel availability, compare options, and manage your bookings through HOTLENO.",
+  });
+}
 
 const heroImage =
   "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=2200&auto=format&fit=crop";
 
 const destinations = [
   {
-    cityAr: "دبي",
-    cityEn: "Dubai",
-    countryAr: "الإمارات",
-    countryEn: "United Arab Emirates",
-    price: "$89",
+    id: "dubai",
     image:
       "https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=900&auto=format&fit=crop",
   },
   {
-    cityAr: "إسطنبول",
-    cityEn: "Istanbul",
-    countryAr: "تركيا",
-    countryEn: "Turkey",
-    price: "$72",
+    id: "istanbul",
     image:
       "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=900&auto=format&fit=crop",
   },
   {
-    cityAr: "الرياض",
-    cityEn: "Riyadh",
-    countryAr: "السعودية",
-    countryEn: "Saudi Arabia",
-    price: "$95",
+    id: "riyadh",
     image:
       "https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?q=80&w=900&auto=format&fit=crop",
   },
   {
-    cityAr: "لندن",
-    cityEn: "London",
-    countryAr: "المملكة المتحدة",
-    countryEn: "United Kingdom",
-    price: "$120",
+    id: "london",
     image:
       "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=900&auto=format&fit=crop",
   },
-];
+] as const;
 
-const hotelDeals = [
+const stayInspirations = [
   {
-    name: "Marina View Hotel",
-    cityAr: "دبي",
-    cityEn: "Dubai",
-    rating: "4.8",
-    price: "$129",
+    id: "waterfront",
     image:
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600&auto=format&fit=crop",
   },
   {
-    name: "Old City Suites",
-    cityAr: "إسطنبول",
-    cityEn: "Istanbul",
-    rating: "4.6",
-    price: "$98",
+    id: "heritage",
     image:
       "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=600&auto=format&fit=crop",
   },
   {
-    name: "Capital Stay",
-    cityAr: "الرياض",
-    cityEn: "Riyadh",
-    rating: "4.7",
-    price: "$110",
+    id: "city",
     image:
       "https://images.unsplash.com/photo-1564501049412-61c2a3083791?q=80&w=600&auto=format&fit=crop",
   },
   {
-    name: "West End Hotel",
-    cityAr: "لندن",
-    cityEn: "London",
-    rating: "4.5",
-    price: "$145",
+    id: "central",
     image:
       "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=600&auto=format&fit=crop",
   },
-];
+] as const;
 
 export default async function Home({
   params,
@@ -94,53 +88,37 @@ export default async function Home({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const isAr = locale === "ar";
-
-  const copy = {
-    heroTitle: isAr
-      ? "احجز فنادقك ورحلاتك بسهولة"
-      : "Book your hotels and trips with ease",
-    heroSubtitle: isAr
-      ? "أفضل الأسعار لأفضل الوجهات حول العالم"
-      : "The best prices for top destinations around the world",
-    popular: isAr ? "وجهات شائعة" : "Popular destinations",
-    popularDesc: isAr
-      ? "اختيارات مختصرة لوجهات يحبها المسافرون."
-      : "A focused selection of traveler-loved destinations.",
-    why: isAr ? "لماذا تحجز مع Hotleno؟" : "Why book with Hotleno?",
-    deals: isAr ? "أفضل عروض الفنادق" : "Best hotel deals",
-    from: isAr ? "يبدأ من" : "From",
-    night: isAr ? "لليلة" : "night",
-    plannerCta: isAr ? "خطط رحلتك بميزانيتك" : "Plan your trip by budget",
-    blogCta: isAr ? "استكشف المدونة" : "Explore the blog",
-    transfersTitle: isAr ? "النقل من وإلى المطار" : "Airport transfers",
-    transfersDesc: isAr
-      ? "احجز خدمات النقل بين المطار والفندق بسهولة. الخدمة قيد التجهيز وسيتم ربطها مع Hotelbeds Transfers."
-      : "Book transfers between the airport and your hotel with ease. This service is being prepared for Hotelbeds Transfers.",
-    transfersCta: isAr ? "استكشف خدمة النقل" : "Explore transfers",
-    activitiesTitle: isAr ? "الأنشطة والتجارب" : "Activities and experiences",
-    activitiesDesc: isAr
-      ? "استكشف الجولات والتجارب السياحية حسب الوجهة والتاريخ والمسافرين عبر Hotelbeds Activities."
-      : "Explore tours and travel experiences by destination, dates, and travellers with Hotelbeds Activities.",
-    activitiesCta: isAr ? "استكشف الأنشطة" : "Explore activities",
-  };
+  const t = await getTranslations({ locale, namespace: "homePage" });
 
   const benefits = [
-    isAr ? "إلغاء مجاني" : "Free cancellation",
-    isAr ? "حجز آمن" : "Secure booking",
-    isAr ? "أسعار منافسة" : "Competitive prices",
-    isAr ? "دعم على مدار الساعة" : "24/7 support",
-  ];
+    { key: "trustedBooking", icon: Shield02Icon },
+    { key: "customerSupport", icon: CustomerServiceIcon },
+    { key: "securePayment", icon: CreditCardIcon },
+    { key: "trustedProviders", icon: Tick02Icon },
+  ] as const;
+
+  const services = [
+    {
+      key: "transfers",
+      href: `/${locale}/transfers`,
+      icon: Car01Icon,
+    },
+    {
+      key: "activities",
+      href: `/${locale}/activities`,
+      icon: AirplaneTakeOff01Icon,
+    },
+  ] as const;
 
   const reasons = [
-    isAr ? "دعم عملاء ممتاز" : "Excellent customer support",
-    isAr ? "حجز سريع وسهل" : "Fast and easy booking",
-    isAr ? "أسعار رائعة" : "Great prices",
-    isAr ? "خيارات متنوعة" : "Wide range of options",
-  ];
+    { key: "support", icon: CustomerServiceIcon },
+    { key: "simpleBooking", icon: Tick02Icon },
+    { key: "secureExperience", icon: Shield02Icon },
+    { key: "hotelOptions", icon: Hotel01Icon },
+  ] as const;
 
   return (
-    <div className="bg-white text-[#0F172A]">
+    <div className="overflow-x-clip bg-white text-[#0F172A]">
       <section className="relative -mt-20 min-h-[760px] overflow-hidden pt-20">
         <Image
           src={heroImage}
@@ -155,31 +133,31 @@ export default async function Home({
         <div className="relative mx-auto flex min-h-[680px] max-w-7xl flex-col justify-center px-4 pb-10 pt-24 sm:px-6 lg:px-8">
           <div className="max-w-3xl text-white">
             <p className="mb-4 inline-flex rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-bold backdrop-blur">
-              HOTLENO OTA
+              {t("heroBadge")}
             </p>
             <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-normal sm:text-5xl lg:text-6xl">
-              {copy.heroTitle}
+              {t("heroTitle")}
             </h1>
             <p className="mt-5 max-w-2xl text-lg font-medium leading-8 text-white/90 sm:text-xl">
-              {copy.heroSubtitle}
+              {t("heroSubtitle")}
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/${locale}/smart-trip-planner`}
                 className="inline-flex h-12 items-center justify-center rounded-2xl bg-[#F97316] px-6 text-sm font-black text-white shadow-xl shadow-orange-500/25 transition hover:bg-[#ea580c]"
               >
-                {copy.plannerCta}
+                {t("plannerCta")}
               </Link>
               <Link
                 href={`/${locale}/blog`}
                 className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/40 bg-white/15 px-6 text-sm font-black text-white backdrop-blur transition hover:bg-white/25"
               >
-                {copy.blogCta}
+                {t("blogCta")}
               </Link>
             </div>
           </div>
 
-          <div className="mt-10">
+          <div className="mt-10 min-w-0">
             <SearchForm />
           </div>
         </div>
@@ -187,12 +165,14 @@ export default async function Home({
 
       <section className="relative z-10 mx-auto -mt-12 max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-3 rounded-3xl border border-[#E5E7EB] bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
-          {benefits.map((item) => (
-            <div key={item} className="flex items-center gap-3 rounded-2xl p-3">
+          {benefits.map(({ key, icon }) => (
+            <div key={key} className="flex min-w-0 items-center gap-3 rounded-2xl p-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
-                <HugeiconsIcon icon={Tick02Icon} className="h-5 w-5" />
+                <HugeiconsIcon icon={icon} className="h-5 w-5" />
               </span>
-              <span className="text-sm font-bold text-[#0F172A]">{item}</span>
+              <span className="text-sm font-bold text-[#0F172A]">
+                {t(`benefits.${key}`)}
+              </span>
             </div>
           ))}
         </div>
@@ -200,86 +180,74 @@ export default async function Home({
 
       <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
         <div className="grid gap-5 lg:grid-cols-2">
-          {[
-            {
-              title: copy.transfersTitle,
-              description: copy.transfersDesc,
-              cta: copy.transfersCta,
-              href: `/${locale}/transfers`,
-            },
-            {
-              title: copy.activitiesTitle,
-              description: copy.activitiesDesc,
-              cta: copy.activitiesCta,
-              href: `/${locale}/activities`,
-            },
-          ].map((service) => (
-            <div
+          {services.map((service) => (
+            <article
               key={service.href}
-              className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-[#F8FAFC] p-5 shadow-sm md:p-7"
+              className="relative overflow-hidden rounded-3xl border border-[#E5E7EB] bg-[#F8FAFC] p-5 shadow-sm md:p-7"
             >
-              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                <div className="flex gap-4">
+              <div className="pointer-events-none absolute -bottom-8 -end-8 flex h-36 w-36 items-center justify-center rounded-full bg-orange-50 text-[#F97316]/10">
+                <HugeiconsIcon icon={service.icon} className="h-20 w-20" />
+              </div>
+              <div className="relative flex min-w-0 flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div className="flex min-w-0 gap-4">
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
-                    <HugeiconsIcon icon={Hotel01Icon} className="h-6 w-6" />
+                    <HugeiconsIcon icon={service.icon} className="h-6 w-6" />
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="text-2xl font-black text-[#0F172A]">
-                      {service.title}
+                      {t(`services.${service.key}.title`)}
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm font-medium leading-7 text-slate-600">
-                      {service.description}
+                      {t(`services.${service.key}.description`)}
                     </p>
                   </div>
                 </div>
                 <Link
                   href={service.href}
-                  className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-[#F97316] px-6 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-[#ea580c]"
+                  className="inline-flex h-12 w-full shrink-0 items-center justify-center rounded-2xl bg-[#F97316] px-6 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-[#ea580c] md:w-auto"
                 >
-                  {service.cta}
+                  {t(`services.${service.key}.cta`)}
                 </Link>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-          <div>
-            <h2 className="text-3xl font-black text-[#0F172A]">
-              {copy.popular}
-            </h2>
-            <p className="mt-2 text-sm font-medium text-slate-500">
-              {copy.popularDesc}
-            </p>
-          </div>
+        <div className="mb-8">
+          <h2 className="text-3xl font-black text-[#0F172A]">
+            {t("destinations.title")}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-500">
+            {t("destinations.description")}
+          </p>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {destinations.map((destination) => (
             <article
-              key={destination.cityEn}
-              className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-950/5"
+              key={destination.id}
+              className="group overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-950/5"
             >
-              <div className="relative h-44">
+              <div className="relative h-44 overflow-hidden">
                 <Image
                   src={destination.image}
-                  alt={isAr ? destination.cityAr : destination.cityEn}
+                  alt={t(`destinations.items.${destination.id}.city`)}
                   fill
                   sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover"
+                  className="object-cover transition duration-500 group-hover:scale-105"
                 />
               </div>
               <div className="p-5">
                 <h3 className="text-xl font-black text-[#0F172A]">
-                  {isAr ? destination.cityAr : destination.cityEn}
+                  {t(`destinations.items.${destination.id}.city`)}
                 </h3>
                 <p className="mt-1 text-sm font-medium text-slate-500">
-                  {isAr ? destination.countryAr : destination.countryEn}
+                  {t(`destinations.items.${destination.id}.country`)}
                 </p>
                 <p className="mt-4 text-sm font-bold text-[#F97316]">
-                  {copy.from} {destination.price}
+                  {t("destinations.explore")}
                 </p>
               </div>
             </article>
@@ -289,61 +257,67 @@ export default async function Home({
 
       <section className="bg-[#F8FAFC] py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-black text-[#0F172A]">{copy.why}</h2>
+          <h2 className="text-3xl font-black text-[#0F172A]">
+            {t("why.title")}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-500">
+            {t("why.description")}
+          </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {reasons.map((reason) => (
-              <div
-                key={reason}
+            {reasons.map(({ key, icon }) => (
+              <article
+                key={key}
                 className="rounded-3xl border border-[#E5E7EB] bg-white p-6"
               >
                 <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
-                  <HugeiconsIcon icon={Hotel01Icon} className="h-6 w-6" />
+                  <HugeiconsIcon icon={icon} className="h-6 w-6" />
                 </span>
-                <h3 className="text-lg font-black text-[#0F172A]">{reason}</h3>
-              </div>
+                <h3 className="text-lg font-black text-[#0F172A]">
+                  {t(`why.items.${key}.title`)}
+                </h3>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
+                  {t(`why.items.${key}.description`)}
+                </p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-black text-[#0F172A]">{copy.deals}</h2>
-        <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {hotelDeals.map((hotel) => (
+        <div className="mb-8">
+          <h2 className="text-3xl font-black text-[#0F172A]">
+            {t("inspiration.title")}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-500">
+            {t("inspiration.description")}
+          </p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {stayInspirations.map((item) => (
             <article
-              key={hotel.name}
-              className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-sm"
+              key={item.id}
+              className="group overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-950/5"
             >
-              <div className="relative h-36">
+              <div className="relative h-40 overflow-hidden">
                 <Image
-                  src={hotel.image}
-                  alt={hotel.name}
+                  src={item.image}
+                  alt={t(`inspiration.items.${item.id}.title`)}
                   fill
                   sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
-                  className="object-cover"
+                  className="object-cover transition duration-500 group-hover:scale-105"
                 />
               </div>
-              <div className="space-y-3 p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-black text-[#0F172A]">{hotel.name}</h3>
-                    <p className="mt-1 text-sm font-medium text-slate-500">
-                      {isAr ? hotel.cityAr : hotel.cityEn}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-black text-[#F97316]">
-                    {hotel.rating}
-                  </span>
-                </div>
-                <div className="flex items-end justify-between">
-                  <span className="text-sm text-slate-500">{copy.from}</span>
-                  <span className="text-2xl font-black text-[#F97316]">
-                    {hotel.price}
-                    <span className="text-xs font-bold text-slate-500">
-                      /{copy.night}
-                    </span>
-                  </span>
-                </div>
+              <div className="p-5">
+                <h3 className="font-black text-[#0F172A]">
+                  {t(`inspiration.items.${item.id}.title`)}
+                </h3>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
+                  {t(`inspiration.items.${item.id}.description`)}
+                </p>
+                <p className="mt-4 text-sm font-bold text-[#F97316]">
+                  {t("inspiration.cta")}
+                </p>
               </div>
             </article>
           ))}

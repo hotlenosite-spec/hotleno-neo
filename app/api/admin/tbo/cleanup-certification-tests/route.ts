@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Document } from "mongodb";
 import { requireAdminFromRequest } from "@/lib/auth-user";
+import { requireStaffPermission } from "@/lib/staff-permissions";
 import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { getUserByEmail } from "@/lib/firebase-store";
 
@@ -186,6 +187,9 @@ function summarizeBookings(bookings: BookingDocument[]) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await requireStaffPermission(req, "suppliers.manage"))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const admin = requireAdminFromRequest(req);
   if (!admin) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,10 +20,18 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading } = useAuth();
   const isDevAdminBypass = isDevAdminBypassEnabled();
   const isDevPreviewAllPages = isDevPreviewAllPagesEnabled();
-  const canPreviewAdmin = isDevAdminBypass || isDevPreviewAllPages;
+  const canPreviewAdmin = isDevAdminBypass;
+  const requiredPermission = getRequiredPermission(pathname);
+  const hasPagePermission =
+    !requiredPermission ||
+    !user?.permissions ||
+    user.permissions.length === 0 ||
+    user.staffRole === "super_admin" ||
+    user.permissions.includes(requiredPermission);
 
   useEffect(() => {
     const warning = getDevAdminBypassWarning();
@@ -37,8 +46,21 @@ export default function AdminLayout({
 
     if (!isAuthenticated || user?.role !== "admin") {
       router.push("/");
+      return;
     }
-  }, [canPreviewAdmin, isLoading, isAuthenticated, router, user?.role]);
+    if (!hasPagePermission) {
+      const locale = pathname.split("/")[1] || "en";
+      router.replace(`/${locale}/admin`);
+    }
+  }, [
+    canPreviewAdmin,
+    hasPagePermission,
+    isLoading,
+    isAuthenticated,
+    pathname,
+    router,
+    user?.role,
+  ]);
 
   if (canPreviewAdmin) {
     return (
@@ -70,7 +92,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated || user?.role !== "admin" || !hasPagePermission) {
     return null;
   }
 
@@ -89,4 +111,23 @@ export default function AdminLayout({
       </div>
     </div>
   );
+}
+
+function getRequiredPermission(pathname: string) {
+  const routes: Array<[string, string]> = [
+    ["/admin/bookings", "bookings.view"],
+    ["/admin/payments", "payments.view"],
+    ["/admin/support", "support.view"],
+    ["/admin/customers", "customers.view"],
+    ["/admin/users", "customers.view"],
+    ["/admin/staff", "users.view"],
+    ["/admin/notifications", "dashboard.view"],
+    ["/admin/agencies", "agencies.view"],
+    ["/admin/suppliers", "suppliers.view"],
+    ["/admin/pricing", "pricing.view"],
+    ["/admin/hotels", "suppliers.view"],
+    ["/admin/logs", "logs.view"],
+    ["/admin/settings", "settings.view"],
+  ];
+  return routes.find(([route]) => pathname.includes(route))?.[1];
 }

@@ -1,33 +1,34 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
+  CheckmarkCircle02Icon,
+  CustomerServiceIcon,
   TelegramIcon,
   UserIcon,
-  CustomerServiceIcon,
-  CheckmarkCircle02Icon,
 } from "@hugeicons/core-free-icons";
-import { format } from "date-fns";
-import Link from "next/link";
+import { toast } from "sonner";
 
-interface Message {
-  sender: "user" | "admin";
-  content: string;
-  createdAt: string;
-}
+type Message = {
+  id: string;
+  senderType: "customer" | "admin" | "system";
+  senderName: string;
+  message: string;
+  createdAt: string | null;
+};
 
-interface Ticket {
+type Ticket = {
   _id: string;
   ticketNumber: string;
   subject: string;
@@ -35,68 +36,66 @@ interface Ticket {
   priority: string;
   status: string;
   messages: Message[];
+  bookingId?: string;
   bookingReference?: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: {
-    name: string;
-    email: string;
-  };
-}
+  customerName: string;
+};
+
+const statusKeys: Record<string, string> = {
+  open: "statusOpen",
+  waiting_customer: "statusWaitingCustomer",
+  waiting_admin: "statusWaitingAdmin",
+  waiting_supplier: "statusWaitingSupplier",
+  resolved: "statusResolved",
+  closed: "statusClosed",
+};
 
 export default function TicketDetailPage() {
   const t = useTranslations("support");
+  const locale = useLocale();
   const params = useParams();
   const router = useRouter();
-  const ticketId = params.ticketId as string;
+  const ticketId = String(params.ticketId);
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [closing, setClosing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchTicket();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticketId]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [ticket?.messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchTicket = async () => {
+  const fetchTicket = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
       const response = await fetch(`/api/support/tickets/${ticketId}`, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTicket(data.ticket);
-      } else if (response.status === 404) {
-        toast.error(t("ticketNotFound"));
-        router.push("/support");
-      } else if (response.status === 403) {
-        toast.error(t("unauthorized"));
-        router.push("/support");
+      if (response.status === 404 || response.status === 403) {
+        toast.error(response.status === 404 ? t("ticketNotFound") : t("unauthorized"));
+        router.replace(`/${locale}/support`);
+        return;
       }
-    } catch (error) {
-      console.error("Failed to fetch ticket:", error);
+      if (!response.ok) throw new Error("support_detail_failed");
+      const data = await response.json();
+      setTicket(data.ticket);
+    } catch {
       toast.error(t("failedToFetchTicket"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [locale, router, t, ticketId]);
+
+  useEffect(() => {
+    void fetchTicket();
+  }, [fetchTicket]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [ticket?.messages]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-
     try {
       setSending(true);
       const token = localStorage.getItem("token");
@@ -108,22 +107,55 @@ export default function TicketDetailPage() {
         },
         body: JSON.stringify({ message: newMessage }),
       });
-
-      if (response.ok) {
-        setNewMessage("");
-        fetchTicket();
-      } else {
-        toast.error(t("failedToSendMessage"));
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        if (errorData?.error === "ticket_closed_reply_not_allowed") {
+          toast.error(t("closedReplyNotAllowed"));
+          return;
+        }
+        if (errorData?.error === "ticket_resolved_reply_not_allowed") {
+          toast.error(t("resolvedReplyNotAllowed"));
+          return;
+        }
+        throw new Error("support_reply_failed");
       }
-    } catch (_error) {
+      const data = await response.json();
+      setTicket(data.ticket);
+      setNewMessage("");
+      toast.success(t("messageSent"));
+    } catch {
       toast.error(t("failedToSendMessage"));
     } finally {
       setSending(false);
     }
   };
 
+  const handleReopenTicket = async () => {
+    try {
+      setClosing(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/support/tickets/${ticketId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action: "reopen" }),
+      });
+      if (!response.ok) throw new Error("support_reopen_failed");
+      const data = await response.json();
+      setTicket(data.ticket);
+      toast.success(t("ticketReopened"));
+    } catch {
+      toast.error(t("failedToReopenTicket"));
+    } finally {
+      setClosing(false);
+    }
+  };
+
   const handleCloseTicket = async () => {
     try {
+      setClosing(true);
       const token = localStorage.getItem("token");
       const response = await fetch(`/api/support/tickets/${ticketId}`, {
         method: "PATCH",
@@ -133,189 +165,135 @@ export default function TicketDetailPage() {
         },
         body: JSON.stringify({ status: "closed" }),
       });
-
-      if (response.ok) {
-        toast.success(t("ticketClosed"));
-        fetchTicket();
-      } else {
-        toast.error(t("failedToCloseTicket"));
-      }
-    } catch (_error) {
-      toast.error(t("errorOccurred"));
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "open":
-        return <Badge className="bg-[#F97316]">{t("open")}</Badge>;
-      case "in_progress":
-        return <Badge className="bg-amber-500">{t("inProgress")}</Badge>;
-      case "waiting":
-        return (
-          <Badge
-            variant="outline"
-            className="text-purple-600 border-purple-600"
-          >
-            {t("waiting")}
-          </Badge>
-        );
-      case "resolved":
-        return <Badge className="bg-green-500">{t("resolved")}</Badge>;
-      case "closed":
-        return <Badge variant="secondary">{t("closed")}</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+      if (!response.ok) throw new Error("support_close_failed");
+      const data = await response.json();
+      setTicket(data.ticket);
+      toast.success(t("ticketClosed"));
+    } catch {
+      toast.error(t("failedToCloseTicket"));
+    } finally {
+      setClosing(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Skeleton className="h-10 w-32 mb-6" />
-        <Skeleton className="h-96" />
+      <div className="container mx-auto max-w-4xl space-y-5 px-4 py-8">
+        <Skeleton className="h-10 w-36" />
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-[480px] w-full" />
       </div>
     );
   }
-
-  if (!ticket) {
-    return null;
-  }
+  if (!ticket) return null;
 
   const isClosed = ticket.status === "closed" || ticket.status === "resolved";
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-6">
-        <Link href="/support">
-          <Button variant="ghost" className="pl-0">
-            <HugeiconsIcon icon={ArrowLeft01Icon} className="mr-2 h-4 w-4" />
-            {t("backToSupport")}
-          </Button>
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <Button asChild variant="ghost" className="mb-5 px-0">
+        <Link href={`/${locale}/support`}>
+          <HugeiconsIcon icon={ArrowLeft01Icon} className="me-2 h-4 w-4 rtl:rotate-180" />
+          {t("backToSupport")}
         </Link>
-      </div>
+      </Button>
 
       <Card className="mb-6">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
+        <CardHeader>
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
             <div>
-              <CardTitle className="text-xl mb-2">{ticket.subject}</CardTitle>
-              <div className="flex items-center gap-2 flex-wrap">
-                {getStatusBadge(ticket.status)}
-                <span className="text-sm text-muted-foreground">
-                  {t("ticketNumber")}: {ticket.ticketNumber}
-                </span>
-                {ticket.bookingReference && (
-                  <span className="text-sm text-muted-foreground">
-                    | {t("bookingRef")}: {ticket.bookingReference}
-                  </span>
+              <CardTitle>{ticket.subject}</CardTitle>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                <Badge>{t(statusKeys[ticket.status] || "statusOpen")}</Badge>
+                <span>{t("ticketNumber")}: {ticket.ticketNumber}</span>
+                {(ticket.bookingReference || ticket.bookingId) && (
+                  <span>{t("bookingReference")}: {ticket.bookingReference || ticket.bookingId}</span>
                 )}
               </div>
             </div>
             {!isClosed && (
-              <Button variant="outline" size="sm" onClick={handleCloseTicket}>
-                <HugeiconsIcon
-                  icon={CheckmarkCircle02Icon}
-                  className="mr-2 h-4 w-4"
-                />
-                {t("closeTicket")}
+              <Button variant="outline" size="sm" onClick={handleCloseTicket} disabled={closing}>
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} className="me-2 h-4 w-4" />
+                {closing ? t("closing") : t("closeTicket")}
               </Button>
             )}
           </div>
         </CardHeader>
       </Card>
 
-      {/* Messages */}
       <Card className="mb-6">
         <CardContent className="p-0">
           <ScrollArea className="h-[500px] p-4">
             <div className="space-y-4">
-              {ticket.messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${
-                    message.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-4 ${
-                      message.sender === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <HugeiconsIcon
-                        icon={
-                          message.sender === "user"
-                            ? UserIcon
-                            : CustomerServiceIcon
-                        }
-                        className="h-4 w-4"
-                      />
-                      <span className="text-xs font-medium">
-                        {message.sender === "user"
-                          ? ticket.userId.name
-                          : t("supportTeam")}
-                      </span>
-                      <span className="text-xs opacity-70">
-                        {format(new Date(message.createdAt), "MMM d, HH:mm")}
-                      </span>
+              {ticket.messages.map((message) => {
+                if (message.senderType === "system") {
+                  return (
+                    <div key={message.id} className="flex justify-center">
+                      <div className="rounded-full bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800">
+                        {message.message === "ticket_reopened_by_customer"
+                          ? t("reopenedByCustomerMessage")
+                          : message.message}
+                      </div>
                     </div>
-                    <p className="text-sm whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                  );
+                }
+                const isCustomer = message.senderType === "customer";
+                return (
+                  <div key={message.id} className={`flex ${isCustomer ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[85%] rounded-lg p-4 ${isCustomer ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <HugeiconsIcon icon={isCustomer ? UserIcon : CustomerServiceIcon} className="h-4 w-4" />
+                        <span className="text-xs font-medium">{message.senderName || (isCustomer ? ticket.customerName : t("supportTeam"))}</span>
+                        <span className="text-xs opacity-70">{formatDate(message.createdAt, locale)}</span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm">{message.message}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
         </CardContent>
       </Card>
 
-      {/* Reply Box */}
-      {!isClosed && (
+      {!isClosed ? (
         <Card>
           <CardContent className="p-4">
-            <div className="flex gap-4">
-              <Textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder={t("typeYourMessage")}
-                className="flex-1"
-                rows={3}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={sending || !newMessage.trim()}
-                className="self-end"
-              >
-                <HugeiconsIcon icon={TelegramIcon} className="mr-2 h-4 w-4" />
-                {t("send")}
+            <Textarea
+              value={newMessage}
+              onChange={(event) => setNewMessage(event.target.value)}
+              placeholder={t("typeYourMessage")}
+              rows={4}
+            />
+            <div className="mt-3 flex justify-end">
+              <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
+                <HugeiconsIcon icon={TelegramIcon} className="me-2 h-4 w-4" />
+                {sending ? t("sending") : t("send")}
               </Button>
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {isClosed && (
+      ) : (
         <Card className="bg-muted">
-          <CardContent className="p-4 text-center">
-            <HugeiconsIcon
-              icon={CheckmarkCircle02Icon}
-              className="h-8 w-8 text-green-500 mx-auto mb-2"
-            />
+          <CardContent className="p-5 text-center">
             <p className="text-muted-foreground">{t("ticketClosedMessage")}</p>
+            <Button className="mt-4" onClick={handleReopenTicket} disabled={closing}>
+              {closing ? t("reopeningTicket") : t("reopenTicket")}
+            </Button>
           </CardContent>
         </Card>
       )}
     </div>
   );
+}
+
+function formatDate(value: string | null, locale: string) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }

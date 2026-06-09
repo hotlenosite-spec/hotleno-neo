@@ -6,6 +6,7 @@ import PaymentLog from "@/models/PaymentLog";
 import SupplierLog from "@/models/SupplierLog";
 import { PAID_BOOKING_STATUSES, getNextBookingStatus } from "@/lib/booking-status";
 import { runBookingAfterPayment } from "@/lib/booking/booking-orchestrator";
+import { createAdminNotificationSafely } from "@/lib/admin-notifications";
 
 export const runtime = "nodejs";
 
@@ -180,6 +181,16 @@ async function runBookingOrchestratorSafely(
         },
         error,
       });
+      await createAdminNotificationSafely({
+        type: "manual_review_required",
+        title: "Manual review required",
+        message: `Booking ${bookingId} requires review after payment processing.`,
+        severity: "warning",
+        targetRole: "admin",
+        relatedType: "booking",
+        relatedId: bookingId,
+        data: { reference: bookingId },
+      });
     }
 
     return {
@@ -277,6 +288,20 @@ async function handlePaymentSucceeded(event: Stripe.Event) {
     message:
       "Payment succeeded; booking orchestrator will handle supplier booking",
   });
+  await createAdminNotificationSafely({
+    type: "payment_received",
+    title: "Payment received",
+    message: `Payment was recorded for booking ${data.bookingId}.`,
+    severity: "success",
+    targetRole: "admin",
+    relatedType: "payment",
+    relatedId: data.bookingId,
+    data: {
+      reference: data.bookingId,
+      amount: data.amount || 0,
+      currency: data.currency || "",
+    },
+  });
 
   await runBookingOrchestratorSafely(event, data.bookingId);
 
@@ -310,6 +335,16 @@ async function handlePaymentFailed(event: Stripe.Event) {
       ? data.failureReason
       : "Missing bookingId in Stripe metadata",
     error: data.bookingId ? null : { code: "missing_booking_id" },
+  });
+  await createAdminNotificationSafely({
+    type: "payment_failed",
+    title: "Payment failed",
+    message: `Payment could not be completed for booking ${data.bookingId || "-"}.`,
+    severity: "error",
+    targetRole: "admin",
+    relatedType: "payment",
+    relatedId: data.bookingId || undefined,
+    data: { reference: data.bookingId || "-" },
   });
 
   return { handled: true, processed: true };

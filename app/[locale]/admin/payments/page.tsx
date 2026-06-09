@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ContentState } from "@/components/shared/content-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Money01Icon,
@@ -63,7 +72,10 @@ const payments: PaymentItem[] = [
 ];
 
 export default function AdminPaymentsPage() {
+  const t = useTranslations("admin");
+  const locale = useLocale();
   const [search, setSearch] = useState("");
+  const [selectedPayment, setSelectedPayment] = useState<PaymentItem | null>(null);
 
   const filteredPayments = payments.filter((payment) => {
     const keyword = search.toLowerCase();
@@ -93,29 +105,30 @@ export default function AdminPaymentsPage() {
   };
 
   const getStatusBadge = (status: PaymentItem["status"]) => {
+    const label = t(`paymentStatus_${status}`);
     switch (status) {
       case "succeeded":
         return (
           <Badge className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 hover:bg-emerald-50">
-            succeeded
+            {label}
           </Badge>
         );
       case "pending":
         return (
           <Badge className="rounded-full bg-amber-50 px-3 py-1 text-amber-700 hover:bg-amber-50">
-            pending
+            {label}
           </Badge>
         );
       case "failed":
         return (
           <Badge className="rounded-full bg-red-50 px-3 py-1 text-red-700 hover:bg-red-50">
-            failed
+            {label}
           </Badge>
         );
       case "refund_required":
         return (
           <Badge className="rounded-full bg-red-50 px-3 py-1 text-red-700 hover:bg-red-50">
-            refund required
+            {label}
           </Badge>
         );
       default:
@@ -129,55 +142,55 @@ export default function AdminPaymentsPage() {
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div>
             <div className="mb-4 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-[#f4d58d]">
-              HOTLENO Payments Control
+              {t("paymentsControl")}
             </div>
 
             <h1 className="text-3xl font-black tracking-tight md:text-4xl">
-              المدفوعات
+              {t("payments")}
             </h1>
 
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-200">
-              متابعة عمليات الدفع، الحالات المعلقة، والمبالغ التي تحتاج مراجعة.
+              {t("paymentsDescription")}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <HeroMiniCard title="Payments" value={payments.length.toString()} />
-            <HeroMiniCard title="Pending" value={pendingCount.toString()} />
-            <HeroMiniCard title="Issues" value={failedCount.toString()} />
+            <HeroMiniCard title={t("payments")} value={payments.length.toString()} />
+            <HeroMiniCard title={t("paymentStatus_pending")} value={pendingCount.toString()} />
+            <HeroMiniCard title={t("paymentsNeedReview")} value={failedCount.toString()} />
           </div>
         </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatsCard
-          title="إجمالي العمليات"
+          title={t("totalPaymentOperations")}
           value={payments.length.toString()}
-          description="جميع عمليات الدفع"
+          description={t("allPaymentOperations")}
           icon={CreditCardIcon}
           color="bg-orange-50 text-orange-700"
         />
 
         <StatsCard
-          title="إجمالي المبالغ"
+          title={t("totalPaymentAmount")}
           value={formatCurrency(totalAmount, "SAR")}
-          description="إجمالي المدفوعات المسجلة"
+          description={t("recordedPayments")}
           icon={Money01Icon}
           color="bg-emerald-50 text-emerald-700"
         />
 
         <StatsCard
-          title="المدفوعات الناجحة"
+          title={t("successfulPayments")}
           value={formatCurrency(succeededAmount, "SAR")}
-          description="عمليات مكتملة"
+          description={t("completedPayments")}
           icon={ChartIncreaseIcon}
           color="bg-orange-50 text-orange-700"
         />
 
         <StatsCard
-          title="تحتاج مراجعة"
+          title={t("paymentsNeedReview")}
           value={failedCount.toString()}
-          description="فشل أو استرداد مطلوب"
+          description={t("failedOrRefundRequired")}
           icon={Alert02Icon}
           color="bg-red-50 text-red-700"
         />
@@ -192,7 +205,7 @@ export default function AdminPaymentsPage() {
             />
 
             <Input
-              placeholder="ابحث برقم الدفع، رقم الحجز، العميل أو الحالة..."
+              placeholder={t("searchPayments")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="h-12 rounded-2xl border-slate-200 bg-slate-50 pr-12 font-medium"
@@ -204,15 +217,28 @@ export default function AdminPaymentsPage() {
       <Card className="overflow-hidden rounded-[2rem] border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100 pb-4">
           <CardTitle className="text-xl font-black text-slate-950">
-            قائمة المدفوعات
+            {t("paymentsList")}
           </CardTitle>
         </CardHeader>
 
         <CardContent className="p-5">
           {filteredPayments.length === 0 ? (
-            <p className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center text-sm font-medium text-slate-500">
-              لا توجد عمليات دفع مطابقة
-            </p>
+            <ContentState
+              type="empty"
+              title={t("noPaymentsFound")}
+              description={
+                search
+                  ? t("noPaymentsSearchDescription")
+                  : t("noPaymentsDescription")
+              }
+              action={
+                search ? (
+                  <Button variant="outline" onClick={() => setSearch("")}>
+                    {t("clearSearch")}
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : (
             <div className="space-y-4">
               {filteredPayments.map((payment) => (
@@ -233,10 +259,10 @@ export default function AdminPaymentsPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-500">
-                        <span>Payment ID: {payment.id}</span>
-                        <span>Customer: {payment.customer}</span>
-                        <span>Method: {payment.method}</span>
-                        <span>Date: {payment.createdAt}</span>
+                        <span>{t("paymentId")}: {payment.id}</span>
+                        <span>{t("customer")}: {payment.customer}</span>
+                        <span>{t("paymentMethod")}: {payment.method}</span>
+                        <span>{t("paymentDate")}: {payment.createdAt}</span>
                       </div>
                     </div>
 
@@ -248,8 +274,9 @@ export default function AdminPaymentsPage() {
                       <Button
                         variant="outline"
                         className="mt-3 rounded-2xl border-slate-200 font-bold"
+                        onClick={() => setSelectedPayment(payment)}
                       >
-                        عرض التفاصيل
+                        {t("viewPaymentDetails")}
                       </Button>
                     </div>
                   </div>
@@ -259,6 +286,56 @@ export default function AdminPaymentsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={Boolean(selectedPayment)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedPayment(null);
+        }}
+      >
+        <DialogContent className="rounded-3xl border-slate-200 sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("paymentDetails")}</DialogTitle>
+            <DialogDescription>{t("paymentDetailsDescription")}</DialogDescription>
+          </DialogHeader>
+
+          {selectedPayment && (
+            <div className="grid gap-3 py-2 sm:grid-cols-2">
+              <PaymentDetail label={t("paymentId")} value={selectedPayment.id} />
+              <PaymentDetail
+                label={t("bookingReference")}
+                value={selectedPayment.bookingReference}
+              />
+              <PaymentDetail label={t("customer")} value={selectedPayment.customer} />
+              <PaymentDetail label={t("paymentMethod")} value={selectedPayment.method} />
+              <PaymentDetail
+                label={t("amount")}
+                value={formatCurrency(selectedPayment.amount, selectedPayment.currency)}
+              />
+              <PaymentDetail
+                label={t("paymentStatus")}
+                value={t(`paymentStatus_${selectedPayment.status}`)}
+              />
+              <PaymentDetail label={t("paymentProvider")} value={selectedPayment.provider} />
+              <PaymentDetail
+                label={t("paymentDate")}
+                value={new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
+                  dateStyle: "medium",
+                }).format(new Date(selectedPayment.createdAt))}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function PaymentDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+      <p className="text-xs font-bold text-slate-500">{label}</p>
+      <p className="mt-2 break-words text-sm font-black text-slate-950">{value}</p>
     </div>
   );
 }

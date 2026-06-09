@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon, Menu01Icon } from "@hugeicons/core-free-icons";
 import AuthButtons from "./auth-button";
+import { CurrencySelect } from "@/components/shared/currency-select";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -33,15 +34,15 @@ export const HeroHeader = () => {
     pathname === "/admin" ||
     pathname.startsWith("/admin/");
 
-  const isAr = locale === "ar";
   const navItems = [
-    { label: isAr ? "الفنادق" : "Hotels", href: `/${locale}/hotels` },
-    { label: isAr ? "الطيران" : "Flights", href: `/${locale}/flights` },
-    { label: isAr ? "الخدمات" : "Services", href: `/${locale}/services` },
-    { label: isAr ? "الأنشطة" : "Activities", href: `/${locale}/activities` },
-    { label: isAr ? "المدونة" : "Blog", href: `/${locale}/blog` },
-    { label: isAr ? "عروض اليوم" : "Today deals", href: `/${locale}` },
+    { label: t("navigation.hotels"), href: `/${locale}/hotels` },
+    { label: t("navigation.flights"), href: `/${locale}/flights` },
+    { label: t("navigation.services"), href: `/${locale}/services` },
+    { label: t("navigation.activities"), href: `/${locale}/activities` },
+    { label: t("navigation.blog"), href: `/${locale}/blog` },
+    { label: t("navigation.todayDeals"), href: `/${locale}` },
   ];
+  const languageCode = locale === "ar" ? "AR" : "EN";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,7 +84,7 @@ export const HeroHeader = () => {
                 HOTLENO
               </p>
               <p className="mt-0.5 text-[11px] font-bold text-slate-500">
-                {isAr ? "منصة إدارة الحجوزات" : "Booking management platform"}
+                {t("navigation.adminPlatform")}
               </p>
             </div>
           </Link>
@@ -101,11 +102,11 @@ export const HeroHeader = () => {
                 />
               ) : (
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#071b33] text-[9px] font-black text-white">
-                  {isAr ? "AR" : "EN"}
+                  {languageCode}
                 </span>
               )}
 
-              <span>{isAr ? "AR" : "EN"}</span>
+              <span>{languageCode}</span>
               <HugeiconsIcon
                 icon={ArrowRight01Icon}
                 className="h-4 w-4 text-slate-500"
@@ -162,13 +163,15 @@ export const HeroHeader = () => {
                   alt=""
                   className="h-5 w-5 rounded-full object-cover"
                 />
-                <span>{isAr ? "AR" : "EN"}</span>
+                <span>{languageCode}</span>
                 <HugeiconsIcon
                   icon={ArrowRight01Icon}
                   className="h-4 w-4 text-slate-500"
                   aria-hidden="true"
                 />
               </div>
+
+              <CurrencySelect compact />
 
               <AuthButtons />
             </div>
@@ -179,7 +182,7 @@ export const HeroHeader = () => {
                   variant="ghost"
                   size="icon"
                   className="text-[#0F172A] lg:hidden"
-                  aria-label={isAr ? "فتح القائمة" : "Open menu"}
+                  aria-label={t("navigation.openMenu")}
                 >
                   <HugeiconsIcon icon={Menu01Icon} className="h-6 w-6" />
                 </Button>
@@ -191,6 +194,7 @@ export const HeroHeader = () => {
                 </SheetHeader>
 
                 <div className="mt-8 flex flex-col gap-4">
+                  <CurrencySelect className="w-full rounded-2xl" />
                   {navItems.map((item) => (
                     <Link
                       key={item.label}

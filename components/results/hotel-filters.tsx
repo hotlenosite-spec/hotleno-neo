@@ -35,6 +35,7 @@ interface HotelFiltersProps {
   availableBoardTypes: string[];
   totalResults: number;
   filteredResults: number;
+  currency?: string;
 }
 
 const STAR_RATINGS = [5, 4, 3, 2, 1];
@@ -55,11 +56,11 @@ const COMMON_AMENITIES = [
 ];
 
 const BOARD_TYPES = [
-  { value: "Room Only", label: "Room Only" },
-  { value: "Bed and Breakfast", label: "Bed & Breakfast" },
-  { value: "Half Board", label: "Half Board" },
-  { value: "Full Board", label: "Full Board" },
-  { value: "All Inclusive", label: "All Inclusive" },
+  { value: "Room Only", labelKey: "roomOnly" },
+  { value: "Bed and Breakfast", labelKey: "bedAndBreakfast" },
+  { value: "Half Board", labelKey: "halfBoard" },
+  { value: "Full Board", labelKey: "fullBoard" },
+  { value: "All Inclusive", labelKey: "allInclusive" },
 ];
 
 export function HotelFiltersPanel({
@@ -71,6 +72,7 @@ export function HotelFiltersPanel({
   availableBoardTypes,
   totalResults,
   filteredResults,
+  currency = "USD",
 }: HotelFiltersProps) {
   const t = useTranslations("hotels");
   // Local state for price slider - sync with filters prop
@@ -155,14 +157,16 @@ export function HotelFiltersPanel({
       : 0);
 
   return (
-    <Card className="sticky top-4">
-      <CardHeader className="pb-3">
+    <Card className="sticky top-4 overflow-hidden border-slate-200 bg-white shadow-sm">
+      <CardHeader className="border-b border-slate-100 bg-slate-50 pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <HugeiconsIcon icon={FilterRemoveIcon} className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-lg font-black text-[#0F172A]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-[#F97316]">
+              <HugeiconsIcon icon={FilterRemoveIcon} className="h-5 w-5" />
+            </span>
             {t("filters")}
             {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge className="bg-[#F97316] text-white hover:bg-[#F97316]">
                 {activeFiltersCount}
               </Badge>
             )}
@@ -172,7 +176,7 @@ export function HotelFiltersPanel({
               variant="ghost"
               size="sm"
               onClick={clearAllFilters}
-              className="text-muted-foreground"
+              className="font-bold text-[#F97316] hover:bg-orange-50 hover:text-[#EA580C]"
             >
               {t("clearAll")}
             </Button>
@@ -184,7 +188,7 @@ export function HotelFiltersPanel({
         </p>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 p-5">
         <Accordion
           type="multiple"
           defaultValue={["price", "stars"]}
@@ -203,16 +207,20 @@ export function HotelFiltersPanel({
                 {/* Price Display */}
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">
+                      {t("min")}
+                    </Label>
                     <div className="px-3 py-2 bg-muted rounded-md text-sm font-medium">
-                      {formatCurrency(localPriceRange[0], "USD")}
+                      {formatCurrency(localPriceRange[0], currency)}
                     </div>
                   </div>
                   <div className="text-muted-foreground">-</div>
                   <div className="flex-1">
-                    <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">
+                      {t("max")}
+                    </Label>
                     <div className="px-3 py-2 bg-muted rounded-md text-sm font-medium">
-                      {formatCurrency(localPriceRange[1], "USD")}
+                      {formatCurrency(localPriceRange[1], currency)}
                     </div>
                   </div>
                 </div>
@@ -231,8 +239,8 @@ export function HotelFiltersPanel({
 
                 {/* Range Labels */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{formatCurrency(minPrice, "USD")}</span>
-                  <span>{formatCurrency(maxPrice, "USD")}</span>
+                  <span>{formatCurrency(minPrice, currency)}</span>
+                  <span>{formatCurrency(maxPrice, currency)}</span>
                 </div>
               </div>
             </AccordionContent>
@@ -249,7 +257,12 @@ export function HotelFiltersPanel({
             <AccordionContent>
               <div className="space-y-2 pt-2">
                 {STAR_RATINGS.map((rating) => (
-                  <div key={rating} className="flex items-center space-x-2">
+                  <div
+                    key={rating}
+                    className={`flex items-center gap-2 rounded-lg px-2 py-2 transition ${
+                      filters.starRatings.includes(rating) ? "bg-orange-50" : "hover:bg-slate-50"
+                    }`}
+                  >
                     <Checkbox
                       id={`star-${rating}`}
                       checked={filters.starRatings.includes(rating)}
@@ -290,7 +303,12 @@ export function HotelFiltersPanel({
                   ? availableAmenities
                   : COMMON_AMENITIES
                 ).map((amenity) => (
-                  <div key={amenity} className="flex items-center space-x-2">
+                  <div
+                    key={amenity}
+                    className={`flex items-center gap-2 rounded-lg px-2 py-2 transition ${
+                      filters.amenities.includes(amenity) ? "bg-orange-50" : "hover:bg-slate-50"
+                    }`}
+                  >
                     <Checkbox
                       id={`amenity-${amenity}`}
                       checked={filters.amenities.includes(amenity)}
@@ -326,7 +344,9 @@ export function HotelFiltersPanel({
                 ).map((board) => (
                   <div
                     key={board.value}
-                    className="flex items-center space-x-2"
+                    className={`flex items-center gap-2 rounded-lg px-2 py-2 transition ${
+                      filters.boardTypes.includes(board.value) ? "bg-orange-50" : "hover:bg-slate-50"
+                    }`}
                   >
                     <Checkbox
                       id={`board-${board.value}`}
@@ -337,7 +357,7 @@ export function HotelFiltersPanel({
                       htmlFor={`board-${board.value}`}
                       className="text-sm cursor-pointer"
                     >
-                      {board.label}
+                      {t(`boardTypes.${board.labelKey}`)}
                     </Label>
                   </div>
                 ))}
@@ -348,7 +368,11 @@ export function HotelFiltersPanel({
           {/* Refundable Only */}
           <AccordionItem value="refundable">
             <div className="py-4">
-              <div className="flex items-center space-x-2">
+              <div
+                className={`flex items-center gap-2 rounded-lg px-2 py-2 transition ${
+                  filters.refundableOnly ? "bg-orange-50" : "hover:bg-slate-50"
+                }`}
+              >
                 <Checkbox
                   id="refundable-only"
                   checked={filters.refundableOnly}

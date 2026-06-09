@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -9,7 +10,8 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Cancel01Icon,
-  GridViewIcon
+  GridViewIcon,
+  Image01Icon,
 } from "@hugeicons/core-free-icons";
 import type { HotelImage } from "@/types/travellanda";
 
@@ -24,6 +26,7 @@ function getValidImages(images: HotelImage[]): HotelImage[] {
 }
 
 export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps) {
+  const t = useTranslations("hotels");
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -32,8 +35,15 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
 
   if (!validImages || validImages.length === 0) {
     return (
-      <div className="aspect-video bg-gray-100 rounded-2xl flex items-center justify-center">
-        <p className="text-muted-foreground">No images available</p>
+      <div className="relative flex aspect-[16/9] items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-200/70 to-transparent" />
+        <div className="relative text-center text-slate-500">
+          <span className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-[#F97316] shadow-sm">
+            <HugeiconsIcon icon={Image01Icon} className="h-8 w-8" />
+          </span>
+          <p className="font-bold text-[#0F172A]">{t("noImage")}</p>
+          <p className="mt-1 text-sm">{t("imagesMayBeUnavailable")}</p>
+        </div>
       </div>
     );
   }
@@ -58,10 +68,14 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
   return (
     <>
       {/* Main Gallery Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 rounded-2xl overflow-hidden">
+      <div className="relative grid grid-cols-1 gap-2 overflow-hidden rounded-2xl bg-slate-100 md:grid-cols-4">
         {/* Main Large Image */}
         <div 
-          className="md:col-span-2 md:row-span-2 relative aspect-[4/3] md:aspect-auto cursor-pointer group"
+          className={`group relative aspect-[4/3] cursor-pointer overflow-hidden ${
+            gridImages.length > 0
+              ? "md:col-span-2 md:row-span-2 md:aspect-auto md:min-h-[420px]"
+              : "md:col-span-4 md:aspect-[16/7]"
+          }`}
           onClick={() => {
             setCurrentIndex(0);
             setIsOpen(true);
@@ -81,7 +95,7 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
         {gridImages.map((image, index) => (
           <div
             key={index}
-            className="relative aspect-video cursor-pointer group hidden md:block"
+            className="group relative hidden aspect-video cursor-pointer overflow-hidden md:block"
             onClick={() => {
               setCurrentIndex(index + 1);
               setIsOpen(true);
@@ -99,9 +113,9 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
             {/* Show All Photos Button on last image */}
             {index === gridImages.length - 1 && validImages.length > 5 && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <Button variant="secondary" size="sm">
-                  <HugeiconsIcon icon={GridViewIcon} className="mr-2 h-4 w-4" />
-                  +{validImages.length - 5} more
+                <Button variant="secondary" size="sm" className="font-bold">
+                  <HugeiconsIcon icon={GridViewIcon} className="me-2 h-4 w-4" />
+                  +{validImages.length - 5} {t("more")}
                 </Button>
               </div>
             )}
@@ -110,12 +124,12 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
 
         {/* Mobile: Show overlay with photo count */}
         <div 
-          className="md:hidden absolute bottom-4 right-4"
+          className="absolute bottom-4 end-4 md:hidden"
           onClick={() => setIsOpen(true)}
         >
-          <Button variant="secondary" size="sm">
-            <HugeiconsIcon icon={GridViewIcon} className="mr-2 h-4 w-4" />
-            {validImages.length} photos
+          <Button variant="secondary" size="sm" className="font-bold shadow-lg">
+            <HugeiconsIcon icon={GridViewIcon} className="me-2 h-4 w-4" />
+            {validImages.length} {t("photos")}
           </Button>
         </div>
       </div>
@@ -123,19 +137,24 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
       {/* Lightbox Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent 
-          className="max-w-6xl w-full h-[90vh] p-0 bg-black/95 border-none"
+          className="h-[90vh] w-[calc(100%-1rem)] max-w-6xl overflow-hidden border-none bg-black/95 p-0"
           onKeyDown={handleKeyDown}
         >
           <DialogTitle className="sr-only">
-            {hotelName} - Image {currentIndex + 1} of {validImages.length}
+            {t("imagePosition", {
+              hotel: hotelName,
+              current: currentIndex + 1,
+              total: validImages.length,
+            })}
           </DialogTitle>
           
           {/* Close Button */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+            className="absolute end-4 top-4 z-50 text-white hover:bg-white/20"
             onClick={() => setIsOpen(false)}
+            aria-label={t("closeGallery")}
           >
             <HugeiconsIcon icon={Cancel01Icon} className="h-6 w-6" />
           </Button>
@@ -157,22 +176,24 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+                  className="absolute start-2 top-1/2 h-11 w-11 -translate-y-1/2 text-white hover:bg-white/20 sm:start-4 sm:h-12 sm:w-12"
                   onClick={(e) => {
                     e.stopPropagation();
                     handlePrev();
                   }}
+                  aria-label={t("previousImage")}
                 >
                   <HugeiconsIcon icon={ArrowLeft01Icon} className="h-8 w-8" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+                  className="absolute end-2 top-1/2 h-11 w-11 -translate-y-1/2 text-white hover:bg-white/20 sm:end-4 sm:h-12 sm:w-12"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleNext();
                   }}
+                  aria-label={t("nextImage")}
                 >
                   <HugeiconsIcon icon={ArrowRight01Icon} className="h-8 w-8" />
                 </Button>
@@ -180,13 +201,13 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
             )}
 
             {/* Image Counter */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black/50 px-4 py-2 rounded-full">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-sm font-bold text-white">
               {currentIndex + 1} / {validImages.length}
             </div>
 
             {/* Image Description */}
             {validImages[currentIndex]?.Description && (
-              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 text-white text-center max-w-2xl px-4">
+              <div className="absolute bottom-16 left-1/2 max-w-2xl -translate-x-1/2 px-4 text-center text-sm text-white">
                 <p className="bg-black/50 px-4 py-2 rounded-lg">
                   {validImages[currentIndex].Description}
                 </p>
@@ -196,7 +217,7 @@ export function HotelImageGallery({ images, hotelName }: HotelImageGalleryProps)
 
           {/* Thumbnail Strip */}
           {validImages.length > 1 && (
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 px-4 overflow-x-auto max-w-full pb-2">
+            <div className="absolute bottom-20 left-1/2 flex max-w-full -translate-x-1/2 gap-2 overflow-x-auto px-4 pb-2">
               {validImages.map((image, index) => (
                 <button
                   key={index}

@@ -4,6 +4,8 @@ import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { createLog, getUserById } from "@/lib/firebase-store";
 import { getNextBookingStatus, isBookingStatus, type BookingStatus } from "@/lib/booking-status";
 import { verifyToken } from "@/lib/jwt";
+import { requireStaffPermission } from "@/lib/staff-permissions";
+import { createAdminNotificationSafely } from "@/lib/admin-notifications";
 
 type BookingDocument = Document & {
   _id: string;
@@ -184,6 +186,9 @@ function canDirectlySetStatus(currentStatus: string | undefined, nextStatus: str
 
 export async function GET(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, "bookings.view"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const auth = await requireAdmin(req);
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -287,6 +292,9 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, "bookings.manage"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const auth = await requireAdmin(req);
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -539,6 +547,21 @@ export async function PATCH(req: NextRequest) {
       );
     }
     const updatedBooking = await bookings.findOne({ _id: bookingId });
+    if (updates.status === "manual_review_required") {
+      await createAdminNotificationSafely({
+        type: "manual_review_required",
+        title: "Manual review required",
+        message: `Booking ${booking.bookingReference || bookingId} requires an operational review.`,
+        severity: "warning",
+        targetRole: "admin",
+        relatedType: "booking",
+        relatedId: bookingId,
+        data: {
+          reference: String(booking.bookingReference || bookingId),
+          customer: String(booking.customerEmail || ""),
+        },
+      });
+    }
     await createLog({
       supplier: String(booking.supplier || "none"),
       type: logType,

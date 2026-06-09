@@ -15,6 +15,7 @@ import type {
   SupplierGuestOccupancy,
   SupplierPreBookResponse,
 } from "@/lib/suppliers/types";
+import { createAdminNotificationSafely } from "@/lib/admin-notifications";
 
 type BookingDocument = Document & {
   _id: string;
@@ -267,6 +268,20 @@ async function submitTboCertificationBooking(params: {
       };
 
       await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+      await createAdminNotificationSafely({
+        type: "booking_failed",
+        title: "Supplier booking failed",
+        message: `Booking ${booking.bookingReference || booking._id} failed during supplier confirmation.`,
+        severity: "error",
+        targetRole: "admin",
+        relatedType: "booking",
+        relatedId: booking._id,
+        data: {
+          reference: String(booking.bookingReference || booking._id),
+          customer: String(booking.customerEmail || ""),
+          stage: "prebook",
+        },
+      });
       logTboCertificationBookingDiagnostics({
         internalBookingId: booking._id,
         tboBookingEnabled,
@@ -398,6 +413,20 @@ async function submitTboCertificationBooking(params: {
     };
 
     await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+    await createAdminNotificationSafely({
+      type: "booking_failed",
+      title: "Supplier booking failed",
+      message: `Booking ${booking.bookingReference || booking._id} failed during supplier confirmation.`,
+      severity: "error",
+      targetRole: "admin",
+      relatedType: "booking",
+      relatedId: booking._id,
+      data: {
+        reference: String(booking.bookingReference || booking._id),
+        customer: String(booking.customerEmail || ""),
+        stage: "book",
+      },
+    });
     logTboCertificationBookingDiagnostics({
       internalBookingId: booking._id,
       tboBookingEnabled,
@@ -616,6 +645,21 @@ export async function POST(req: NextRequest) {
 
     const bookingsCollection = db.collection<BookingDocument>("bookings");
     await bookingsCollection.insertOne(booking);
+    await createAdminNotificationSafely({
+      type: "booking_created",
+      title: "New booking created",
+      message: `Booking ${booking.bookingReference || booking._id} was created.`,
+      severity: "success",
+      targetRole: "admin",
+      relatedType: "booking",
+      relatedId: booking._id,
+      data: {
+        reference: String(booking.bookingReference || booking._id),
+        customer: String(booking.customerEmail || ""),
+        amount: Number(booking.totalPrice || 0),
+        currency: String(booking.currency || ""),
+      },
+    });
     await createLog({
       type: "booking_created",
       status: "success",

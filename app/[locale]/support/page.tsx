@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/components/providers/auth-provider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -25,73 +16,114 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ContentState } from "@/components/shared/content-state";
+import { Textarea } from "@/components/ui/textarea";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
-  Message02Icon,
-  ClockIcon,
-  Ticket01Icon,
   ArrowRight01Icon,
+  ClockIcon,
+  Message02Icon,
+  Ticket01Icon,
 } from "@hugeicons/core-free-icons";
-import { format } from "date-fns";
-import Link from "next/link";
+import { toast } from "sonner";
 
-interface Ticket {
+type Ticket = {
   _id: string;
   ticketNumber: string;
   subject: string;
   category: string;
   priority: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
-  messageCount?: number;
-}
+  updatedAt: string | null;
+};
+
+const categoryKeys = {
+  booking_issue: "categoryBookingIssue",
+  payment_issue: "categoryPaymentIssue",
+  cancellation_refund: "categoryCancellationRefund",
+  hotel_issue: "categoryHotelIssue",
+  account_issue: "categoryAccountIssue",
+  general: "categoryGeneral",
+} as const;
+
+const statusKeys = {
+  open: "statusOpen",
+  waiting_customer: "statusWaitingCustomer",
+  waiting_admin: "statusWaitingAdmin",
+  waiting_supplier: "statusWaitingSupplier",
+  resolved: "statusResolved",
+  closed: "statusClosed",
+} as const;
+
+const priorityKeys = {
+  low: "priorityLow",
+  normal: "priorityNormal",
+  high: "priorityHigh",
+  urgent: "priorityUrgent",
+} as const;
 
 export default function SupportPage() {
   const t = useTranslations("support");
-  const { isAuthenticated } = useAuth();
+  const locale = useLocale();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newTicket, setNewTicket] = useState({
     subject: "",
     category: "",
-    priority: "medium",
     message: "",
     bookingReference: "",
   });
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchTickets();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
-
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const token = localStorage.getItem("token");
       const response = await fetch("/api/support/tickets", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTickets(data.tickets);
-      }
-    } catch (error) {
-      console.error("Failed to fetch tickets:", error);
+      if (!response.ok) throw new Error("support_fetch_failed");
+      const data = await response.json();
+      setTickets(Array.isArray(data.tickets) ? data.tickets : []);
+    } catch {
+      setLoadError(true);
       toast.error(t("failedToFetchTickets"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    void fetchTickets();
+  }, [authLoading, fetchTickets, isAuthenticated]);
 
   const handleCreateTicket = async () => {
+    if (!newTicket.subject.trim() || !newTicket.category || !newTicket.message.trim()) {
+      toast.error(t("requiredFields"));
+      return;
+    }
+
     try {
+      setSaving(true);
       const token = localStorage.getItem("token");
       const response = await fetch("/api/support/tickets", {
         method: "POST",
@@ -101,68 +133,43 @@ export default function SupportPage() {
         },
         body: JSON.stringify(newTicket),
       });
+      if (!response.ok) throw new Error("support_create_failed");
 
-      if (response.ok) {
-        toast.success(t("ticketCreated"));
-        setIsCreateDialogOpen(false);
-        setNewTicket({
-          subject: "",
-          category: "",
-          priority: "medium",
-          message: "",
-          bookingReference: "",
-        });
-        fetchTickets();
-      } else {
-        toast.error(t("failedToCreateTicket"));
-      }
-    } catch (_error) {
-      toast.error(t("errorOccurred"));
+      toast.success(t("ticketCreated"));
+      setIsCreateDialogOpen(false);
+      setNewTicket({
+        subject: "",
+        category: "",
+        message: "",
+        bookingReference: "",
+      });
+      await fetchTickets();
+    } catch {
+      toast.error(t("failedToCreateTicket"));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "open":
-        return <Badge className="bg-[#F97316]">{t("open")}</Badge>;
-      case "in_progress":
-        return <Badge className="bg-amber-500">{t("inProgress")}</Badge>;
-      case "waiting":
-        return (
-          <Badge
-            variant="outline"
-            className="text-purple-600 border-purple-600"
-          >
-            {t("waiting")}
-          </Badge>
-        );
-      case "resolved":
-        return <Badge className="bg-green-500">{t("resolved")}</Badge>;
-      case "closed":
-        return <Badge variant="secondary">{t("closed")}</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case "urgent":
-        return <Badge variant="destructive">{t("urgent")}</Badge>;
-      case "high":
-        return <Badge className="bg-orange-500">{t("high")}</Badge>;
-      case "medium":
-        return <Badge variant="outline">{t("medium")}</Badge>;
-      case "low":
-        return <Badge variant="secondary">{t("low")}</Badge>;
-      default:
-        return null;
-    }
-  };
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <div className="container mx-auto max-w-4xl px-4 py-12">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <h1 className="text-2xl font-bold">{t("signInRequired")}</h1>
+            <p className="mt-2 text-muted-foreground">{t("signInRequiredDescription")}</p>
+            <Button asChild className="mt-6">
+              <Link href={`/${locale}/login`}>{t("signIn")}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold">{t("supportCenter")}</h1>
           <p className="text-muted-foreground">{t("supportDescription")}</p>
@@ -170,116 +177,75 @@ export default function SupportPage() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <HugeiconsIcon icon={Add01Icon} className="mr-2 h-4 w-4" />
+              <HugeiconsIcon icon={Add01Icon} className="me-2 h-4 w-4" />
               {t("newTicket")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{t("createNewTicket")}</DialogTitle>
-              <DialogDescription>
-                {t("createTicketDescription")}
-              </DialogDescription>
+              <DialogDescription>{t("createTicketDescription")}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div>
-                <label className="text-sm font-medium">{t("subject")}</label>
+              <Field label={t("subject")}>
                 <Input
                   value={newTicket.subject}
-                  onChange={(e) =>
-                    setNewTicket({ ...newTicket, subject: e.target.value })
+                  onChange={(event) =>
+                    setNewTicket((current) => ({ ...current, subject: event.target.value }))
                   }
                   placeholder={t("subjectPlaceholder")}
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("category")}</label>
+              </Field>
+              <Field label={t("category")}>
                 <Select
                   value={newTicket.category}
-                  onValueChange={(value) =>
-                    setNewTicket({ ...newTicket, category: value })
+                  onValueChange={(category) =>
+                    setNewTicket((current) => ({ ...current, category }))
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("selectCategory")} />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("selectCategory")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="booking">
-                      {t("categoryBooking")}
-                    </SelectItem>
-                    <SelectItem value="payment">
-                      {t("categoryPayment")}
-                    </SelectItem>
-                    <SelectItem value="technical">
-                      {t("categoryTechnical")}
-                    </SelectItem>
-                    <SelectItem value="account">
-                      {t("categoryAccount")}
-                    </SelectItem>
-                    <SelectItem value="other">{t("categoryOther")}</SelectItem>
+                    {Object.entries(categoryKeys).map(([value, key]) => (
+                      <SelectItem key={value} value={value}>{t(key)}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("priority")}</label>
-                <Select
-                  value={newTicket.priority}
-                  onValueChange={(value) =>
-                    setNewTicket({ ...newTicket, priority: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("selectPriority")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">{t("low")}</SelectItem>
-                    <SelectItem value="medium">{t("medium")}</SelectItem>
-                    <SelectItem value="high">{t("high")}</SelectItem>
-                    <SelectItem value="urgent">{t("urgent")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">
-                  {t("bookingReference")} ({t("optional")})
-                </label>
+              </Field>
+              <Field label={`${t("bookingReference")} (${t("optional")})`}>
                 <Input
                   value={newTicket.bookingReference}
-                  onChange={(e) =>
-                    setNewTicket({
-                      ...newTicket,
-                      bookingReference: e.target.value,
-                    })
+                  onChange={(event) =>
+                    setNewTicket((current) => ({
+                      ...current,
+                      bookingReference: event.target.value,
+                    }))
                   }
                   placeholder={t("bookingRefPlaceholder")}
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("message")}</label>
+              </Field>
+              <Field label={t("message")}>
                 <Textarea
                   value={newTicket.message}
-                  onChange={(e) =>
-                    setNewTicket({ ...newTicket, message: e.target.value })
+                  onChange={(event) =>
+                    setNewTicket((current) => ({ ...current, message: event.target.value }))
                   }
                   placeholder={t("messagePlaceholder")}
-                  rows={4}
+                  rows={5}
                 />
-              </div>
+              </Field>
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 {t("cancel")}
               </Button>
-              <Button onClick={handleCreateTicket}>{t("create")}</Button>
+              <Button onClick={handleCreateTicket} disabled={saving}>
+                {saving ? t("creating") : t("create")}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Tickets List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -290,64 +256,55 @@ export default function SupportPage() {
         <CardContent>
           {loading ? (
             <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-24" />
-              ))}
+              {[1, 2, 3].map((item) => <Skeleton key={item} className="h-24" />)}
             </div>
+          ) : loadError ? (
+            <ContentState
+              type="error"
+              title={t("ticketsLoadErrorTitle")}
+              description={t("ticketsLoadErrorDescription")}
+              action={
+                <Button variant="outline" onClick={fetchTickets}>
+                  {t("retry")}
+                </Button>
+              }
+            />
           ) : tickets.length === 0 ? (
-            <div className="text-center py-8">
-              <HugeiconsIcon
-                icon={Message02Icon}
-                className="h-12 w-12 text-muted-foreground mx-auto mb-4"
-              />
-              <h3 className="text-lg font-semibold mb-2">
-                {t("noTicketsYet")}
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                {t("createFirstTicket")}
-              </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <HugeiconsIcon icon={Add01Icon} className="mr-2 h-4 w-4" />
-                {t("newTicket")}
-              </Button>
-            </div>
+            <ContentState
+              type="empty"
+              title={t("noTicketsYet")}
+              description={t("createFirstTicket")}
+              action={
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  {t("newTicket")}
+                </Button>
+              }
+            />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {tickets.map((ticket) => (
-                <Link key={ticket._id} href={`/support/tickets/${ticket._id}`}>
-                  <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">
-                            {ticket.subject}
-                          </span>
-                          {getStatusBadge(ticket.status)}
-                          {getPriorityBadge(ticket.priority)}
+                <Link key={ticket._id} href={`/${locale}/support/tickets/${ticket._id}`}>
+                  <div className="rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold">{ticket.subject}</span>
+                          <StatusBadge status={ticket.status} label={t(statusKeys[ticket.status as keyof typeof statusKeys] || "statusOpen")} />
+                          <Badge variant="outline">
+                            {t(priorityKeys[ticket.priority as keyof typeof priorityKeys] || "priorityNormal")}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {t("ticketNumber")}: {ticket.ticketNumber} |{" "}
-                          {t("category")}:{" "}
-                          {t(
-                            `category${ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1)}`,
-                          )}
+                          {t("ticketNumber")}: {ticket.ticketNumber}
+                          {" · "}
+                          {t(categoryKeys[ticket.category as keyof typeof categoryKeys] || "categoryGeneral")}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          <HugeiconsIcon
-                            icon={ClockIcon}
-                            className="h-3 w-3 inline mr-1"
-                          />
-                          {t("lastUpdated")}:{" "}
-                          {format(
-                            new Date(ticket.updatedAt),
-                            "MMM d, yyyy HH:mm",
-                          )}
+                        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <HugeiconsIcon icon={ClockIcon} className="h-3 w-3" />
+                          {t("lastUpdated")}: {formatDate(ticket.updatedAt, locale)}
                         </p>
                       </div>
-                      <HugeiconsIcon
-                        icon={ArrowRight01Icon}
-                        className="h-5 w-5 text-muted-foreground"
-                      />
+                      <HugeiconsIcon icon={ArrowRight01Icon} className="h-5 w-5 shrink-0 text-muted-foreground rtl:rotate-180" />
                     </div>
                   </div>
                 </Link>
@@ -358,4 +315,37 @@ export default function SupportPage() {
       </Card>
     </div>
   );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function StatusBadge({ status, label }: { status: string; label: string }) {
+  const style =
+    status === "resolved"
+      ? "bg-emerald-600"
+      : status === "closed"
+        ? "bg-slate-600"
+        : status === "waiting_customer"
+          ? "bg-blue-600"
+          : status === "waiting_supplier"
+            ? "bg-purple-600"
+            : "bg-orange-600";
+  return <Badge className={style}>{label}</Badge>;
+}
+
+function formatDate(value: string | null, locale: string) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }

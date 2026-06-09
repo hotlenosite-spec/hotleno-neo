@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ContentState } from "@/components/shared/content-state";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -194,14 +195,14 @@ type AdminBookingDisplayStatus =
   | "internal_only"
   | "archive";
 
-const displayStatusFilters: Array<{ value: AdminBookingDisplayStatus; label: string }> = [
-  { value: "all", label: "الكل" },
-  { value: "confirmed", label: "المؤكدة" },
-  { value: "cancelled", label: "الملغية" },
-  { value: "booking_failed", label: "فشل الحجز" },
-  { value: "cancel_failed", label: "فشل الإلغاء" },
-  { value: "review_required", label: "تحتاج مراجعة" },
-  { value: "archive", label: "الأرشيف / اختبارات TBO" },
+const displayStatusFilters: Array<{ value: AdminBookingDisplayStatus; labelKey: string }> = [
+  { value: "all", labelKey: "bookingFilterAll" },
+  { value: "confirmed", labelKey: "bookingFilterConfirmed" },
+  { value: "cancelled", labelKey: "bookingFilterCancelled" },
+  { value: "booking_failed", labelKey: "bookingFilterFailed" },
+  { value: "cancel_failed", labelKey: "bookingFilterCancelFailed" },
+  { value: "review_required", labelKey: "bookingFilterReview" },
+  { value: "archive", labelKey: "bookingFilterArchive" },
 ];
 
 export default function AdminBookingsPage() {
@@ -209,6 +210,7 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [operationalCounts, setOperationalCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -279,6 +281,7 @@ export default function AdminBookingsPage() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const token = localStorage.getItem("token");
       const params = new URLSearchParams();
       params.append("page", page.toString());
@@ -302,10 +305,12 @@ export default function AdminBookingsPage() {
         setOperationalCounts(data.operationalCounts || {});
         setTotalPages(data.pagination.pages);
       } else {
+        setLoadError(true);
         toast.error(t("failedToFetchBookings"));
       }
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
+      setLoadError(true);
       toast.error(t("failedToFetchBookings"));
     } finally {
       setLoading(false);
@@ -902,7 +907,7 @@ export default function AdminBookingsPage() {
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div>
             <div className="mb-4 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-[#f4d58d]">
-              إدارة حجوزات HOTLENO
+              {t("bookingsControl")}
             </div>
             <h1 className="text-3xl font-black tracking-tight md:text-4xl">
               {t("bookings")}
@@ -913,9 +918,9 @@ export default function AdminBookingsPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <HeroMiniCard title="الصفحة" value={page.toString()} />
-            <HeroMiniCard title="عدد النتائج" value={bookings.length.toString()} />
-            <HeroMiniCard title="عدد الصفحات" value={totalPages.toString()} />
+            <HeroMiniCard title={t("page")} value={page.toString()} />
+            <HeroMiniCard title={t("resultsCountLabel")} value={bookings.length.toString()} />
+            <HeroMiniCard title={t("pages")} value={totalPages.toString()} />
           </div>
         </div>
       </section>
@@ -963,7 +968,7 @@ export default function AdminBookingsPage() {
                     : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                {filter.label}
+                {t(filter.labelKey)}
               </button>
             ))}
           </div>
@@ -1045,7 +1050,7 @@ export default function AdminBookingsPage() {
                   className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
                 />
                 <Input
-                  placeholder="ابحث بالمرجع أو بريد العميل أو النزيل أو الفندق..."
+                  placeholder={t("searchBookings")}
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && handleSearch()}
@@ -1165,10 +1170,28 @@ export default function AdminBookingsPage() {
                 <Skeleton key={i} className="h-24 rounded-3xl" />
               ))}
             </div>
+          ) : loadError ? (
+            <ContentState
+              type="error"
+              title={t("bookingsLoadErrorTitle")}
+              description={t("bookingsLoadErrorDescription")}
+              action={
+                <Button variant="outline" onClick={fetchBookings}>
+                  {t("retry")}
+                </Button>
+              }
+            />
           ) : displayedBookings.length === 0 ? (
-            <p className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center text-sm font-medium text-slate-500">
-              {t("noBookingsFound")}
-            </p>
+            <ContentState
+              type="empty"
+              title={t("noBookingsFound")}
+              description={t("noBookingsDescription")}
+              action={
+                <Button variant="outline" onClick={clearFilters}>
+                  {t("clearFilters")}
+                </Button>
+              }
+            />
           ) : (
             <div className="space-y-4">
               {displayedBookings.map((booking) => (
@@ -1196,7 +1219,7 @@ export default function AdminBookingsPage() {
 
                     {booking.rooms?.[0]?.roomName && (
                       <p className="text-sm font-medium text-slate-500">
-                        الغرفة: {booking.rooms[0].roomName}
+                        {t("room")}: {booking.rooms[0].roomName}
                       </p>
                     )}
 
@@ -1220,10 +1243,10 @@ export default function AdminBookingsPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => openBookingDialog(booking)}
-                      className="rounded-2xl border-slate-200 font-bold"
+                      className="rounded-2xl border-orange-200 bg-white font-bold text-orange-700 hover:bg-orange-50"
                     >
                       <HugeiconsIcon icon={ViewIcon} className="ml-1 h-4 w-4" />
-                      التفاصيل
+                      {t("viewDetails")}
                     </Button>
                   </div>
                 </div>

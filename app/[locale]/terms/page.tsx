@@ -1,5 +1,15 @@
-import { TermsStaticPage } from "@/components/static-pages/hotleno-static-pages";
+import { LegalPage, getLegalMetadata } from "@/components/legal/legal-page";
 
-export default function TermsPage() {
-  return <TermsStaticPage />;
+type PageProps = {
+  params: Promise<{ locale: string }>;
+};
+
+export async function generateMetadata({ params }: PageProps) {
+  const { locale } = await params;
+  return getLegalMetadata(locale, "terms");
+}
+
+export default async function TermsPage({ params }: PageProps) {
+  const { locale } = await params;
+  return <LegalPage locale={locale} type="terms" />;
 }

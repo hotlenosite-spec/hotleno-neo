@@ -11,21 +11,38 @@ import { HeroHeader } from "@/components/shared/header";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DirectionProvider } from "@/components/ui/direction";
+import { buildLocalizedMetadata, normalizeSeoLocale } from "@/lib/seo";
 import "../globals.css";
 
-export const metadata: Metadata = {
-  title: "هوتلينو",
-  description: "Hotel Booking Platform by Abdullah hasson",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Hotleno",
-  },
-  formatDetection: {
-    telephone: false,
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const metadata = buildLocalizedMetadata({ locale });
+
+  return {
+    ...metadata,
+    applicationName: "HOTLENO",
+    manifest: "/manifest.json",
+    icons: {
+      icon: [
+        { url: "/favicon.ico" },
+        { url: "/favicon.jpg", type: "image/jpeg" },
+      ],
+      apple: "/icon-192x192.png",
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "HOTLENO",
+    },
+    formatDetection: {
+      telephone: false,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#000000",
@@ -53,7 +70,11 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={cairo.variable} suppressHydrationWarning>
+    <html
+      lang={normalizeSeoLocale(locale)}
+      className={cairo.variable}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />

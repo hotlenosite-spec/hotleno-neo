@@ -4,6 +4,7 @@ import type { Document } from "mongodb";
 import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { getUserById } from "@/lib/firebase-store";
 import { verifyToken } from "@/lib/jwt";
+import { requireStaffPermission } from "@/lib/staff-permissions";
 
 export const runtime = "nodejs";
 
@@ -50,6 +51,9 @@ export async function POST(
   { params }: { params: Promise<{ bookingId: string }> },
 ) {
   try {
+    if (!(await requireStaffPermission(req, "payments.manage"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const auth = await requireAdmin(req);
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });

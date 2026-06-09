@@ -3,6 +3,7 @@ import type { Document } from 'mongodb';
 import { verifyToken } from '@/lib/jwt';
 import { getFirestoreMongoDb } from '@/lib/firestore-mongo';
 import { getUserById } from '@/lib/firebase-store';
+import { requireStaffPermission } from '@/lib/staff-permissions';
 
 type StringIdDocument = Document & { _id: string };
 
@@ -61,6 +62,9 @@ function byLogType(logs: Record<string, unknown>[], kind: 'booking' | 'payment' 
 
 export async function GET(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, 'logs.view'))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const auth = await requireAdmin(req);
 
     if ('error' in auth) {

@@ -9,11 +9,15 @@ import {
   type UserRole,
 } from '@/lib/firebase-store';
 import { getFirestoreMongoDb } from '@/lib/firestore-mongo';
+import { requireStaffPermission } from '@/lib/staff-permissions';
 
 const editableRoles = USER_ROLES.filter((role) => role !== 'user');
 
 export async function GET(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, 'customers.view'))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const token = req.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!token) {
@@ -70,6 +74,9 @@ export async function GET(req: NextRequest) {
 // PATCH - Update user role
 export async function PATCH(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, 'customers.manage'))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const token = req.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!token) {

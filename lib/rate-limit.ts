@@ -12,6 +12,25 @@ type RateLimitEntry = {
 };
 
 const store = new Map<string, RateLimitEntry>();
+let warnedAboutMemoryStore = false;
+
+function warnIfProductionMemoryStore() {
+  const hasExternalRateLimitStore =
+    Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) ||
+    Boolean(process.env.RATE_LIMIT_REDIS_URL);
+
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !hasExternalRateLimitStore &&
+    !warnedAboutMemoryStore
+  ) {
+    warnedAboutMemoryStore = true;
+    console.warn(
+      '[HOTLENO SECURITY] Rate limiting is using the in-memory store. ' +
+        'Configure Upstash Redis or RATE_LIMIT_REDIS_URL before relying on rate limits in production.',
+    );
+  }
+}
 
 function getClientIp(req: NextRequest) {
   const forwardedFor = req.headers.get('x-forwarded-for');
@@ -21,6 +40,8 @@ function getClientIp(req: NextRequest) {
 }
 
 export function checkRateLimit(req: NextRequest, options: RateLimitOptions) {
+  warnIfProductionMemoryStore();
+
   const now = Date.now();
   const key = `${options.keyPrefix}:${getClientIp(req)}`;
   const current = store.get(key);

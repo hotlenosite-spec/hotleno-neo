@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ContentState } from "@/components/shared/content-state";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -76,6 +77,7 @@ export default function AdminUsersPage() {
   const t = useTranslations("admin");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
@@ -97,11 +99,13 @@ export default function AdminUsersPage() {
     accountType: "b2c",
     isActive: true,
   });
+  const debugAdminUsers = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
-    console.log("Users page mounted, fetching users...");
     const token = localStorage.getItem("token");
-    console.log("Token exists:", !!token);
+    if (debugAdminUsers) {
+      console.info("[admin/users page] mounted tokenPresent=%s", Boolean(token));
+    }
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, roleFilter]);
@@ -109,6 +113,7 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -123,7 +128,9 @@ export default function AdminUsersPage() {
       if (roleFilter) params.append("role", roleFilter);
       if (search) params.append("search", search);
 
-      console.log("Fetching users with params:", params.toString());
+      if (debugAdminUsers) {
+        console.info("[admin/users page] fetching params=%s", params.toString());
+      }
 
       const response = await fetch(`/api/admin/users?${params}`, {
         headers: {
@@ -131,13 +138,17 @@ export default function AdminUsersPage() {
         },
       });
 
-      console.log("Response status:", response.status);
+      if (debugAdminUsers) {
+        console.info("[admin/users page] responseStatus=%d", response.status);
+      }
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Users data:", data);
         setUsers(data.users || []);
         setTotalPages(data.pagination?.pages || 1);
+        if (debugAdminUsers) {
+          console.info("[admin/users page] usersCount=%d", data.users?.length || 0);
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error("API Error:", response.status, errorData);
@@ -146,11 +157,13 @@ export default function AdminUsersPage() {
         } else {
           toast.error(errorData.error || t("failedToFetchUsers"));
         }
+        setLoadError(true);
         setUsers([]);
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error(t("failedToFetchUsers"));
+      setLoadError(true);
       setUsers([]);
     } finally {
       setLoading(false);
@@ -250,7 +263,7 @@ export default function AdminUsersPage() {
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div>
             <div className="mb-4 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-[#f4d58d]">
-              HOTLENO Users Control
+              {t("usersControl")}
             </div>
 
             <h1 className="text-3xl font-black tracking-tight md:text-4xl">
@@ -263,9 +276,9 @@ export default function AdminUsersPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <HeroMiniCard title="Users" value={users.length.toString()} />
-            <HeroMiniCard title="Page" value={page.toString()} />
-            <HeroMiniCard title="Pages" value={totalPages.toString()} />
+            <HeroMiniCard title={t("users")} value={users.length.toString()} />
+            <HeroMiniCard title={t("page")} value={page.toString()} />
+            <HeroMiniCard title={t("pages")} value={totalPages.toString()} />
           </div>
         </div>
       </section>
@@ -334,10 +347,23 @@ export default function AdminUsersPage() {
                 <Skeleton key={i} className="h-24 rounded-3xl" />
               ))}
             </div>
+          ) : loadError ? (
+            <ContentState
+              type="error"
+              title={t("usersLoadErrorTitle")}
+              description={t("usersLoadErrorDescription")}
+              action={
+                <Button variant="outline" onClick={fetchUsers}>
+                  {t("retry")}
+                </Button>
+              }
+            />
           ) : users.length === 0 ? (
-            <p className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center text-sm font-medium text-slate-500">
-              {t("noUsersFound")}
-            </p>
+            <ContentState
+              type="empty"
+              title={t("noUsersFound")}
+              description={t("noUsersDescription")}
+            />
           ) : (
             <div className="space-y-4">
               {users.map((user) => (
@@ -389,7 +415,7 @@ export default function AdminUsersPage() {
 
                         {user.isActive === false && (
                           <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
-                            inactive
+                            {t("inactive")}
                           </span>
                         )}
                       </div>
@@ -414,7 +440,7 @@ export default function AdminUsersPage() {
                       onClick={() => {
                         openEditDialog(user);
                       }}
-                      className="rounded-2xl border-slate-200 font-bold"
+                      className="rounded-2xl border-orange-200 bg-white font-bold text-orange-700 hover:bg-orange-50"
                     >
                       <HugeiconsIcon icon={ShieldUserIcon} className="ml-1 h-4 w-4" />
                       {t("edit")}

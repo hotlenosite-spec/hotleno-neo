@@ -7,11 +7,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/components/providers/auth-provider";
+import type { StaffPermission } from "@/lib/staff-permissions";
 
 interface SidebarItem {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  permission?: StaffPermission;
 }
 
 function MenuIcon({ className }: { className?: string }) {
@@ -95,6 +98,15 @@ function CardIcon({ className }: { className?: string }) {
   );
 }
 
+function NotificationIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8.5h18C21 16 18 16 18 9Z" />
+      <path d="M10 21h4" />
+    </svg>
+  );
+}
+
 function ChartIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -128,21 +140,36 @@ export function AdminSidebar() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const pathname = usePathname();
-  const isAr = locale === "ar";
+  const { user } = useAuth();
+  const adminPath = (path: string) => `/${locale}${path}`;
+  const can = (permission: StaffPermission) =>
+    !user?.permissions ||
+    user.permissions.length === 0 ||
+    user.staffRole === "super_admin" ||
+    user.permissions.includes(permission);
 
-  const sidebarItems: SidebarItem[] = [
-    { title: t("dashboard"), href: "/admin", icon: HomeIcon },
-    { title: t("bookings"), href: "/admin/bookings", icon: CalendarIcon },
-    { title: isAr ? "الفنادق" : "Hotels", href: "/admin/hotels", icon: BuildingIcon },
-    { title: t("users"), href: "/admin/users", icon: UsersIcon },
-    { title: isAr ? "الوكالات" : "Agencies", href: "/admin/agencies", icon: HandshakeIcon },
-    { title: isAr ? "الأفلييت" : "Affiliates", href: "/admin/affiliates", icon: HandshakeIcon },
-    { title: isAr ? "المدفوعات" : "Payments", href: "/admin/payments", icon: CardIcon },
-    { title: "Suppliers Control", href: "/admin/suppliers", icon: SettingsIcon },
-    { title: isAr ? "السجلات" : "Logs", href: "/admin/logs", icon: ChartIcon },
-    { title: isAr ? "المدونة" : "Blog", href: "/admin/blog", icon: ChartIcon },
-    { title: t("settings"), href: "/admin/settings", icon: SettingsIcon },
-  ];
+  const allSidebarItems = [
+    { title: t("dashboard"), href: adminPath("/admin"), icon: HomeIcon, permission: "dashboard.view" },
+    { title: t("bookings"), href: adminPath("/admin/bookings"), icon: CalendarIcon, permission: "bookings.view" },
+    { title: t("hotels"), href: adminPath("/admin/hotels"), icon: BuildingIcon, permission: "suppliers.view" },
+    { title: t("customers"), href: adminPath("/admin/customers"), icon: UsersIcon, permission: "customers.view" },
+    { title: t("users"), href: adminPath("/admin/users"), icon: UsersIcon, permission: "customers.view" },
+    { title: t("staff"), href: adminPath("/admin/staff"), icon: UsersIcon, permission: "users.view" },
+    { title: t("agencies"), href: adminPath("/admin/agencies"), icon: HandshakeIcon, permission: "agencies.view" },
+    { title: t("affiliates"), href: adminPath("/admin/affiliates"), icon: HandshakeIcon },
+    { title: t("payments"), href: adminPath("/admin/payments"), icon: CardIcon, permission: "payments.view" },
+    { title: t("notifications"), href: adminPath("/admin/notifications"), icon: NotificationIcon, permission: "dashboard.view" },
+    { title: t("support"), href: adminPath("/admin/support"), icon: HandshakeIcon, permission: "support.view" },
+    { title: t("suppliersControl"), href: adminPath("/admin/suppliers"), icon: SettingsIcon, permission: "suppliers.view" },
+    { title: t("pricing"), href: adminPath("/admin/pricing"), icon: ChartIcon, permission: "pricing.view" },
+    { title: t("logs"), href: adminPath("/admin/logs"), icon: ChartIcon, permission: "logs.view" },
+    { title: t("blog"), href: adminPath("/admin/blog"), icon: ChartIcon },
+    { title: t("settings"), href: adminPath("/admin/settings"), icon: SettingsIcon, permission: "settings.view" },
+  ] satisfies SidebarItem[];
+
+  const sidebarItems = allSidebarItems.filter(
+    (item) => !item.permission || can(item.permission),
+  );
 
   return (
     <>
@@ -159,17 +186,15 @@ export function AdminSidebar() {
 
         <SheetContent
           side="right"
-          className="w-[273px] border-l border-[#E5E7EB] bg-white p-0"
+          className="h-dvh w-[273px] border-l border-[#E5E7EB] bg-white p-0"
         >
-          <SidebarContent items={sidebarItems} pathname={pathname} isAr={isAr} />
+          <SidebarContent items={sidebarItems} pathname={pathname} />
         </SheetContent>
       </Sheet>
 
       <div className="hidden w-[273px] shrink-0 lg:block">
         <aside className="fixed right-0 top-0 z-40 h-screen w-[273px] border-l border-[#E5E7EB] bg-white text-[#0F172A] shadow-xl shadow-slate-900/5">
-          <ScrollArea className="h-screen">
-            <SidebarContent items={sidebarItems} pathname={pathname} isAr={isAr} />
-          </ScrollArea>
+          <SidebarContent items={sidebarItems} pathname={pathname} />
         </aside>
       </div>
     </>
@@ -179,79 +204,81 @@ export function AdminSidebar() {
 function SidebarContent({
   items,
   pathname,
-  isAr,
 }: {
   items: SidebarItem[];
   pathname: string;
-  isAr: boolean;
 }) {
+  const t = useTranslations("admin");
+
   return (
     <div
       dir="rtl"
-      className="relative flex h-screen flex-col overflow-hidden bg-white px-[13px] pb-[12px] pt-[22px]"
+      className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white px-[13px] pb-[12px] pt-[22px]"
     >
-      <div className="relative mb-[22px] text-center">
+      <div className="relative mb-[18px] shrink-0 text-center">
         <h2 className="text-[28px] font-black leading-none tracking-[0.26em] text-[#F97316]">
           HOTLENO
         </h2>
         <p className="mt-[10px] text-[13px] font-semibold text-slate-500">
-          {isAr ? "إدارة عمليات السفر" : "Clean travel operations"}
+          {t("travelOperations")}
         </p>
       </div>
 
-      <nav className="relative flex flex-col gap-[7px]">
-        {items.map((item) => {
-          const isActive =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+      <ScrollArea className="min-h-0 flex-1 pr-1">
+        <nav className="relative flex flex-col gap-[7px] pb-[10px]">
+          {items.map((item) => {
+            const isActive =
+              item.href.endsWith("/admin")
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-          const Icon = item.icon;
+            const Icon = item.icon;
 
-          return (
-            <Link key={item.href} href={item.href}>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "flex h-[47px] w-full flex-row items-center justify-start gap-[12px] rounded-xl px-[16px] text-[15px] font-semibold text-slate-600 hover:bg-orange-50 hover:text-[#F97316]",
-                  isActive &&
-                    "bg-[#F97316] text-white shadow-lg shadow-orange-500/20 hover:bg-[#F97316] hover:text-white"
-                )}
-              >
-                <Icon
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant="ghost"
                   className={cn(
-                    "h-[21px] w-[21px] shrink-0",
-                    isActive ? "text-white" : "text-slate-500"
+                    "flex h-[47px] w-full flex-row items-center justify-start gap-[12px] rounded-xl px-[16px] text-[15px] font-semibold text-slate-600 hover:bg-orange-50 hover:text-[#F97316]",
+                    isActive &&
+                      "bg-[#F97316] text-white shadow-lg shadow-orange-500/20 hover:bg-[#F97316] hover:text-white"
                   )}
-                />
+                >
+                  <Icon
+                    className={cn(
+                      "h-[21px] w-[21px] shrink-0",
+                      isActive ? "text-white" : "text-slate-500"
+                    )}
+                  />
 
-                <span className="leading-none">{item.title}</span>
-              </Button>
-            </Link>
-          );
-        })}
-      </nav>
+                  <span className="leading-none">{item.title}</span>
+                </Button>
+              </Link>
+            );
+          })}
+        </nav>
+      </ScrollArea>
 
-      <div className="relative mt-auto pt-[13px]">
+      <div className="relative shrink-0 pt-[13px]">
         <div className="overflow-hidden rounded-2xl border border-orange-100 bg-orange-50 shadow-sm">
           <div className="px-[15px] pb-[12px] pt-[12px] text-center">
             <h3 className="text-[15px] font-black leading-6 text-[#0F172A]">
-              {isAr ? "إدارة Hotleno" : "Hotleno Admin"}
+              {t("hotlenoAdmin")}
             </h3>
             <p className="mt-[3px] text-[11px] font-medium leading-5 text-slate-500">
-              {isAr ? "لوحة تشغيلية" : "Operational dashboard"}
+              {t("operationalDashboard")}
             </p>
 
             <Button className="mt-[10px] flex h-[38px] w-full items-center justify-center rounded-xl bg-[#F97316] text-[12px] font-black text-white hover:bg-[#ea580c]">
-              <span>{isAr ? "مراجعة العمليات" : "Review operations"}</span>
+              <span>{t("reviewOperations")}</span>
             </Button>
 
-            <Link href="/">
+            <Link href={`/${pathname.split("/")[1] || "ar"}`}>
               <Button
                 variant="ghost"
                 className="mt-[7px] flex h-[34px] w-full items-center justify-center rounded-xl text-[12px] font-bold text-slate-600 hover:bg-white hover:text-[#F97316]"
               >
-                <span>{isAr ? "العودة للموقع" : "Back to website"}</span>
+                <span>{t("backToSite")}</span>
                 <BackIcon className="mr-2 h-[16px] w-[16px]" />
               </Button>
             </Link>

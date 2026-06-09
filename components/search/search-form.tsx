@@ -1,11 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/providers/auth-provider";
+import {
+  CURRENCY_CHANGE_EVENT,
+  DEFAULT_CURRENCY_CODE,
+  getStoredCurrencyCode,
+} from "@/lib/data/currencies";
 import { GuestSelector } from "./guest-selector";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,17 +46,11 @@ import {
 import type { HotelbedsSearchSuggestion } from "@/types/hotelbeds-content";
 
 const NATIONALITIES = [
-  { code: "US", name: "United States" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "FR", name: "France" },
-  { code: "DE", name: "Germany" },
-  { code: "AE", name: "United Arab Emirates" },
-];
-
-const CURRENCIES = [
-  { code: "USD", name: "US Dollar" },
-  { code: "EUR", name: "Euro" },
-  { code: "GBP", name: "British Pound" },
+  { code: "US", nameEn: "United States", nameAr: "الولايات المتحدة" },
+  { code: "GB", nameEn: "United Kingdom", nameAr: "المملكة المتحدة" },
+  { code: "FR", nameEn: "France", nameAr: "فرنسا" },
+  { code: "DE", nameEn: "Germany", nameAr: "ألمانيا" },
+  { code: "AE", nameEn: "United Arab Emirates", nameAr: "الإمارات العربية المتحدة" },
 ];
 
 type UnknownRecord = Record<string, unknown>;
@@ -368,6 +368,7 @@ async function fetchHotelbedsSuggestions(
 
 export default function SearchForm() {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const lang = useLocale();
   const t = useTranslations();
@@ -378,10 +379,15 @@ export default function SearchForm() {
   const [tboCertificationMode, setTboCertificationMode] = useState(
     () => process.env.NEXT_PUBLIC_TBO_CERTIFICATION_MODE === "true",
   );
+  const certificationDefaultsApplied = useRef(false);
 
   useEffect(() => {
-    setTboCertificationMode(getClientTboCertificationMode());
-  }, []);
+    const isTboTester =
+      user?.email?.toLowerCase() === "tbo.tester@hotleno.com" ||
+      (user?.role === "supplier_tester" && user?.supplierScope === "tbo");
+
+    setTboCertificationMode(getClientTboCertificationMode() || isTboTester);
+  }, [user?.email, user?.role, user?.supplierScope]);
 
   const [dates, setDates] = useState({
     checkIn: new Date(),
@@ -396,22 +402,46 @@ export default function SearchForm() {
   });
 
   const [nationality, setNationality] = useState("US");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY_CODE);
+
+  useEffect(() => {
+    if (!tboCertificationMode || certificationDefaultsApplied.current) return;
+
+    const checkIn = new Date();
+    checkIn.setDate(checkIn.getDate() + 21);
+    const checkOut = new Date(checkIn);
+    checkOut.setDate(checkOut.getDate() + 2);
+
+    setDates({ checkIn, checkOut });
+    setGuests({ rooms: 1, adults: 1, children: 0, childrenAges: [] });
+    setNationality("SA");
+    certificationDefaultsApplied.current = true;
+  }, [tboCertificationMode]);
+
+  useEffect(() => {
+    const syncCurrency = () => setCurrency(getStoredCurrencyCode());
+    syncCurrency();
+    window.addEventListener("storage", syncCurrency);
+    window.addEventListener(CURRENCY_CHANGE_EVENT, syncCurrency);
+    return () => {
+      window.removeEventListener("storage", syncCurrency);
+      window.removeEventListener(CURRENCY_CHANGE_EVENT, syncCurrency);
+    };
+  }, []);
 
   const copy = {
-    title: isAr ? "ابدأ رحلتك الآن" : "Start your trip now",
-    hotels: isAr ? "الفنادق" : "Hotels",
-    flights: isAr ? "الطيران" : "Flights",
-    services: isAr ? "الخدمات" : "Services",
-    destination: isAr ? "إلى أين تريد السفر؟" : "Where do you want to go?",
-    destinationPlaceholder: isAr
-      ? "اكتب المدينة أو الدولة أو اسم الفندق"
-      : "Type a city, country, or hotel name",
-    checkIn: isAr ? "تاريخ الدخول" : "Check-in",
-    checkOut: isAr ? "تاريخ المغادرة" : "Check-out",
-    guests: isAr ? "الغرف والنزلاء" : "Rooms and guests",
-    search: isAr ? "ابحث الآن" : "Search now",
-    cancellation: isAr ? "إلغاء مجاني" : "Free cancellation",
+    title: t("search.heroTitle"),
+    subtitle: t("search.heroSubtitle"),
+    hotels: t("search.tabs.hotels"),
+    flights: t("search.tabs.flights"),
+    services: t("search.tabs.services"),
+    destination: t("search.destinationPrompt"),
+    destinationPlaceholder: t("search.destinationPlaceholder"),
+    checkIn: t("search.checkIn"),
+    checkOut: t("search.checkOut"),
+    guests: t("search.roomsAndGuests"),
+    search: t("search.searchNow"),
+    cancellation: t("search.freeCancellation"),
   };
 
   const handleSearch = async () => {
@@ -482,9 +512,7 @@ export default function SearchForm() {
             {copy.title}
           </h2>
           <p className="mt-1 text-sm font-medium text-slate-500">
-            {isAr
-              ? "قارن أفضل الخيارات واحجز بثقة."
-              : "Compare top options and book with confidence."}
+            {copy.subtitle}
           </p>
         </div>
 
@@ -557,38 +585,25 @@ export default function SearchForm() {
             <SelectContent>
               {NATIONALITIES.map((nat) => (
                 <SelectItem key={nat.code} value={nat.code}>
-                  {nat.name}
+                  {nat.code} - {isAr ? nat.nameAr : nat.nameEn}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <Select value={currency} onValueChange={setCurrency}>
-            <SelectTrigger className="h-11 w-full rounded-xl border-[#E5E7EB] bg-white px-4 text-sm font-bold text-[#0F172A] sm:w-[130px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCIES.map((curr) => (
-                <SelectItem key={curr.code} value={curr.code}>
-                  {curr.code}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex h-11 items-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-black text-[#0F172A] sm:min-w-[110px]">
+            {t("search.currency")}: {currency}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function getSuggestionTypeLabel(type: HotelbedsSearchSuggestion["type"]) {
-  const labels = {
-    hotel: "فندق",
-    destination: "وجهة",
-    country: "دولة",
-    zone: "منطقة",
-  };
-
+function getSuggestionTypeLabel(
+  type: HotelbedsSearchSuggestion["type"],
+  labels: Record<HotelbedsSearchSuggestion["type"], string>,
+) {
   return labels[type];
 }
 
@@ -603,6 +618,7 @@ function HotelbedsDestinationAutocomplete({
   onChange: (value: HotelbedsSearchSuggestion | null) => void;
   tboCertificationMode: boolean;
 }) {
+  const t = useTranslations("search");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value?.label || "");
   const [loading, setLoading] = useState(false);
@@ -611,6 +627,15 @@ function HotelbedsDestinationAutocomplete({
   const [suggestions, setSuggestions] = useState<HotelbedsSearchSuggestion[]>([]);
 
   const selectedLabel = useMemo(() => value?.label || "", [value?.label]);
+  const suggestionTypeLabels = useMemo(
+    () => ({
+      hotel: t("suggestionTypes.hotel"),
+      destination: t("suggestionTypes.destination"),
+      country: t("suggestionTypes.country"),
+      zone: t("suggestionTypes.zone"),
+    }),
+    [t],
+  );
 
   useEffect(() => {
     if (tboCertificationMode) return;
@@ -673,7 +698,7 @@ function HotelbedsDestinationAutocomplete({
       } catch (err) {
         if (!controller.signal.aborted) {
           setSuggestions([]);
-          setError(err instanceof Error ? err.message : "فشل جلب الوجهات");
+          setError(err instanceof Error ? err.message : t("autocomplete.fetchFailed"));
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -720,7 +745,7 @@ function HotelbedsDestinationAutocomplete({
           <CommandList>
             {loading && (
               <div className="px-4 py-3 text-sm text-muted-foreground">
-                جاري جلب الاقتراحات...
+                {t("autocomplete.loading")}
               </div>
             )}
 
@@ -733,7 +758,7 @@ function HotelbedsDestinationAutocomplete({
               searchCompleted &&
               query.trim().length >= 2 &&
               suggestions.length === 0 && (
-                <CommandEmpty>لا توجد نتائج مطابقة</CommandEmpty>
+                <CommandEmpty>{t("autocomplete.empty")}</CommandEmpty>
               )}
 
             {suggestions.length > 0 && (
@@ -742,8 +767,8 @@ function HotelbedsDestinationAutocomplete({
                   tboCertificationMode
                     ? "TBO Certification"
                     : suggestions.some((suggestion) => suggestion.cityCode === "115936")
-                      ? "TBO Normal Search"
-                      : "نتائج Hotelbeds"
+                      ? t("autocomplete.tboNormalSearch")
+                      : t("autocomplete.hotelbedsResults")
                 }
               >
                 {suggestions.map((suggestion) => (
@@ -773,7 +798,7 @@ function HotelbedsDestinationAutocomplete({
                         {suggestion.label}
                       </span>
                       <span className="shrink-0 rounded-full bg-orange-50 px-2 py-1 text-xs font-bold text-[#F97316]">
-                        {getSuggestionTypeLabel(suggestion.type)}
+                        {getSuggestionTypeLabel(suggestion.type, suggestionTypeLabels)}
                       </span>
                     </div>
                   </CommandItem>

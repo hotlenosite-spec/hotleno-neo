@@ -121,6 +121,26 @@ function isTboCertificationTester(user: {
   );
 }
 
+function isTboCertificationSearch(user: {
+  email?: string;
+  role?: string;
+  supplierScope?: string | null;
+} | null) {
+  return (
+    process.env.TBO_CERTIFICATION_MODE === "true" ||
+    process.env.NEXT_PUBLIC_TBO_CERTIFICATION_MODE === "true" ||
+    isTboCertificationTester(user)
+  );
+}
+
+function getTboCertificationTimeoutMs() {
+  const responseTimeSeconds = Number(process.env.TBO_RESPONSE_TIME || 23);
+  const safeResponseTime = Number.isFinite(responseTimeSeconds)
+    ? Math.min(Math.max(responseTimeSeconds, 5), 23)
+    : 23;
+  return (safeResponseTime + 5) * 1000;
+}
+
 function createTimeoutError(providerName: string, timeoutMs: number) {
   return new Error(
     `Supplier ${providerName} search timed out after ${timeoutMs}ms`,
@@ -219,12 +239,15 @@ export async function POST(req: NextRequest) {
     const currency = body.currency ?? body.Currency ?? "USD";
     const rooms = toSupplierRooms(body.rooms ?? body.Rooms);
     const authUser = getAuthUserFromRequest(req);
+    const tboCertificationSearch = isTboCertificationSearch(authUser);
     const providers = await getSearchProviders({
       providerOverride: body.provider ?? body.supplierProvider,
       role: authUser?.role,
       supplierScope: authUser?.supplierScope,
     });
-    const timeoutMs = getSupplierSearchTimeoutMs();
+    const timeoutMs = tboCertificationSearch
+      ? Math.max(getSupplierSearchTimeoutMs(), getTboCertificationTimeoutMs())
+      : getSupplierSearchTimeoutMs();
     const explicitHotelIds = [
       ...(body.hotelCode ? [body.hotelCode] : []),
       ...(Array.isArray(body.hotelIds) ? body.hotelIds : []),
@@ -233,7 +256,7 @@ export async function POST(req: NextRequest) {
       .map(String)
       .filter(Boolean);
     const tboNormalHotelIds =
-      explicitHotelIds.length > 0 || isTboCertificationTester(authUser)
+      explicitHotelIds.length > 0 || tboCertificationSearch
         ? []
         : await getTboNormalSearchHotelCodes({
             destination: body.destination,
@@ -305,9 +328,34 @@ export async function POST(req: NextRequest) {
         tboNormalSearch: tboNormalHotelIds.length > 0,
         disableEnvHotelCodes:
           tboNormalHotelIds.length > 0 ||
-          (!isTboCertificationTester(authUser) && isTboNormalSearchEnabled()),
+          (!tboCertificationSearch && isTboNormalSearchEnabled()),
       },
     };
+
+    if (
+      process.env.NODE_ENV !== "production" &&
+      providers.some((provider) => provider.name === "tbo")
+    ) {
+      console.info("[TBO Certification Search Request]", {
+        certificationMode: tboCertificationSearch,
+        checkIn,
+        checkOut,
+        hotelCodeSource:
+          hotelIds.length > 0
+            ? "request"
+            : tboCertificationSearch
+              ? "TBO_SEARCH_HOTEL_CODES"
+              : "none",
+        explicitHotelCodeCount: hotelIds.length,
+        guestNationality:
+          supplierRequest.nationality ||
+          process.env.TBO_GUEST_NATIONALITY ||
+          "SA",
+        rooms,
+        currency,
+        timeoutMs,
+      });
+    }
 
     if (
       providers.some((provider) => provider.name === "hotelbeds") &&
@@ -345,6 +393,23 @@ export async function POST(req: NextRequest) {
     );
     const unifiedHotels = normalizeSupplierHotels(enrichedSupplierHotels, currency);
     const hotels = unifiedHotels.map(toLegacyHotelResult);
+
+    if (
+      process.env.NODE_ENV !== "production" &&
+      providers.some((provider) => provider.name === "tbo")
+    ) {
+      console.info("[TBO Certification Search Result]", {
+        certificationMode: tboCertificationSearch,
+        supplierResponseCount: supplierResponses.length,
+        returnedHotels: hotels.length,
+        noAvailabilityReason:
+          hotels.length > 0
+            ? null
+            : supplierResponses.length === 0
+              ? "supplier_error_or_timeout"
+              : "supplier_returned_zero_availability",
+      });
+    }
 
     const response: HotelSearchResponse = {
       ServerTime: new Date().toISOString(),

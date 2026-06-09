@@ -3,6 +3,99 @@
     "title": "Hotleno - منصة حجز الفنادق والسفر",
     "description": "اعثر على أفضل الفنادق والوجهات واحجز رحلتك بسهولة"
   },
+  "homePage": {
+    "heroBadge": "السفر مع HOTLENO",
+    "heroTitle": "اعثر على الإقامة المناسبة لكل رحلة",
+    "heroSubtitle": "ابحث عن خيارات الفنادق من مزودي سفر موثوقين، وخطط لإقامتك بثقة ووضوح.",
+    "plannerCta": "خطط لرحلتك حسب الميزانية",
+    "blogCta": "استكشف أدلة السفر",
+    "benefits": {
+      "trustedBooking": "حجز فنادق موثوق",
+      "customerSupport": "دعم العملاء",
+      "securePayment": "خيارات دفع آمنة",
+      "trustedProviders": "مزودو سفر موثوقون"
+    },
+    "services": {
+      "transfers": {
+        "title": "الاستقبال والتوصيل من المطار",
+        "description": "خطط لانتقال أكثر سلاسة بين المطار ومكان الإقامة. يجري تجهيز خيارات النقل للإطلاق.",
+        "cta": "استكشف خدمات النقل"
+      },
+      "activities": {
+        "title": "الأنشطة والتجارب",
+        "description": "اكتشف الجولات والتجارب التي تضيف المزيد إلى رحلتك. يجري تجهيز خيارات حجز الأنشطة للإطلاق.",
+        "cta": "استكشف الأنشطة"
+      }
+    },
+    "destinations": {
+      "title": "وجهات شائعة",
+      "description": "استلهم رحلتك من مدن مميزة، ثم ابدأ بحثًا جديدًا عن الفنادق حسب تواريخ سفرك.",
+      "explore": "استكشف الإقامات",
+      "items": {
+        "dubai": {
+          "city": "دبي",
+          "country": "الإمارات العربية المتحدة"
+        },
+        "istanbul": {
+          "city": "إسطنبول",
+          "country": "تركيا"
+        },
+        "riyadh": {
+          "city": "الرياض",
+          "country": "المملكة العربية السعودية"
+        },
+        "london": {
+          "city": "لندن",
+          "country": "المملكة المتحدة"
+        }
+      }
+    },
+    "why": {
+      "title": "لماذا تخطط مع HOTLENO؟",
+      "description": "تجربة حجز واضحة تركز على احتياجات رحلتك الأساسية.",
+      "items": {
+        "support": {
+          "title": "دعم عملاء متعاون",
+          "description": "احصل على المساعدة في حسابك ورحلة الحجز عند الحاجة."
+        },
+        "simpleBooking": {
+          "title": "رحلة حجز سهلة",
+          "description": "انتقل من البحث إلى الحجز عبر خطوات واضحة ومركزة."
+        },
+        "secureExperience": {
+          "title": "تجربة تراعي الأمان",
+          "description": "صممت مسارات الحساب والحجز للتعامل بعناية مع معلوماتك."
+        },
+        "hotelOptions": {
+          "title": "خيارات فنادق متنوعة",
+          "description": "قارن الإقامات المتاحة واختر ما يناسب خطط رحلتك."
+        }
+      }
+    },
+    "inspiration": {
+      "title": "أفكار لإقامتك القادمة",
+      "description": "أفكار تساعدك على اختيار أجواء إقامتك وأسلوبها، وتظهر الأسعار والتوافر الفعلي بعد البحث.",
+      "cta": "ابحث عن الإقامات المتاحة",
+      "items": {
+        "waterfront": {
+          "title": "إقامات على الواجهة البحرية",
+          "description": "فنادق قريبة من المراسي والشواطئ والممرات الحيوية."
+        },
+        "heritage": {
+          "title": "إقامات المدن التاريخية",
+          "description": "خيارات تبقيك قريبًا من الشوارع القديمة والمعالم الثقافية."
+        },
+        "city": {
+          "title": "فنادق المدن العصرية",
+          "description": "إقامات عملية بالقرب من مناطق الأعمال والمطاعم والتسوق."
+        },
+        "central": {
+          "title": "إقامات في الأحياء المركزية",
+          "description": "خيارات مريحة لاستكشاف المدينة من موقع جيد الاتصال."
+        }
+      }
+    }
+  },
   "navigation": {
     "home": "الرئيسية",
     "about": "من نحن",
@@ -18,7 +111,15 @@
     "english": "English",
     "arabic": "العربية",
     "menu": "القائمة",
-    "back": "رجوع"
+    "back": "رجوع",
+    "hotels": "الفنادق",
+    "flights": "الطيران",
+    "services": "الخدمات",
+    "activities": "الأنشطة",
+    "blog": "المدونة",
+    "todayDeals": "عروض اليوم",
+    "adminPlatform": "منصة إدارة الحجوزات",
+    "openMenu": "فتح القائمة"
   },
   "auth": {
     "signIn": "تسجيل الدخول",
@@ -73,7 +174,190 @@
     "countries": "الدول",
     "cities": "المدن",
     "selectDestination": "يرجى اختيار الوجهة",
-    "flightsComingSoon": "الطيران قريباً"
+    "flightsComingSoon": "الطيران قريباً",
+    "heroTitle": "ابدأ رحلتك الآن",
+    "heroSubtitle": "قارن أفضل الخيارات واحجز بثقة.",
+    "destinationPrompt": "إلى أين تريد السفر؟",
+    "destinationPlaceholder": "اكتب المدينة أو الدولة أو اسم الفندق",
+    "roomsAndGuests": "الغرف والنزلاء",
+    "searchNow": "ابحث الآن",
+    "freeCancellation": "إلغاء مجاني",
+    "tabs": {
+      "hotels": "الفنادق",
+      "flights": "الطيران",
+      "services": "الخدمات"
+    },
+    "suggestionTypes": {
+      "hotel": "فندق",
+      "destination": "وجهة",
+      "country": "دولة",
+      "zone": "منطقة"
+    },
+    "autocomplete": {
+      "fetchFailed": "تعذر جلب الوجهات",
+      "loading": "جاري جلب الاقتراحات...",
+      "empty": "لا توجد نتائج مطابقة",
+      "tboNormalSearch": "بحث TBO العادي",
+      "hotelbedsResults": "نتائج Hotelbeds"
+    }
+  },
+  "currency": {
+    "select": "اختر العملة",
+    "heading": "العملات",
+    "searchPlaceholder": "ابحث عن عملة...",
+    "empty": "لم يتم العثور على عملة"
+  },
+  "searchResults": {
+    "title": "نتائج البحث عن الفنادق",
+    "subtitle": "{count} منشأة من البحث الحالي",
+    "newSearch": "بحث جديد",
+    "editSearch": "تعديل البحث",
+    "searchSummary": "ملخص بحثك",
+    "destination": "الوجهة",
+    "selectedDestination": "وجهة محددة",
+    "checkIn": "تاريخ الدخول",
+    "checkOut": "تاريخ المغادرة",
+    "nightsLabel": "الليالي",
+    "night": "ليلة",
+    "nights": "ليالٍ",
+    "guestsRooms": "النزلاء والغرف",
+    "rooms": "غرف",
+    "adults": "بالغين",
+    "children": "أطفال",
+    "missingDates": "يرجى تحديد تاريخ الدخول وتاريخ المغادرة.",
+    "supplierError": "تعذر تحميل توفر الفنادق.",
+    "loadError": "تعذر تحميل نتائج الفنادق.",
+    "errorTitle": "تعذر تحميل النتائج",
+    "errorDescription": "تعذر إكمال البحث الآن. راجع التواريخ والوجهة ثم حاول مرة أخرى.",
+    "loadingTitle": "نبحث عن الإقامات المتاحة",
+    "loadingDescription": "جارٍ التحقق من توفر الفنادق وفق تفاصيل بحثك.",
+    "backToSearch": "العودة للبحث",
+    "emptyTitle": "لا توجد فنادق متاحة",
+    "emptyDescription": "لا توجد فنادق متاحة لهذه التواريخ. جرّب تغيير التواريخ أو الوجهة.",
+    "resultsCount": "{count} نتيجة",
+    "taxNotice": "قد لا تشمل بعض الضرائب والرسوم حسب الفندق.",
+    "currencyChangeNotice": "لتحديث الأسعار بالعملة الجديدة، يرجى إعادة البحث.",
+    "filters": "الفلاتر",
+    "filteredEmptyTitle": "لا توجد فنادق تطابق هذه الفلاتر",
+    "filteredEmptyDescription": "جرّب إزالة الفلاتر أو تعديل البحث.",
+    "clearFilters": "مسح الفلاتر",
+    "sort": {
+      "priceLow": "الأقل سعرًا",
+      "priceHigh": "الأعلى سعرًا",
+      "ratingHigh": "الأعلى تقييمًا",
+      "value": "الأفضل قيمة"
+    }
+  },
+  "checkout": {
+    "title": "إكمال الحجز",
+    "description": "أدخل بيانات المسافرين لإتمام الحجز",
+    "backToReview": "العودة للمراجعة",
+    "travelerInformation": "بيانات المسافرين",
+    "travelerInformationHelp": "أضف بيانات كل مسافر كما تظهر في وثيقة السفر.",
+    "customerDetails": "بيانات العميل",
+    "customerDetailsHelp": "بيانات التواصل والوثائق المستخدمة لإكمال هذا الحجز.",
+    "leadTravelerSection": "المسافر الرئيسي",
+    "leadTravelerHint": "سيتم استخدام أول مسافر بالغ كمسافر رئيسي لهذا الحجز.",
+    "leadTravelerMissing": "أضف مسافرًا بالغًا واحدًا على الأقل للمتابعة.",
+    "contactSection": "بيانات التواصل",
+    "nationalityResidenceSection": "الجنسية والإقامة",
+    "documentSection": "بيانات الوثيقة",
+    "specialRequestsSection": "الطلبات الخاصة",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "you@example.com",
+    "emailHelp": "سيتم إرسال تأكيد الحجز إلى هذا البريد.",
+    "phoneCountryCode": "مفتاح الاتصال",
+    "phoneNumber": "رقم الجوال",
+    "phoneNumberPlaceholder": "5xxxxxxxx",
+    "nationality": "الجنسية",
+    "countryOfResidence": "بلد الإقامة",
+    "documentType": "نوع الوثيقة",
+    "documentNumber": "رقم الوثيقة",
+    "passportExpiryDate": "تاريخ انتهاء الجواز",
+    "gender": "النوع",
+    "dateOfBirth": "تاريخ الميلاد",
+    "age": "العمر",
+    "adult": "بالغ",
+    "child": "طفل",
+    "adults": "البالغون",
+    "children": "الأطفال",
+    "room": "غرفة",
+    "year": "سنة",
+    "years": "سنوات",
+    "savedTraveler": "مسافر محفوظ",
+    "chooseSavedTraveler": "اختر مسافرًا محفوظًا",
+    "noSavedTravelers": "لا يوجد مسافرون محفوظون بعد. أدخل بيانات المسافر هنا أو أدر المسافرين من حسابك.",
+    "selectNationality": "اختر الجنسية",
+    "selectCountry": "اختر الدولة",
+    "searchNationality": "ابحث عن الجنسية...",
+    "searchCountry": "ابحث عن الدولة...",
+    "noCountries": "لم يتم العثور على دول",
+    "nationalities": "الجنسيات",
+    "countries": "الدول",
+    "specialRequests": "طلبات خاصة (اختياري)",
+    "specialRequestsPlaceholder": "أي طلبات خاصة مثل تسجيل دخول مبكر أو موقع غرفة محدد.",
+    "specialRequestsHelp": "الطلبات الخاصة حسب التوفر ولا يمكن ضمانها.",
+    "titleField": "اللقب",
+    "bookingSummary": "ملخص الحجز",
+    "checkIn": "تاريخ الدخول",
+    "checkOut": "تاريخ المغادرة",
+    "duration": "المدة",
+    "night": "ليلة",
+    "nights": "ليالٍ",
+    "guests": "النزلاء",
+    "roomDetails": "تفاصيل الغرف",
+    "childAges": "أعمار الأطفال",
+    "taxesFees": "الضرائب والرسوم",
+    "total": "الإجمالي",
+    "feesNotice": "قد يتم تأكيد بعض ضرائب أو رسوم الفندق خلال عملية الحجز. لا يضاف أي مبلغ ما لم يكن موجودًا في بيانات الحجز.",
+    "processing": "جارٍ المعالجة...",
+    "completeBooking": "إكمال الحجز",
+    "termsNotice": "بإكمال هذا الحجز، فإنك توافق على شروط الخدمة وسياسة الخصوصية.",
+    "documentTypes": {
+      "passport": "جواز سفر",
+      "national_id": "هوية وطنية",
+      "residence_permit": "إقامة"
+    },
+    "titles": {
+      "Mr": "السيد",
+      "Mrs": "السيدة",
+      "Miss": "الآنسة",
+      "Ms": "الآنسة",
+      "Dr": "دكتور",
+      "Child": "طفل"
+    },
+    "trust": {
+      "protectedData": "يتم التعامل مع بياناتك بأمان",
+      "securePayment": "خيارات دفع آمنة",
+      "supportAfterBooking": "دعم العملاء متاح بعد الحجز"
+    },
+    "errors": {
+      "travelerNames": "يرجى إدخال أسماء جميع المسافرين.",
+      "travelerNationality": "يرجى تحديد جنسية كل مسافر.",
+      "travelerDocumentNumber": "يرجى إدخال رقم الوثيقة لكل مسافر.",
+      "childAge": "يرجى إدخال عمر كل طفل أو تاريخ ميلاده.",
+      "adultContact": "يرجى إدخال البريد والجوال للمسافرين البالغين.",
+      "emailRequired": "يرجى إدخال البريد الإلكتروني.",
+      "emailInvalid": "يرجى إدخال بريد إلكتروني صحيح.",
+      "phoneRequired": "يرجى إدخال مفتاح الاتصال ورقم الجوال.",
+      "nationalityRequired": "يرجى اختيار الجنسية.",
+      "residenceRequired": "يرجى اختيار بلد الإقامة.",
+      "documentRequired": "يرجى إدخال نوع الوثيقة ورقم الوثيقة.",
+      "bookingDataMissing": "بيانات الحجز غير موجودة.",
+      "signInRequired": "يرجى تسجيل الدخول لإكمال الحجز.",
+      "bookingIdMissing": "تم إنشاء الحجز بدون رقم حجز.",
+      "paymentStartFailed": "تعذر بدء الدفع.",
+      "paymentUrlMissing": "لم يرجع رابط الدفع من جلسة الدفع.",
+      "timeout": "انتهت مهلة طلب الحجز. يرجى المحاولة مرة أخرى أو التواصل مع الدعم.",
+      "bookingFailed": "تعذر إنشاء الحجز. يرجى المحاولة مرة أخرى."
+    },
+    "notices": {
+      "confirmed": "تم إنشاء الحجز برقم {bookingId}. تم تأكيد الحجز.",
+      "failed": "تم إنشاء الحجز برقم {bookingId}. تعذر تأكيده تلقائيًا وسيتم التواصل معك.",
+      "paymentDisabled": "تم إنشاء الحجز برقم {bookingId}. الدفع غير مفعل حاليًا."
+    }
   },
   "common": {
     "notImplemented": "غير متاح حالياً",
@@ -87,11 +371,21 @@
     "night": "ليلة",
     "perNight": "/ الليلة",
     "total": "الإجمالي",
+    "totalStayPrice": "إجمالي سعر الإقامة",
+    "priceReturnedBySupplier": "السعر الراجع من المورد",
+    "availabilityNotice": "السعر المعروض حسب التوفر الحالي",
+    "locationUnavailable": "تفاصيل الموقع غير متاحة",
+    "taxNotice": "قد لا تشمل بعض ضرائب ورسوم الفندق.",
     "for": "لمدة",
     "viewDetails": "عرض التفاصيل",
     "bestPriceGuarantee": "ضمان أفضل سعر",
     "photos": "صور",
     "noImage": "لا توجد صورة",
+    "imagesMayBeUnavailable": "صور الفندق غير متاحة لهذه النتيجة.",
+    "imagePosition": "{hotel} - الصورة {current} من {total}",
+    "closeGallery": "إغلاق معرض الصور",
+    "previousImage": "الصورة السابقة",
+    "nextImage": "الصورة التالية",
     "starHotel": "فندق نجوم",
     "standardRoom": "غرفة قياسية",
     "available": "متاح",
@@ -130,6 +424,15 @@
     "amenities": "المرافق",
     "mealPlan": "خطة الوجبات",
     "freeCancellationOnly": "إلغاء مجاني فقط",
+    "min": "الأدنى",
+    "max": "الأعلى",
+    "boardTypes": {
+      "roomOnly": "غرفة فقط",
+      "bedAndBreakfast": "إقامة مع إفطار",
+      "halfBoard": "نصف إقامة",
+      "fullBoard": "إقامة كاملة",
+      "allInclusive": "شامل كلياً"
+    },
     "showing": "عرض",
     "of": "من",
     "clearAll": "مسح الكل",
@@ -141,6 +444,7 @@
   },
   "hotelDetails": {
     "errorLoading": "تعذر تحميل الفندق",
+    "errorDescription": "تعذر تحميل بيانات الفندق الآن. حاول مرة أخرى أو عد إلى نتائج البحث.",
     "notFound": "الفندق غير موجود",
     "backToResults": "العودة إلى النتائج",
     "aboutHotel": "عن هذا الفندق",
@@ -148,7 +452,9 @@
     "facilities": "المرافق",
     "hotelFacilities": "مرافق الفندق",
     "noFacilities": "لا توجد معلومات عن المرافق.",
+    "noDescription": "وصف الفندق غير متاح لهذه النتيجة.",
     "location": "الموقع",
+    "locationUnavailable": "تفاصيل الموقع غير متاحة.",
     "address": "العنوان",
     "city": "المدينة",
     "country": "الدولة",
@@ -158,22 +464,32 @@
     "roomOptions": "{count} خيارات غرف متاحة لمدة {nights, plural, one {ليلة واحدة} other {# ليالٍ}}",
     "loadingPolicies": "جارٍ تحميل سياسات الإلغاء...",
     "bookNow": "احجز الآن",
+    "bookingSummary": "الإقامة المختارة",
     "wontBeCharged": "لن يتم تحصيل أي مبلغ الآن",
     "selectRoomToContinue": "اختر غرفة للمتابعة",
     "noRoomsAvailable": "لا توجد غرف متاحة للتواريخ المحددة",
     "modifySearch": "تعديل البحث",
     "taxesFees": "الضرائب والرسوم",
+    "taxNotice": "قد يتم تأكيد بعض ضرائب أو رسوم الفندق خلال عملية الحجز.",
     "freeCancellationUntil": "إلغاء مجاني حتى",
     "checkInTime": "من الساعة 2:00 مساءً",
     "checkOutTime": "حتى الساعة 12:00 ظهراً",
     "guests": "النزلاء",
     "adults": "بالغون",
     "children": "أطفال",
-    "rooms": "غرف"
+    "rooms": "غرف",
+    "trust": {
+      "securePayment": "خيارات دفع آمنة",
+      "customerSupport": "دعم العملاء متاح",
+      "supplierConfirmation": "تأكيد الحجز يعتمد على التوفر الحالي لدى المزود"
+    }
   },
   "booking": {
     "reviewPolicies": "المراجعة والسياسات",
     "reviewDescription": "يرجى مراجعة تفاصيل الحجز والموافقة على الشروط",
+    "missingDataTitle": "تفاصيل الحجز غير متاحة",
+    "missingDataDescription": "لم نتمكن من العثور على البيانات اللازمة لمراجعة الحجز. عد إلى البحث واختر إقامتك مرة أخرى.",
+    "loadErrorDescription": "تعذر تحميل مراجعة الحجز. عد إلى البحث وحاول مرة أخرى.",
     "hotelSummary": "ملخص الفندق",
     "checkIn": "تاريخ الدخول",
     "checkOut": "تاريخ المغادرة",
@@ -185,6 +501,7 @@
     "termsDescription": "بالمتابعة، أقر بأنني قرأت ووافقت على سياسة الإلغاء وسياسة الخصوصية وشروط الخدمة.",
     "priceSummary": "ملخص السعر",
     "roomPrice": "سعر الغرفة",
+    "taxNotice": "قد يتم تأكيد بعض ضرائب أو رسوم الفندق خلال عملية الحجز. لا تتم إضافة أي مبالغ هنا ما لم تكن موجودة ضمن بيانات الحجز.",
     "cityTax": "ضريبة المدينة (تدفع في الفندق)",
     "total": "الإجمالي",
     "continueToCheckout": "المتابعة إلى الدفع",
@@ -204,7 +521,85 @@
     "completed": "مكتمل",
     "rejected": "مرفوض",
     "review": "مراجعة",
-    "checkout": "الدفع"
+    "checkout": "الدفع",
+    "supplierPolicy": "سياسة الإلغاء حسب شروط المزود",
+    "travelersInformation": "بيانات المسافرين",
+    "travelersDescription": "أدخل البيانات المطلوبة لكل مسافر كما تظهر في وثيقة السفر.",
+    "room": "الغرفة",
+    "adult": "بالغ",
+    "child": "طفل",
+    "childAges": "أعمار الأطفال",
+    "age": "العمر",
+    "title": "اللقب",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "nationality": "الجنسية",
+    "documentType": "نوع الوثيقة",
+    "documentNumber": "رقم الوثيقة",
+    "phone": "رقم الجوال",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "guest@example.com",
+    "phonePlaceholder": "رقم الجوال",
+    "requestCreated": "تم إنشاء طلب الحجز {bookingId}.",
+    "titles": {
+      "Mr": "السيد",
+      "Mrs": "السيدة",
+      "Ms": "الآنسة",
+      "Miss": "الآنسة"
+    },
+    "documentTypes": {
+      "passport": "جواز سفر",
+      "national_id": "هوية وطنية"
+    },
+    "trust": {
+      "securePayment": "خيارات دفع آمنة",
+      "protectedData": "يتم التعامل مع بياناتك بأمان",
+      "customerSupport": "دعم العملاء متاح"
+    },
+    "processing": "جاري المعالجة...",
+    "confirmBooking": "تأكيد الحجز"
+  },
+  "bookingConfirmation": {
+    "devPreview": "معاينة المطور",
+    "devPreviewTitle": "تأكيد الحجز يحتاج بيانات حجز",
+    "devPreviewDescription": "هذه الصفحة مفتوحة للمعاينة المحلية فقط. لا يتم عرض تأكيد حجز وهمي لأن الصفحة الحقيقية تقرأ bookingConfirmation من localStorage بعد مسار الحجز.",
+    "backHome": "العودة للرئيسية",
+    "notFoundTitle": "لم يتم العثور على الحجز",
+    "notFoundDescription": "تعذر جلب تفاصيل الحجز",
+    "confirmedTitle": "تم تأكيد الحجز!",
+    "sentTitle": "تم إرسال الحجز",
+    "statusTitle": "حالة الحجز",
+    "confirmedDescription": "تم تأكيد حجزك. راجع بريدك الإلكتروني للتفاصيل.",
+    "pendingDescription": "حجزك قيد المعالجة. ستصلك رسالة التأكيد قريبًا.",
+    "statusDescription": "يرجى مراجعة حالة الحجز لمزيد من التفاصيل.",
+    "bookingDetails": "تفاصيل الحجز",
+    "bookingNumber": "رقم الحجز",
+    "yourReference": "مرجعك",
+    "bookingDate": "تاريخ الحجز",
+    "hotel": "الفندق",
+    "checkIn": "تسجيل الدخول",
+    "checkOut": "تسجيل الخروج",
+    "roomDetails": "تفاصيل الغرفة",
+    "adultCount": "{count} بالغ",
+    "childCount": "{count} طفل",
+    "leadGuest": "النزيل الرئيسي",
+    "contactInfo": "معلومات التواصل",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "importantInfo": "معلومات مهمة",
+    "priceSummary": "ملخص السعر",
+    "totalPrice": "السعر الإجمالي",
+    "paymentPolicy": "ستتم معالجة الدفع حسب سياسة الفندق.",
+    "printConfirmation": "طباعة التأكيد",
+    "shareTitle": "تأكيد الحجز - {hotel}",
+    "shareText": "حجزي في {hotel}",
+    "shareBooking": "مشاركة الحجز",
+    "needHelpTitle": "هل تحتاج مساعدة؟",
+    "needHelpDescription": "إذا كانت لديك أي أسئلة حول حجزك، يرجى التواصل مع فريق الدعم.",
+    "contactSupport": "تواصل مع الدعم",
+    "printFooterTitle": "تأكيد حجز Hotleno",
+    "printFooterBookingNumber": "رقم الحجز: {reference}",
+    "printedAt": "تمت الطباعة في {date}"
   },
   "profile": {
     "overview": "نظرة عامة",
@@ -308,7 +703,40 @@
     "manageYourBusiness": "إدارة أعمالك",
     "dashboard": "لوحة التحكم",
     "users": "المستخدمون",
+    "customers": "العملاء",
+    "staff": "الموظفون",
+    "notifications": "التنبيهات",
     "settings": "الإعدادات",
+    "hotels": "الفنادق",
+    "agencies": "الوكالات",
+    "affiliates": "الأفلييت",
+    "payments": "المدفوعات",
+    "viewPaymentDetails": "عرض التفاصيل",
+    "paymentDetails": "تفاصيل عملية الدفع",
+    "paymentDetailsDescription": "مراجعة بيانات عملية الدفع المسجلة.",
+    "paymentId": "رقم عملية الدفع",
+    "bookingReference": "مرجع الحجز",
+    "customer": "العميل",
+    "paymentMethod": "طريقة الدفع",
+    "amount": "المبلغ",
+    "paymentStatus": "الحالة",
+    "paymentProvider": "مزود الدفع",
+    "paymentDate": "تاريخ الدفع",
+    "paymentStatus_succeeded": "ناجحة",
+    "paymentStatus_pending": "قيد الانتظار",
+    "paymentStatus_failed": "فشلت",
+    "paymentStatus_refund_required": "مطلوب استرداد",
+    "suppliersControl": "إدارة الموردين",
+    "pricing": "التسعير",
+    "logs": "السجلات",
+    "blog": "المدونة",
+    "hotlenoAdmin": "مدير Hotleno",
+    "globalSearchPlaceholder": "ابحث في الحجوزات والفنادق والمستخدمين...",
+    "systemOperational": "النظام يعمل",
+    "today": "اليوم",
+    "travelOperations": "إدارة عمليات السفر",
+    "operationalDashboard": "لوحة تشغيلية",
+    "reviewOperations": "مراجعة العمليات",
     "backToSite": "العودة للموقع",
     "profile": "الملف الشخصي",
     "logout": "تسجيل الخروج",
@@ -331,11 +759,26 @@
     "completed": "مكتمل",
     "rejected": "مرفوض",
     "manageAllBookings": "إدارة جميع الحجوزات",
+    "bookingsControl": "إدارة عمليات حجوزات HOTLENO",
+    "resultsCountLabel": "عدد النتائج",
+    "pages": "عدد الصفحات",
+    "room": "الغرفة",
+    "viewDetails": "عرض التفاصيل",
+    "bookingFilterAll": "الكل",
+    "bookingFilterConfirmed": "المؤكدة",
+    "bookingFilterCancelled": "الملغية",
+    "bookingFilterFailed": "فشل الحجز",
+    "bookingFilterCancelFailed": "فشل الإلغاء",
+    "bookingFilterReview": "تحتاج مراجعة",
+    "bookingFilterArchive": "الأرشيف / اختبارات TBO",
     "searchBookings": "ابحث برقم الحجز أو الفندق أو النزيل...",
     "filterByStatus": "تصفية حسب الحالة",
     "allStatuses": "جميع الحالات",
     "allBookings": "جميع الحجوزات",
     "noBookingsFound": "لم يتم العثور على حجوزات",
+    "noBookingsDescription": "لا توجد حجوزات مطابقة للبحث والفلاتر الحالية. عدّل الفلاتر لمراجعة سجلات أخرى.",
+    "bookingsLoadErrorTitle": "تعذر تحميل الحجوزات",
+    "bookingsLoadErrorDescription": "قائمة الحجوزات غير متاحة مؤقتًا. أعد المحاولة من دون تغيير أي بيانات للحجز.",
     "failedToFetchBookings": "تعذر جلب الحجوزات",
     "statusUpdated": "تم تحديث الحالة بنجاح",
     "failedToUpdateStatus": "تعذر تحديث الحالة",
@@ -350,11 +793,16 @@
     "guest": "النزيل",
     "onRequest": "عند الطلب",
     "manageAllUsers": "إدارة جميع المستخدمين المسجلين",
+    "usersControl": "إدارة مستخدمي HOTLENO",
+    "inactive": "غير نشط",
     "searchUsers": "ابحث بالاسم أو البريد الإلكتروني...",
     "filterByRole": "تصفية حسب الدور",
     "allRoles": "جميع الأدوار",
     "allUsers": "جميع المستخدمين",
     "noUsersFound": "لم يتم العثور على مستخدمين",
+    "noUsersDescription": "لا توجد سجلات مستخدمين مطابقة للبحث وفلتر الصلاحية الحاليين.",
+    "usersLoadErrorTitle": "تعذر تحميل المستخدمين",
+    "usersLoadErrorDescription": "قائمة المستخدمين غير متاحة مؤقتًا. يرجى إعادة المحاولة.",
     "failedToFetchUsers": "تعذر جلب المستخدمين",
     "roleUpdated": "تم تحديث الدور بنجاح",
     "failedToUpdateRole": "تعذر تحديث الدور",
@@ -413,7 +861,78 @@
     "nationalId": "رقم الهوية الوطنية",
     "passportNumber": "رقم الجواز",
     "passportExpiryDate": "تاريخ انتهاء الجواز",
-    "edit": "تعديل"
+    "edit": "تعديل",
+    "supportCenterLabel": "مركز دعم HOTLENO",
+    "waitingAdmin": "بانتظار فريق الدعم",
+    "allSupportTickets": "جميع تذاكر الدعم",
+    "completedTickets": "تم حلها أو إغلاقها",
+    "searchSupportTickets": "ابحث برقم التذكرة أو العميل أو البريد أو الحجز...",
+    "filterByCategory": "تصفية حسب التصنيف",
+    "allCategories": "جميع التصنيفات",
+    "noTicketsFound": "لا توجد تذاكر دعم مطابقة",
+    "noTicketsDescription": "لا توجد تذاكر دعم مطابقة للفلاتر المحددة.",
+    "supportLoadErrorTitle": "تعذر تحميل تذاكر الدعم",
+    "supportLoadErrorDescription": "قائمة تذاكر الدعم غير متاحة مؤقتًا. يرجى إعادة المحاولة.",
+    "supportFailedToFetch": "تعذر تحميل تذاكر الدعم",
+    "retry": "إعادة المحاولة",
+    "openConversation": "فتح المحادثة",
+    "paymentsControl": "إدارة مدفوعات HOTLENO",
+    "paymentsDescription": "مراجعة سجلات الدفع والحالات المعلقة والعمليات التي تحتاج إلى متابعة.",
+    "paymentsNeedReview": "تحتاج مراجعة",
+    "totalPaymentOperations": "إجمالي العمليات",
+    "allPaymentOperations": "جميع عمليات الدفع المسجلة",
+    "totalPaymentAmount": "إجمالي المبالغ",
+    "recordedPayments": "إجمالي المدفوعات المسجلة",
+    "successfulPayments": "المدفوعات الناجحة",
+    "completedPayments": "عمليات مكتملة",
+    "failedOrRefundRequired": "فشل أو استرداد مطلوب",
+    "searchPayments": "ابحث برقم الدفع أو الحجز أو العميل أو الحالة...",
+    "paymentsList": "سجلات المدفوعات",
+    "paymentDate": "التاريخ",
+    "dashboardLoadErrorTitle": "تعذر تحميل بيانات لوحة التحكم",
+    "dashboardLoadErrorDescription": "الإحصائيات التشغيلية غير متاحة مؤقتًا. أعد المحاولة من دون تغيير أي سجلات.",
+    "noPaymentsFound": "لا توجد سجلات مدفوعات",
+    "noPaymentsDescription": "ستظهر سجلات المدفوعات هنا عند توفرها.",
+    "noPaymentsSearchDescription": "لا توجد مدفوعات مطابقة للبحث. جرّب مرجع حجز أو اسم عميل آخر.",
+    "clearSearch": "مسح البحث",
+    "supportTicketNotFound": "تذكرة الدعم غير موجودة",
+    "ticketUpdated": "تم تحديث التذكرة",
+    "failedToUpdateTicket": "تعذر تحديث التذكرة",
+    "backToSupportTickets": "العودة إلى تذاكر الدعم",
+    "customerId": "معرّف العميل",
+    "conversation": "المحادثة",
+    "replyToCustomer": "الرد على العميل",
+    "replyPlaceholder": "اكتب ردًا واضحًا للعميل...",
+    "sendingReply": "جارٍ الإرسال...",
+    "sendReply": "إرسال الرد",
+    "supportReplySent": "تم إرسال الرد",
+    "supportReplyFailed": "تعذر إرسال الرد",
+    "adminReplyRequiresReopen": "أعد فتح التذكرة قبل إرسال رد جديد.",
+    "reopenedByCustomerMessage": "أعاد العميل فتح التذكرة.",
+    "ticketManagement": "إدارة التذكرة",
+    "category": "التصنيف",
+    "bookingId": "معرّف الحجز",
+    "bookingReference": "مرجع الحجز",
+    "viewRelatedBooking": "عرض الحجز المرتبط",
+    "assigneePlaceholder": "معرّف أو بريد موظف الإدارة",
+    "invalidAdminAssignee": "اختر حساب مدير صالحًا أو اترك حقل التعيين فارغًا",
+    "savingChanges": "جارٍ الحفظ...",
+    "statusOpen": "مفتوحة",
+    "statusWaitingCustomer": "بانتظار العميل",
+    "statusWaitingAdmin": "بانتظار فريق الدعم",
+    "statusWaitingSupplier": "بانتظار المورد",
+    "statusResolved": "تم الحل",
+    "statusClosed": "مغلقة",
+    "priorityLow": "منخفضة",
+    "priorityNormal": "عادية",
+    "priorityHigh": "عالية",
+    "priorityUrgent": "عاجلة",
+    "categoryBookingIssue": "مشكلة في الحجز",
+    "categoryPaymentIssue": "مشكلة في الدفع",
+    "categoryCancellationRefund": "إلغاء أو استرداد",
+    "categoryHotelIssue": "مشكلة في الفندق",
+    "categoryAccountIssue": "مشكلة في الحساب",
+    "categoryGeneral": "استفسار عام"
   },
   "support": {
     "support": "الدعم",
@@ -432,24 +951,39 @@
     "categoryTechnical": "دعم فني",
     "categoryAccount": "مساعدة في الحساب",
     "categoryOther": "أخرى",
+    "categoryBookingIssue": "مشكلة في الحجز",
+    "categoryPaymentIssue": "مشكلة في الدفع",
+    "categoryCancellationRefund": "إلغاء أو استرداد",
+    "categoryHotelIssue": "مشكلة في الفندق",
+    "categoryAccountIssue": "مشكلة في الحساب",
+    "categoryGeneral": "استفسار عام",
     "priority": "الأولوية",
     "selectPriority": "اختر الأولوية",
     "low": "منخفضة",
     "medium": "متوسطة",
     "high": "عالية",
     "urgent": "عاجلة",
+    "priorityLow": "منخفضة",
+    "priorityNormal": "عادية",
+    "priorityHigh": "عالية",
+    "priorityUrgent": "عاجلة",
     "optional": "اختياري",
     "bookingReference": "رقم الحجز",
     "bookingRefPlaceholder": "مثال: HTL-123456 إن وجد",
     "message": "الرسالة",
     "messagePlaceholder": "اكتب تفاصيل المشكلة...",
     "create": "إنشاء تذكرة",
+    "creating": "جارٍ الإنشاء...",
+    "requiredFields": "يرجى إكمال بيانات التذكرة المطلوبة",
     "cancel": "إلغاء",
     "ticketCreated": "تم إنشاء التذكرة بنجاح",
     "failedToCreateTicket": "تعذر إنشاء التذكرة",
     "failedToFetchTickets": "تعذر جلب التذاكر",
     "noTicketsYet": "لا توجد تذاكر بعد",
     "createFirstTicket": "أنشئ أول تذكرة للحصول على المساعدة",
+    "ticketsLoadErrorTitle": "تعذر تحميل تذاكر الدعم",
+    "ticketsLoadErrorDescription": "سجل الدعم غير متاح مؤقتًا. أعد المحاولة، أو أنشئ طلبًا جديدًا بعد استعادة الاتصال.",
+    "retry": "إعادة المحاولة",
     "ticketNumber": "رقم التذكرة",
     "categoryLabel": "التصنيف",
     "lastUpdated": "آخر تحديث",
@@ -464,14 +998,33 @@
     "ticketClosed": "تم إغلاق التذكرة بنجاح",
     "failedToCloseTicket": "تعذر إغلاق التذكرة",
     "ticketClosedMessage": "تم إغلاق هذه التذكرة. إذا احتجت إلى مساعدة إضافية، يرجى إنشاء تذكرة جديدة.",
+    "reopenTicket": "إعادة فتح التذكرة",
+    "reopeningTicket": "جارٍ إعادة الفتح...",
+    "ticketReopened": "تمت إعادة فتح التذكرة",
+    "failedToReopenTicket": "تعذرت إعادة فتح التذكرة",
+    "closedReplyNotAllowed": "لا يمكن الرد على تذكرة مغلقة. أعد فتحها أولًا.",
+    "resolvedReplyNotAllowed": "لا يمكن الرد على تذكرة محلولة. أعد فتحها أولًا.",
+    "reopenedByCustomerMessage": "أعاد العميل فتح التذكرة.",
     "open": "مفتوحة",
     "inProgress": "قيد المعالجة",
     "waiting": "بانتظار الرد",
     "resolved": "تم الحل",
     "closed": "مغلقة",
+    "statusOpen": "مفتوحة",
+    "statusWaitingCustomer": "بانتظار ردك",
+    "statusWaitingAdmin": "بانتظار فريق الدعم",
+    "statusWaitingSupplier": "بانتظار تحديث خارجي",
+    "statusResolved": "تم الحل",
+    "statusClosed": "مغلقة",
     "failedToSendMessage": "تعذر إرسال الرسالة",
+    "messageSent": "تم إرسال الرسالة",
+    "sending": "جارٍ الإرسال...",
+    "closing": "جارٍ الإغلاق...",
     "errorOccurred": "حدث خطأ",
-    "allStatuses": "جميع الحالات"
+    "allStatuses": "جميع الحالات",
+    "signInRequired": "سجّل الدخول للتواصل مع الدعم",
+    "signInRequiredDescription": "ترتبط تذاكر الدعم بحسابك بشكل آمن.",
+    "signIn": "تسجيل الدخول"
   },
   "blog": {
     "blog": "المدونة",
@@ -673,6 +1226,670 @@
           "nav6": "سياسة الخصوصية"
         },
         "copyright": "Hotleno"
+      }
+    }
+  },
+  "adminCustomers": {
+    "eyebrow": "عمليات عملاء B2C",
+    "title": "إدارة العملاء",
+    "description": "مراجعة نشاط العميل وحجوزاته ومدفوعاته وتذاكر الدعم مع الحفاظ على خصوصية وثائق الهوية.",
+    "total": "العملاء",
+    "search": "بحث",
+    "searchPlaceholder": "ابحث بالاسم أو البريد أو الهاتف",
+    "unknownName": "عميل دون اسم",
+    "viewDetails": "عرض التفاصيل",
+    "previous": "السابق",
+    "next": "التالي",
+    "pagination": "الصفحة {page} من {pages}",
+    "filters": {
+      "allTypes": "كل تصنيفات العملاء",
+      "allStatuses": "كل حالات الحساب"
+    },
+    "types": {
+      "normal": "عادي",
+      "vip": "مميز"
+    },
+    "statuses": {
+      "active": "نشط",
+      "blocked": "محظور"
+    },
+    "columns": {
+      "customer": "العميل",
+      "phone": "الهاتف",
+      "type": "التصنيف",
+      "status": "حالة الحساب",
+      "bookings": "الحجوزات",
+      "lastActivity": "آخر نشاط",
+      "registeredAt": "تاريخ التسجيل",
+      "actions": "الإجراءات"
+    },
+    "states": {
+      "errorTitle": "تعذر تحميل العملاء",
+      "errorDescription": "بيانات العملاء غير متاحة مؤقتًا. حاول مرة أخرى.",
+      "emptyTitle": "لا يوجد عملاء",
+      "emptyDescription": "لا يوجد عملاء B2C مطابقون للبحث والفلاتر الحالية.",
+      "detailErrorTitle": "تعذر تحميل تفاصيل العميل",
+      "detailErrorDescription": "قد يكون العميل غير متاح أو لا تملك صلاحية عرض هذا السجل.",
+      "retry": "إعادة المحاولة"
+    },
+    "detail": {
+      "back": "العودة إلى العملاء",
+      "bookingCount": "الحجوزات",
+      "paymentCount": "المدفوعات",
+      "ticketCount": "التذاكر",
+      "profile": "ملف العميل",
+      "email": "البريد الإلكتروني",
+      "lastLogin": "آخر تسجيل دخول",
+      "lastUpdated": "آخر تحديث",
+      "bookings": "الحجوزات",
+      "noBookings": "لا توجد حجوزات لهذا العميل",
+      "hotelBooking": "حجز فندق",
+      "payments": "المدفوعات",
+      "noPayments": "لا توجد سجلات مدفوعات",
+      "paymentRecord": "سجل دفع",
+      "supportTickets": "تذاكر الدعم",
+      "noTickets": "لا توجد تذاكر دعم",
+      "supportTicket": "تذكرة دعم",
+      "accountManagement": "إدارة الحساب",
+      "customerType": "تصنيف العميل",
+      "accountStatus": "حالة الحساب",
+      "internalNotes": "ملاحظات داخلية",
+      "notesPlaceholder": "أضف ملاحظة تشغيلية تظهر للموظفين المخولين فقط",
+      "notesPrivacy": "لا تظهر الملاحظات الداخلية للعميل. لا تحفظ وثائق الهوية أو أسرار الدفع هنا.",
+      "save": "حفظ التغييرات",
+      "saving": "جارٍ الحفظ...",
+      "saved": "تم تحديث إعدادات العميل",
+      "saveFailed": "تعذر تحديث إعدادات العميل",
+      "readOnly": "لديك صلاحية عرض فقط. يلزم تصريح إدارة العملاء لإجراء تغييرات."
+    }
+  },
+  "adminStaff": {
+    "eyebrow": "الوصول والصلاحيات",
+    "title": "إدارة الموظفين",
+    "description": "إدارة حسابات الموظفين الداخلية والأدوار وحالة الوصول والصلاحيات التشغيلية.",
+    "total": "الموظفون",
+    "active": "النشطون",
+    "superAdmins": "المديرون الأعلى",
+    "staffList": "حسابات الموظفين",
+    "staffListDescription": "لا يمكن إنشاء أو تعديل وصول الموظفين إلا من مدير مخوّل.",
+    "addStaff": "إضافة موظف",
+    "fetchFailed": "تعذر تحميل حسابات الموظفين",
+    "saveFailed": "تعذر حفظ تغييرات الموظف",
+    "loadErrorTitle": "تعذر تحميل حسابات الموظفين",
+    "loadErrorDescription": "دليل الموظفين غير متاح مؤقتًا. يرجى إعادة المحاولة.",
+    "retry": "إعادة المحاولة",
+    "emptyTitle": "لا توجد حسابات موظفين",
+    "emptyDescription": "أنشئ أول حساب موظف لتعيين صلاحيات التشغيل.",
+    "permissionCount": "{count} صلاحية",
+    "lastLogin": "آخر دخول",
+    "edit": "تعديل الوصول",
+    "createTitle": "إضافة موظف",
+    "createDescription": "أنشئ حساب دخول داخليًا وعيّن الصلاحيات اللازمة للدور فقط.",
+    "editTitle": "تعديل وصول الموظف",
+    "editDescription": "حدّث الدور الداخلي والحالة والصلاحيات التشغيلية.",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "temporaryPassword": "كلمة مرور مؤقتة",
+    "role": "الدور الداخلي",
+    "status": "حالة الحساب",
+    "permissionsTitle": "الصلاحيات",
+    "permissionsDescription": "يمكن تخصيص الصلاحيات الافتراضية للدور لهذا الموظف.",
+    "requiredFields": "أكمل بيانات الموظف المطلوبة",
+    "cancel": "إلغاء",
+    "save": "حفظ الوصول",
+    "saving": "جارٍ الحفظ...",
+    "created": "تم إنشاء حساب الموظف",
+    "updated": "تم تحديث وصول الموظف",
+    "statuses": {
+      "active": "نشط",
+      "suspended": "معلّق"
+    },
+    "roles": {
+      "super_admin": "مدير أعلى",
+      "admin": "مدير",
+      "support": "خدمة العملاء",
+      "finance": "المالية",
+      "sales": "المبيعات",
+      "content_manager": "مدير المحتوى"
+    },
+    "permissions": {
+      "dashboard_view": "عرض لوحة التحكم",
+      "bookings_view": "عرض الحجوزات",
+      "bookings_manage": "إدارة الحجوزات",
+      "payments_view": "عرض المدفوعات",
+      "payments_manage": "إدارة المدفوعات",
+      "support_view": "عرض تذاكر الدعم",
+      "support_manage": "إدارة تذاكر الدعم",
+      "customers_view": "عرض العملاء",
+      "customers_manage": "إدارة العملاء",
+      "agencies_view": "عرض الوكالات",
+      "agencies_manage": "إدارة الوكالات",
+      "suppliers_view": "عرض الموردين",
+      "suppliers_manage": "إدارة الموردين",
+      "pricing_view": "عرض التسعير",
+      "pricing_manage": "إدارة التسعير",
+      "reports_view": "عرض التقارير",
+      "users_view": "عرض الموظفين",
+      "users_manage": "إدارة الموظفين",
+      "settings_view": "عرض الإعدادات",
+      "settings_manage": "إدارة الإعدادات",
+      "logs_view": "عرض السجلات"
+    },
+    "errors": {
+      "forbidden": "لا تملك صلاحية إدارة الموظفين",
+      "invalid_staff_data": "راجع بيانات الموظف ثم أعد المحاولة",
+      "staff_exists": "يوجد حساب موظف بهذا البريد بالفعل",
+      "email_in_use": "هذا البريد مرتبط بحساب غير إداري",
+      "super_admin_management_forbidden": "المدير الأعلى فقط يستطيع إدارة صلاحيات المديرين الأعلى",
+      "last_super_admin_required": "لا يمكن تعليق أو تخفيض آخر مدير أعلى نشط",
+      "staff_not_found": "حساب الموظف غير موجود",
+      "staff_create_failed": "تعذر إنشاء حساب الموظف",
+      "staff_update_failed": "تعذر تحديث حساب الموظف",
+      "save_failed": "تعذر حفظ تغييرات الموظف"
+    }
+  },
+  "adminAgencies": {
+    "eyebrow": "توزيع الأعمال B2B",
+    "title": "إدارة الوكالات",
+    "description": "إدارة ملفات الوكالات وإعداداتها التجارية والائتمانية ووصول الموظفين وبيانات API الداخلية.",
+    "total": "الوكالات",
+    "addAgency": "إضافة وكالة",
+    "readOnly": "يمكنك عرض بيانات الوكالات، لكن تعديلها يتطلب صلاحية إدارة الوكالات.",
+    "searchPlaceholder": "ابحث باسم الوكالة أو البريد أو الهاتف أو الدولة أو المدينة",
+    "allStatuses": "كل الحالات",
+    "search": "بحث",
+    "listTitle": "وكالات B2B",
+    "loadErrorTitle": "تعذر تحميل الوكالات",
+    "loadErrorDescription": "دليل الوكالات غير متاح مؤقتًا. حاول مرة أخرى.",
+    "retry": "إعادة المحاولة",
+    "emptyTitle": "لا توجد وكالات",
+    "emptyDescription": "أنشئ أول وكالة B2B عندما تصبح بياناتها التجارية جاهزة.",
+    "location": "الموقع",
+    "markup": "الزيادة",
+    "commission": "العمولة",
+    "creditLimit": "الحد الائتماني",
+    "walletBalance": "رصيد المحفظة",
+    "apiEnabled": "API مفعّل",
+    "apiDisabled": "API متوقف",
+    "edit": "تعديل",
+    "details": "التفاصيل",
+    "previous": "السابق",
+    "next": "التالي",
+    "page": "الصفحة {page} من {pages}",
+    "createTitle": "إضافة وكالة B2B",
+    "editTitle": "تعديل الوكالة",
+    "formDescription": "إدارة البيانات التجارية والتشغيلية الداخلية لهذه الوكالة.",
+    "created": "تم إنشاء الوكالة.",
+    "updated": "تم تحديث الوكالة.",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "saving": "جار الحفظ...",
+    "apiEnabledHelp": "يجهز هذا الخيار الوصول الداخلي للـ API فقط، ولا يفعّل أي ربط خارجي من هنا.",
+    "backToAgencies": "العودة إلى الوكالات",
+    "detailLoadError": "تعذر تحميل تفاصيل الوكالة",
+    "detailLoadErrorDescription": "سجل الوكالة غير متاح أو لا تملك صلاحية عرضه.",
+    "agencyData": "بيانات الوكالة",
+    "saveAgency": "حفظ تغييرات الوكالة",
+    "creditSettings": "إعدادات الائتمان والتجارة",
+    "apiSettings": "إعدادات API",
+    "apiStatus": "حالة API",
+    "apiKeyPrefix": "بداية المفتاح",
+    "generateApiKey": "إنشاء مفتاح API",
+    "regenerateApiKey": "إعادة إنشاء مفتاح API",
+    "disableApiKey": "تعطيل مفتاح API",
+    "apiNotIntegrated": "يُحفظ المفتاح للوصول الداخلي المستقبلي. الفوترة حسب الاستخدام والربط الخارجي للـ API غير مفعّلين.",
+    "apiGenerateConfirm": "هل تريد إنشاء مفتاح API جديد؟ سيتوقف أي مفتاح سابق عن العمل.",
+    "apiDisableConfirm": "هل تريد تعطيل وصول API لهذه الوكالة؟",
+    "apiDisabledSuccess": "تم تعطيل وصول API للوكالة.",
+    "apiKeyCreatedTitle": "تم إنشاء مفتاح API",
+    "apiKeyCreatedDescription": "يظهر هذا المفتاح مرة واحدة فقط. احفظه بأمان لأن HOTLENO تحتفظ بالبصمة فقط.",
+    "copyApiKey": "نسخ المفتاح",
+    "done": "تم",
+    "agencyStaff": "موظفو الوكالة",
+    "agencyStaffDescription": "إدارة سجلات موظفي الوكالة وصلاحياتهم التشغيلية الداخلية.",
+    "addStaff": "إضافة موظف",
+    "staffEmptyTitle": "لا يوجد موظفون للوكالة",
+    "staffEmptyDescription": "لم تتم إضافة أي سجل موظف لهذه الوكالة.",
+    "addStaffTitle": "إضافة موظف وكالة",
+    "editStaffTitle": "تعديل موظف الوكالة",
+    "staffFormDescription": "حدد دور الموظف وحالة الوصول وصلاحيات الوكالة الداخلية.",
+    "staffCreated": "تمت إضافة موظف الوكالة.",
+    "staffUpdated": "تم تحديث موظف الوكالة.",
+    "permissionCount": "{count} صلاحيات",
+    "agencyBookings": "حجوزات الوكالة",
+    "bookingsEmptyTitle": "لا توجد حجوزات للوكالة",
+    "bookingsEmptyDescription": "ستظهر الحجوزات المرتبطة بهذه الوكالة هنا عند توفرها.",
+    "statuses": {
+      "pending": "بانتظار المراجعة",
+      "active": "نشطة",
+      "suspended": "موقوفة",
+      "rejected": "مرفوضة"
+    },
+    "staffRoles": {
+      "owner": "مالك",
+      "manager": "مدير",
+      "agent": "موظف حجوزات",
+      "accountant": "محاسب"
+    },
+    "staffStatuses": {
+      "active": "نشط",
+      "suspended": "موقوف"
+    },
+    "staffPermissions": {
+      "bookings_view": "عرض الحجوزات",
+      "bookings_create": "إنشاء الحجوزات",
+      "bookings_manage": "إدارة الحجوزات",
+      "wallet_view": "عرض المحفظة",
+      "reports_view": "عرض التقارير",
+      "staff_view": "عرض موظفي الوكالة",
+      "staff_manage": "إدارة موظفي الوكالة"
+    },
+    "fields": {
+      "name": "الاسم القانوني",
+      "commercialName": "الاسم التجاري",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "country": "الدولة",
+      "city": "المدينة",
+      "status": "الحالة",
+      "currency": "العملة",
+      "commissionRate": "نسبة العمولة (%)",
+      "markupRate": "نسبة الزيادة (%)",
+      "creditLimit": "الحد الائتماني",
+      "walletBalance": "رصيد المحفظة",
+      "apiEnabled": "تفعيل وصول API",
+      "notes": "ملاحظات داخلية",
+      "staffName": "الاسم",
+      "staffEmail": "البريد الإلكتروني",
+      "staffRole": "الدور",
+      "staffStatus": "الحالة",
+      "permissions": "الصلاحيات"
+    },
+    "errors": {
+      "required": "أكمل حقول الوكالة المطلوبة.",
+      "forbidden": "لا تملك صلاحية إدارة الوكالات.",
+      "invalid_agency": "راجع بيانات الوكالة.",
+      "agency_not_found": "الوكالة غير موجودة.",
+      "agency_create_failed": "تعذر إنشاء الوكالة.",
+      "agency_update_failed": "تعذر تحديث الوكالة.",
+      "saveFailed": "تعذر حفظ تغييرات الوكالة.",
+      "staffRequired": "أدخل اسم الموظف وبريده الإلكتروني.",
+      "invalid_agency_staff": "راجع بيانات موظف الوكالة.",
+      "agency_staff_exists": "يوجد موظف بهذا البريد في الوكالة بالفعل.",
+      "agency_staff_not_found": "موظف الوكالة غير موجود.",
+      "agency_staff_create_failed": "تعذر إنشاء موظف الوكالة.",
+      "agency_staff_update_failed": "تعذر تحديث موظف الوكالة.",
+      "staffSaveFailed": "تعذر حفظ تغييرات موظف الوكالة.",
+      "apiKeyCreateFailed": "تعذر إنشاء مفتاح API.",
+      "apiKeyDisableFailed": "تعذر تعطيل وصول API."
+    }
+  },
+  "adminPricing": {
+    "eyebrow": "إدارة الربح",
+    "title": "قواعد التسعير",
+    "description": "تجهيز قواعد الزيادة والربح داخليًا للأفراد والأعمال والموردين والوكالات دون تغيير أسعار الموردين الفعلية.",
+    "totalRules": "القواعد",
+    "activeRules": "المفعّلة",
+    "addRule": "إضافة قاعدة تسعير",
+    "noticeTitle": "إعداد ومعاينة فقط",
+    "notice": "تُحفظ هذه القواعد للتخطيط والإدارة الداخلية، ولا يتم تطبيقها على بحث الفنادق أو إجمالي الحجز أو طلبات المورد أو أسعار العميل.",
+    "readOnly": "يمكنك عرض قواعد التسعير، لكن تعديلها يتطلب صلاحية إدارة التسعير.",
+    "rulesList": "القواعد المسجلة",
+    "rulesListDescription": "تُرتب القواعد هنا حسب الأولوية لأغراض الإدارة فقط.",
+    "loadErrorTitle": "تعذر تحميل قواعد التسعير",
+    "loadErrorDescription": "إعدادات التسعير غير متاحة مؤقتًا. حاول مرة أخرى.",
+    "retry": "إعادة المحاولة",
+    "emptyTitle": "لا توجد قواعد تسعير",
+    "emptyDescription": "أنشئ أول قاعدة عندما تصبح سياسة التسعير التجارية جاهزة.",
+    "enabled": "مفعّلة",
+    "disabled": "متوقفة",
+    "markup": "الزيادة",
+    "priority": "الأولوية",
+    "supplierCode": "رمز المورد",
+    "agencyId": "معرّف الوكالة",
+    "profitLimits": "نطاق الربح: الحد الأدنى {min}، الحد الأعلى {max}",
+    "edit": "تعديل",
+    "archive": "أرشفة",
+    "archiveConfirm": "هل تريد أرشفة القاعدة «{name}»؟ سيتم تعطيلها وإزالتها من القائمة النشطة.",
+    "archived": "تمت أرشفة قاعدة التسعير.",
+    "created": "تم إنشاء قاعدة التسعير.",
+    "updated": "تم تحديث قاعدة التسعير.",
+    "createTitle": "إضافة قاعدة تسعير",
+    "editTitle": "تعديل قاعدة التسعير",
+    "formDescription": "اضبط القاعدة وراجع حسابها النظري قبل الحفظ.",
+    "name": "اسم القاعدة",
+    "scope": "نطاق القاعدة",
+    "markupType": "نوع الزيادة",
+    "markupValue": "قيمة الزيادة",
+    "minProfit": "الحد الأدنى للربح",
+    "maxProfit": "الحد الأعلى للربح",
+    "enabledHelp": "تبقى القاعدة المتوقفة محفوظة لكنها لا تُعد قاعدة نشطة.",
+    "notes": "ملاحظات داخلية",
+    "previewTitle": "معاينة نظرية",
+    "previewDescription": "استخدم سعر أساس تجريبي لفهم القاعدة دون تغيير أي سعر فعلي.",
+    "basePrice": "سعر الأساس",
+    "estimatedProfit": "الربح التقديري",
+    "estimatedSellingPrice": "سعر البيع التقديري",
+    "previewDisclaimer": "لا تتضمن هذه المعاينة تحويل عملة ولا تُستخدم في البحث أو الحجز.",
+    "cancel": "إلغاء",
+    "save": "حفظ القاعدة",
+    "saving": "جار الحفظ...",
+    "scopes": {
+      "global": "زيادة عامة",
+      "b2c": "زيادة B2C",
+      "b2b": "زيادة B2B",
+      "supplier": "زيادة حسب المورد",
+      "agency": "زيادة حسب الوكالة"
+    },
+    "markupTypes": {
+      "percentage": "نسبة مئوية",
+      "fixed": "مبلغ ثابت"
+    },
+    "errors": {
+      "nameRequired": "أدخل اسم قاعدة التسعير.",
+      "supplierRequired": "أدخل رمز المورد لهذه القاعدة.",
+      "agencyRequired": "أدخل معرّف الوكالة لهذه القاعدة.",
+      "profitRange": "لا يمكن أن يتجاوز الحد الأدنى للربح الحد الأعلى.",
+      "forbidden": "لا تملك صلاحية إدارة التسعير.",
+      "invalid_pricing_rule": "راجع حقول قاعدة التسعير.",
+      "pricing_rule_not_found": "قاعدة التسعير غير موجودة.",
+      "pricing_create_failed": "تعذر إنشاء قاعدة التسعير.",
+      "pricing_update_failed": "تعذر تحديث قاعدة التسعير.",
+      "pricing_archive_failed": "تعذر أرشفة قاعدة التسعير.",
+      "saveFailed": "تعذر حفظ قاعدة التسعير.",
+      "archiveFailed": "تعذر أرشفة قاعدة التسعير."
+    }
+  },
+  "adminSuppliers": {
+    "eyebrow": "إعدادات الموردين الداخلية",
+    "title": "إدارة الموردين",
+    "description": "إدارة الإعدادات التشغيلية الداخلية لمزودي السفر الحاليين والمخطط لهم من مساحة إدارية موحدة.",
+    "refresh": "تحديث",
+    "retry": "إعادة المحاولة",
+    "integrationNoticeTitle": "إعدادات إدارية فقط",
+    "integrationNotice": "تُحفظ هذه الإعدادات للإدارة الداخلية، ولا يتم تطبيقها حاليًا على تدفقات البحث أو الحجز أو الاتصال بالموردين.",
+    "readOnlyNotice": "يمكنك عرض إعدادات الموردين، لكن تعديلها يتطلب صلاحية إدارة الموردين.",
+    "saved": "تم حفظ إعدادات {supplier}.",
+    "save": "حفظ التغييرات",
+    "saving": "جار الحفظ...",
+    "emptyTitle": "لا توجد إعدادات للموردين",
+    "emptyDescription": "ستظهر إعدادات الموردين هنا عند توفر قاعدة البيانات.",
+    "notesPlaceholder": "أضف ملاحظة تشغيلية داخلية بدون بيانات دخول أو معلومات حساسة.",
+    "noLastError": "لا يوجد خطأ مسجل",
+    "lastUpdated": "آخر تحديث: {date}",
+    "notUpdated": "لم يتم التحديث بعد",
+    "summary": {
+      "total": "الموردون المسجلون",
+      "active": "الموردون النشطون",
+      "search": "البحث المفعّل",
+      "booking": "الحجز المفعّل"
+    },
+    "fields": {
+      "enabled": "تشغيل المورد",
+      "searchEnabled": "تفعيل البحث",
+      "bookingEnabled": "تفعيل الحجز",
+      "status": "الحالة التشغيلية",
+      "priority": "الأولوية",
+      "timeoutMs": "مهلة الانتظار (مللي ثانية)",
+      "markupPercent": "نسبة الزيادة (%)",
+      "notes": "ملاحظات داخلية",
+      "lastError": "آخر خطأ مسجل"
+    },
+    "statuses": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "maintenance": "صيانة"
+    },
+    "errors": {
+      "load": "تعذر تحميل إعدادات الموردين.",
+      "save": "تعذر حفظ إعدادات المورد."
+    }
+  },
+  "adminNotifications": {
+    "title": "التنبيهات",
+    "pageTitle": "تنبيهات لوحة الأدمن",
+    "pageDescription": "{count} تنبيهات غير مقروءة",
+    "bellLabel": "فتح التنبيهات",
+    "unreadCount": "{count} غير مقروء",
+    "markAllRead": "تعليم الكل كمقروء",
+    "viewAll": "عرض جميع التنبيهات",
+    "loading": "جار تحميل التنبيهات...",
+    "loadError": "تعذر تحميل التنبيهات.",
+    "retry": "إعادة المحاولة",
+    "empty": "لا توجد تنبيهات",
+    "emptyDescription": "ستظهر هنا تحديثات العمليات عندما توجد حالة تحتاج إلى انتباهك.",
+    "filters": {
+      "all": "الكل",
+      "unread": "غير المقروءة",
+      "read": "المقروءة"
+    },
+    "types": {
+      "booking_created": {
+        "title": "تم إنشاء حجز جديد",
+        "message": "تم إنشاء الحجز {reference} للعميل {customer}."
+      },
+      "booking_failed": {
+        "title": "فشل تأكيد الحجز",
+        "message": "يحتاج الحجز {reference} إلى مراجعة بعد تعذر تأكيده لدى المورد."
+      },
+      "payment_received": {
+        "title": "تم استلام دفعة",
+        "message": "تم تسجيل دفعة للحجز {reference}."
+      },
+      "payment_failed": {
+        "title": "فشلت عملية الدفع",
+        "message": "تعذر إكمال دفعة الحجز {reference}."
+      },
+      "support_ticket_created": {
+        "title": "تذكرة دعم جديدة",
+        "message": "أنشأ العميل {customer} التذكرة {reference}."
+      },
+      "support_ticket_replied": {
+        "title": "رد جديد من العميل",
+        "message": "رد العميل {customer} على التذكرة {reference}."
+      },
+      "manual_review_required": {
+        "title": "مراجعة يدوية مطلوبة",
+        "message": "يحتاج الحجز {reference} إلى مراجعة تشغيلية."
+      },
+      "user_created": {
+        "title": "حساب مستخدم جديد",
+        "message": "تم إنشاء حساب جديد للعميل {customer}."
+      },
+      "system_warning": {
+        "title": "تنبيه من النظام",
+        "message": "يوجد تنبيه تشغيلي يحتاج إلى المراجعة."
+      }
+    }
+  },
+  "footer": {
+    "description": "منصة لحجز الفنادق وخدمات السفر تجمع خيارات موثوقة في تجربة واضحة وسهلة.",
+    "company": "HOTLENO",
+    "about": "من نحن",
+    "blog": "مدونة السفر",
+    "legal": "المعلومات القانونية",
+    "terms": "الشروط والأحكام",
+    "privacy": "سياسة الخصوصية",
+    "cancellationRefund": "سياسة الإلغاء والاسترداد",
+    "help": "المساعدة",
+    "supportCenter": "مركز الدعم",
+    "contact": "تواصل معنا",
+    "manageBookings": "إدارة الحجوزات",
+    "needHelp": "تحتاج إلى مساعدة؟ انتقل إلى مركز الدعم",
+    "rights": "جميع الحقوق محفوظة."
+  },
+  "legal": {
+    "common": {
+      "onThisPage": "محتويات الصفحة"
+    },
+    "about": {
+      "title": "من نحن",
+      "description": "تساعد HOTLENO المسافرين على البحث عن توفر الفنادق وإدارة حجوزاتهم عبر تجربة واضحة ومتعددة اللغات.",
+      "notice": "يتم توفير التوفر والأسعار وتفاصيل الغرف وشروط الحجز النهائية من الفنادق ومزودي خدمات السفر المشاركين، وقد تتغير قبل التأكيد.",
+      "sections": {
+        "whatWeDo": {
+          "title": "ماذا نقدم",
+          "body": "نوفر منصة رقمية للعثور على خيارات الفنادق ومراجعة أسعار الغرف المتاحة وإدارة طلبات الحجز. ونسعى إلى جعل تخطيط السفر أكثر وضوحًا وسهولة."
+        },
+        "howItWorks": {
+          "title": "كيف تعمل المنصة",
+          "body": "تجمع نتائج البحث معلومات التوفر والحجز الواردة من مزودي خدمات السفر المتصلين. ويراجع العميل تفاصيل الغرفة والسعر والنزلاء وسياسة الإلغاء قبل إرسال الحجز."
+        },
+        "providerAvailability": {
+          "title": "توفر الفنادق والمزودين",
+          "body": "لا تملك HOTLENO الفنادق المعروضة ولا تديرها. ويظل التوفر والمحتوى والتأكيد والخدمة داخل الفندق خاضعًا للفندق ومزود السفر المعني."
+        },
+        "customerCare": {
+          "title": "خدمة العملاء",
+          "body": "يمكن للعملاء المسجلين استخدام مركز الدعم للاستفسار عن حجز أو طلب إلغاء أو مشكلة دفع أو حساب. ويتم حفظ الطلبات والردود داخل حساب العميل."
+        },
+        "responsibleInformation": {
+          "title": "معلومات سفر واضحة",
+          "body": "نحرص على عرض معلومات المزودين بدقة ومن دون وعود غير مؤكدة. وعلى العميل مراجعة شروط السعر وبيانات المسافرين وسياسات الفندق الظاهرة أثناء الحجز."
+        }
+      }
+    },
+    "contact": {
+      "title": "تواصل معنا",
+      "description": "استخدم مركز دعم HOTLENO للحصول على المساعدة بشأن الحجوزات والحساب والإلغاء والمدفوعات.",
+      "notice": "للحصول على مساعدة أسرع، أرفق مرجع حجز HOTLENO عندما يتعلق الطلب بحجز قائم. ولا ترسل كلمات المرور أو بيانات بطاقة الدفع الكاملة في رسائل الدعم.",
+      "ctaTitle": "ابدأ طلب دعم",
+      "ctaDescription": "سجّل الدخول لإنشاء تذكرة والاحتفاظ بجميع الردود داخل حسابك.",
+      "ctaAction": "فتح مركز الدعم",
+      "sections": {
+        "supportTickets": {
+          "title": "تذاكر الدعم",
+          "body": "مركز الدعم هو قناة التواصل الأساسية المتاحة عبر HOTLENO. ويتيح للعملاء المسجلين إنشاء طلب ومتابعة حالته وتبادل الرسائل مع فريق الدعم."
+        },
+        "bookingHelp": {
+          "title": "المساعدة في الحجوزات",
+          "body": "عند الاستفسار عن حجز قائم، أرفق مرجع الحجز ووصفًا مختصرًا للمشكلة. وتظل التعديلات والإلغاءات والمبالغ المستردة خاضعة لشروط السعر والمزود."
+        },
+        "accountHelp": {
+          "title": "المساعدة في الحساب",
+          "body": "يمكنك التواصل مع الدعم للمساعدة في بيانات الملف الشخصي أو الوصول إلى الحجوزات أو المسافرين المحفوظين أو أي استفسارات متعلقة بالحساب."
+        },
+        "responseTimes": {
+          "title": "الردود والتحديثات",
+          "body": "تتم مراجعة الطلبات بحسب درجة الاستعجال والمعلومات المتاحة. وقد يختلف وقت الرد عندما يتطلب الأمر التواصل مع فندق أو جهة دفع أو مزود سفر."
+        },
+        "urgentIssues": {
+          "title": "الطلبات العاجلة",
+          "body": "إذا كان موعد الدخول قريبًا، اذكر تاريخ السفر ومرجع الحجز بوضوح في عنوان الطلب ونصه. وقد يؤدي إنشاء تذاكر مكررة إلى إبطاء مراجعة الطلب نفسه."
+        }
+      }
+    },
+    "privacy": {
+      "title": "سياسة الخصوصية",
+      "description": "توضح هذه السياسة بصورة عامة أنواع المعلومات التي تعالجها HOTLENO لتوفير الحسابات والحجوزات وخدمة العملاء.",
+      "notice": "تصف هذه السياسة ممارسات منصة HOTLENO الحالية بصورة عامة. وقد تعتمد بعض المعالجات أيضًا على الفندق أو مزود السفر أو خدمة الدفع المشاركة في الحجز.",
+      "sections": {
+        "informationCollected": {
+          "title": "المعلومات التي نجمعها",
+          "body": "قد نعالج بيانات الحساب والتواصل والمسافرين وسجلات الحجوزات ورسائل الدعم والمعلومات التقنية اللازمة لتشغيل الخدمة وحمايتها."
+        },
+        "informationUse": {
+          "title": "كيفية استخدام المعلومات",
+          "body": "تستخدم المعلومات لتوفير مزايا الحساب ومعالجة طلبات الحجز وإرسال تحديثات الحجز والرد على طلبات الدعم والمحافظة على أمان الخدمة والوفاء بالمتطلبات المعمول بها."
+        },
+        "informationSharing": {
+          "title": "متى تتم مشاركة المعلومات",
+          "body": "قد تتم مشاركة معلومات الحجز مع الفندق أو مزود السفر أو خدمة الدفع أو مقدم الخدمة التشغيلي المعني عند الحاجة لإتمام الخدمة المطلوبة أو دعمها. ولا ننشر بيانات وثائق المسافرين للعامة."
+        },
+        "retention": {
+          "title": "الاحتفاظ بالبيانات",
+          "body": "نحتفظ بالسجلات للمدة اللازمة بصورة معقولة للحجوزات ودعم الحساب والأمان ومعالجة النزاعات والمتطلبات القانونية أو التشغيلية. وقد تختلف المدة بحسب نوع السجل."
+        },
+        "security": {
+          "title": "الأمان",
+          "body": "نطبق إجراءات تقنية وتنظيمية معقولة لحماية معلومات المنصة. ولا يمكن لأي خدمة عبر الإنترنت ضمان الأمان المطلق، لذلك ينبغي للعملاء حماية بيانات الدخول إلى حساباتهم."
+        },
+        "yourChoices": {
+          "title": "خياراتك",
+          "body": "يمكن للعملاء مراجعة بعض بيانات الملف الشخصي والحجوزات من خلال حساباتهم، والتواصل مع الدعم لطلب المساعدة في تصحيح معلومات الحساب أو إدارتها، وفقًا للتحقق والمتطلبات المعمول بها."
+        },
+        "cookies": {
+          "title": "ملفات الارتباط والتفضيلات المحلية",
+          "body": "قد تستخدم المنصة ملفات الارتباط أو تخزين المتصفح للجلسات الأساسية وتفضيلات اللغة وعرض العملة وغيرها من المزايا اللازمة لتجربة متسقة."
+        },
+        "updates": {
+          "title": "تحديثات السياسة",
+          "body": "قد نحدث هذه السياسة عند تغير المنصة أو المتطلبات المعمول بها. وستظل النسخة الحالية متاحة في هذه الصفحة."
+        }
+      }
+    },
+    "terms": {
+      "title": "الشروط والأحكام",
+      "description": "توضح هذه الشروط القواعد العامة لاستخدام HOTLENO وإرسال طلبات حجز الفنادق عبر المنصة.",
+      "notice": "تعد شروط السعر وسياسات الفندق وشروط المزود المعروضة لحجز محدد جزءًا من ذلك الحجز. راجعها قبل التأكيد لأنها قد تكون أكثر تحديدًا من هذه الشروط العامة.",
+      "sections": {
+        "usingPlatform": {
+          "title": "استخدام HOTLENO",
+          "body": "يجب تقديم معلومات صحيحة واستخدام المنصة لأغراض السفر المشروعة فقط. وتتحمل مسؤولية النشاط الذي يتم عبر حسابك والمحافظة على سرية بيانات الدخول."
+        },
+        "bookingConfirmation": {
+          "title": "تأكيد الحجز",
+          "body": "لا يضمن إرسال الطلب إتمام الحجز حتى صدور التأكيد المعني. وقد يتغير التوفر وشروط السعر أثناء معالجة الطلب."
+        },
+        "pricesAndPayment": {
+          "title": "الأسعار والدفع",
+          "body": "تعرض الأسعار بالعملة والصيغة المتاحة للحجز. وينبغي مراجعة الضرائب والرسوم المشمولة أو غير المشمولة ومتطلبات الدفع في ملخص الحجز وشروط السعر قبل التأكيد."
+        },
+        "changesAndCancellation": {
+          "title": "التعديل والإلغاء",
+          "body": "تعتمد أهلية التعديل أو الإلغاء أو الاسترداد على السعر المختار وسياسة الفندق وقواعد المزود والتوقيت وحالة الحجز. وقد تكون بعض الحجوزات غير قابلة للاسترداد أو التعديل."
+        },
+        "userResponsibilities": {
+          "title": "مسؤوليات المسافر",
+          "body": "تتحمل مسؤولية إدخال أسماء المسافرين وبيانات التواصل والتواريخ ومعلومات الوثائق المطلوبة بصورة صحيحة، والتحقق من متطلبات السفر والدخول والصحة والهوية للوجهة."
+        },
+        "serviceAvailability": {
+          "title": "توفر الخدمة",
+          "body": "نسعى إلى إبقاء المنصة متاحة، لكن قد ينقطع الوصول أحيانًا بسبب الصيانة أو أنظمة المزودين أو ظروف الشبكة أو أحداث خارجة عن نطاق سيطرتنا المعقولة."
+        },
+        "liability": {
+          "title": "الفنادق وخدمات الأطراف الأخرى",
+          "body": "تتحمل الفنادق ومزودو السفر مسؤولية تقديم الإقامة أو الخدمة التي يؤكدونها. وتسهّل HOTLENO الوصول إلى خدمات الحجز والدعم، لكنها لا تدير الفنادق."
+        },
+        "updates": {
+          "title": "تحديثات الشروط",
+          "body": "قد يتم تحديث هذه الشروط لتعكس تغييرات المنصة أو المتطلبات التنظيمية. ويخضع استمرار استخدام المنصة للنسخة المتاحة وقت الاستخدام."
+        }
+      }
+    },
+    "cancellationRefund": {
+      "title": "سياسة الإلغاء والاسترداد",
+      "description": "توضح هذه السياسة كيفية التعامل مع طلبات الإلغاء والمبالغ المستردة المؤهلة لحجوزات الفنادق عبر HOTLENO.",
+      "notice": "تكون لشروط الإلغاء المعروضة للغرفة والسعر المختارين الأولوية، وقد تتضمن مواعيد نهائية أو غرامات أو شروطًا غير قابلة للاسترداد أو قيودًا خاصة بالفندق.",
+      "sections": {
+        "rateConditions": {
+          "title": "شروط السعر",
+          "body": "قد يكون لكل سعر غرفة قواعد مختلفة للإلغاء والتعديل. راجع الشروط المعمول بها قبل الحجز، وخصوصًا الموعد النهائي للإلغاء وقيمة أي غرامة."
+        },
+        "requestingCancellation": {
+          "title": "طلب الإلغاء",
+          "body": "يمكن للعملاء المسجلين طلب المساعدة من صفحة الحجز أو مركز الدعم. ولا يعد طلب الإلغاء مكتملًا حتى يتم تأكيد حالته من HOTLENO، ومن المزود المعني عند الحاجة."
+        },
+        "supplierProcessing": {
+          "title": "معالجة الفندق والمزود",
+          "body": "يجب إرسال بعض طلبات الإلغاء إلى الفندق أو مزود السفر. ويعتمد وقت المعالجة والموافقة النهائية على أنظمتهم وقواعدهم وحالة الحجز."
+        },
+        "refundEligibility": {
+          "title": "أهلية الاسترداد",
+          "body": "يتاح الاسترداد فقط عندما تسمح به شروط السعر ونتيجة الإلغاء المؤكدة. وقد يتم خصم غرامة الإلغاء المعمول بها أو الجزء المستخدم من الخدمة."
+        },
+        "nonRefundableBookings": {
+          "title": "الحجوزات غير القابلة للاسترداد",
+          "body": "قد لا يكون الحجز غير القابل للاسترداد مؤهلًا لاستعادة المبلغ بعد التأكيد. ويمكن مراجعة الطلبات الاستثنائية، لكن الموافقة غير مضمونة وتظل خاضعة للفندق أو المزود."
+        },
+        "refundTiming": {
+          "title": "مدة الاسترداد",
+          "body": "قد تتطلب المبالغ المستردة المعتمدة وقتًا إضافيًا للمعالجة من جهة الدفع والمؤسسة المالية للعميل. ولا تضمن HOTLENO تاريخًا ثابتًا للإتمام عندما تعتمد المعالجة على جهات خارجية."
+        },
+        "support": {
+          "title": "الحصول على المساعدة",
+          "body": "إذا كانت الحالة المعروضة غير واضحة أو اقترب موعد السفر، أنشئ تذكرة دعم وأرفق مرجع الحجز. ويمكن لفريق الدعم مراجعة حالة الحجز الداخلية وحالة المزود."
+        }
       }
     }
   }

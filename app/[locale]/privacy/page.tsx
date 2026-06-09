@@ -1,5 +1,15 @@
-import { PrivacyStaticPage } from "@/components/static-pages/hotleno-static-pages";
+import { LegalPage, getLegalMetadata } from "@/components/legal/legal-page";
 
-export default function PrivacyPage() {
-  return <PrivacyStaticPage />;
+type PageProps = {
+  params: Promise<{ locale: string }>;
+};
+
+export async function generateMetadata({ params }: PageProps) {
+  const { locale } = await params;
+  return getLegalMetadata(locale, "privacy");
+}
+
+export default async function PrivacyPage({ params }: PageProps) {
+  const { locale } = await params;
+  return <LegalPage locale={locale} type="privacy" />;
 }

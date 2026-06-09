@@ -22,6 +22,9 @@ interface User {
   isActive?: boolean;
   lastLoginAt?: string;
   avatar?: string;
+  staffRole?: string;
+  permissions?: string[];
+  staffStatus?: "active" | "suspended";
 }
 
 interface AuthContextType {

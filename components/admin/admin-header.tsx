@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,16 +20,16 @@ import {
   SettingsIcon,
   LogoutIcon,
   Search01Icon,
-  Notification01Icon,
 } from "@hugeicons/core-free-icons";
+import { AdminNotificationsMenu } from "@/components/admin/admin-notifications-menu";
 
 export function AdminHeader() {
   const locale = useLocale();
+  const t = useTranslations("admin");
   const { user, logout } = useAuth();
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const isAr = locale === "ar";
 
-  const adminName = user?.name || (isAr ? "مدير Hotleno" : "Hotleno Admin");
+  const adminName = user?.name || t("hotlenoAdmin");
   const adminEmail = user?.email || "admin@hotleno.com";
   const adminRole = user?.role || "admin";
 
@@ -99,17 +99,17 @@ export function AdminHeader() {
 
               <DropdownMenuSeparator />
 
-              <Link href="/profile">
+              <Link href={`/${locale}/account/profile`}>
                 <DropdownMenuItem className="cursor-pointer">
                   <HugeiconsIcon icon={UserIcon} className="ml-2 h-4 w-4" />
-                  {isAr ? "الملف الشخصي" : "Profile"}
+                  {t("profile")}
                 </DropdownMenuItem>
               </Link>
 
-              <Link href="/admin/settings">
+              <Link href={`/${locale}/admin/settings`}>
                 <DropdownMenuItem className="cursor-pointer">
                   <HugeiconsIcon icon={SettingsIcon} className="ml-2 h-4 w-4" />
-                  {isAr ? "الإعدادات" : "Settings"}
+                  {t("settings")}
                 </DropdownMenuItem>
               </Link>
 
@@ -120,7 +120,7 @@ export function AdminHeader() {
                 onClick={logout}
               >
                 <HugeiconsIcon icon={LogoutIcon} className="ml-2 h-4 w-4" />
-                {isAr ? "تسجيل الخروج" : "Logout"}
+                {t("logout")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -133,16 +133,7 @@ export function AdminHeader() {
             <HugeiconsIcon icon={SettingsIcon} className="h-6 w-6" />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-11 w-11 rounded-xl text-slate-600 hover:bg-orange-50 hover:text-[#F97316]"
-          >
-            <HugeiconsIcon icon={Notification01Icon} className="h-6 w-6" />
-            <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#F97316] px-1 text-[10px] font-black text-white">
-              8
-            </span>
-          </Button>
+          <AdminNotificationsMenu />
         </div>
 
         <div className="hidden flex-1 justify-center lg:flex">
@@ -154,9 +145,7 @@ export function AdminHeader() {
             <input
               type="text"
               placeholder={
-                isAr
-                  ? "ابحث في الحجوزات والفنادق والمستخدمين..."
-                  : "Search bookings, hotels, users..."
+                t("globalSearchPlaceholder")
               }
               className="h-12 w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-center text-sm font-medium text-slate-600 outline-none transition placeholder:text-slate-400 focus:border-[#F97316] focus:ring-4 focus:ring-orange-50"
             />
@@ -166,13 +155,13 @@ export function AdminHeader() {
         <div className="flex items-center gap-5 text-sm font-bold text-slate-700">
           <div className="hidden items-center gap-2 rounded-xl border-l border-[#E5E7EB] pl-5 lg:flex">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            <span>{isAr ? "النظام يعمل" : "System operational"}</span>
+            <span>{t("systemOperational")}</span>
           </div>
 
           <div className="hidden h-8 w-px bg-[#E5E7EB] lg:block" />
 
           <div className="hidden items-center gap-2 lg:flex">
-            <span>{isAr ? "اليوم" : "Today"}</span>
+            <span>{t("today")}</span>
           </div>
         </div>
       </div>

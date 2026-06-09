@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminFromRequest } from "@/lib/auth-user";
+import { requireStaffPermission } from "@/lib/staff-permissions";
 import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { TboContentClient, type TboHotelCodeSummary } from "@/lib/suppliers/tbo-content-client";
 import {
@@ -61,6 +62,9 @@ async function saveSyncLog(params: {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await requireStaffPermission(req, "suppliers.manage"))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const user = requireAdminFromRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });

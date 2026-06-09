@@ -20,7 +20,11 @@ import {
   AiPhoneIcon,
   ArrowLeftIcon,
   LeftTriangleIcon,
-  RefreshIcon
+  RefreshIcon,
+  CreditCardIcon,
+  CustomerServiceIcon,
+  Shield02Icon,
+  CheckmarkCircle02Icon,
 } from "@hugeicons/core-free-icons";
 import type { HotelSearchResult, HotelOption, HotelPoliciesResponse, SavedSearch } from "@/types/travellanda";
 import { formatCurrency, calculateNights } from "@/hooks/use-hotels-enhanced";
@@ -28,6 +32,7 @@ import { formatCurrency, calculateNights } from "@/hooks/use-hotels-enhanced";
 function createSupplierFallbackPolicies(
   option: HotelOption,
   currency: string,
+  description: string,
 ): HotelPoliciesResponse {
   return {
     ServerTime: new Date().toISOString(),
@@ -41,7 +46,7 @@ function createSupplierFallbackPolicies(
     Restrictions: [
       {
         Type: "supplier_policy",
-        Description: "سياسة الإلغاء حسب شروط المزود",
+        Description: description,
       },
     ],
     Alerts: [],
@@ -263,7 +268,13 @@ interface HotelDetailsData {
     
     if (shouldSkipTravellandaForTbo(hotel)) {
       console.info('Skipping policies fetch for TBO certification booking flow');
-      setPolicies(createSupplierFallbackPolicies(sanitizedOption, hotel?.Options?.[0]?.Currency || 'USD'));
+      setPolicies(
+        createSupplierFallbackPolicies(
+          sanitizedOption,
+          hotel?.Options?.[0]?.Currency || 'USD',
+          t("booking.supplierPolicy"),
+        ),
+      );
       return;
     }
 
@@ -319,10 +330,10 @@ interface HotelDetailsData {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-96 w-full rounded-2xl mb-6" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
+      <div className="container mx-auto overflow-x-clip px-4 py-8">
+        <Skeleton className="mb-6 h-96 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
             <Skeleton className="h-8 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
             <Skeleton className="h-32 w-full" />
@@ -338,20 +349,27 @@ interface HotelDetailsData {
   if (error || !hotel) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <HugeiconsIcon icon={LeftTriangleIcon} className="h-12 w-12 text-red-500" />
+        <Card className="border-slate-200 shadow-sm">
+          <CardContent className="px-6 py-14 text-center">
+            <div className="mb-4 flex items-center justify-center">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50">
+                <HugeiconsIcon icon={LeftTriangleIcon} className="h-7 w-7 text-[#F97316]" />
+              </span>
             </div>
-            <h2 className="text-xl font-bold mb-2">{t('hotelDetails.errorLoading')}</h2>
-            <p className="text-red-500 mb-6">{error || t('hotelDetails.notFound')}</p>
-            <div className="flex gap-4 justify-center">
+            <h2 className="mb-2 text-xl font-black text-[#0F172A]">{t('hotelDetails.errorLoading')}</h2>
+            <p className="mx-auto mb-6 max-w-lg text-sm leading-6 text-muted-foreground">
+              {t('hotelDetails.errorDescription')}
+            </p>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
               <Button onClick={() => window.location.reload()} variant="outline">
-                <HugeiconsIcon icon={RefreshIcon} className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={RefreshIcon} className="me-2 h-4 w-4" />
                 {t('hotels.tryAgain')}
               </Button>
-              <Button onClick={() => router.push('/')}>
-                <HugeiconsIcon icon={ArrowLeftIcon} className="mr-2 h-4 w-4" />
+              <Button
+                onClick={() => router.push(`/${locale}`)}
+                className="bg-[#F97316] text-white hover:bg-[#EA580C]"
+              >
+                <HugeiconsIcon icon={ArrowLeftIcon} className="me-2 h-4 w-4" />
                 {t('hotels.newSearch')}
               </Button>
             </div>
@@ -374,11 +392,18 @@ interface HotelDetailsData {
     CityName: hotel.CityName || hotelDetails?.CityName,
     Images: validImages,
     Facilities: hotelDetails?.Facilities || hotel.Facilities || [],
-    Description: hotelDetails?.Description || hotel.Description || 'No description available.',
+    Description: hotelDetails?.Description || hotel.Description,
   };
+  const displayLocation = [
+    displayData.Address,
+    displayData.CityName,
+    displayData.CountryName || hotel.CountryName,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto overflow-x-clip px-4 py-8">
       {/* Breadcrumb */}
       <div className="mb-4">
         <BookingBreadcrumb currentStep="hotel" hotelName={displayData.HotelName} />
@@ -387,40 +412,40 @@ interface HotelDetailsData {
       {/* Back Button */}
       <Button 
         variant="ghost" 
-        className="mb-6 -ml-2"
+        className="mb-6 -ms-2 font-bold"
         onClick={() => router.back()}
       >
-        <HugeiconsIcon icon={ArrowLeftIcon} className="mr-2 h-4 w-4" />
+        <HugeiconsIcon icon={ArrowLeftIcon} className="me-2 h-4 w-4" />
         {t('hotelDetails.backToResults')}
       </Button>
 
       {/* Hotel Header */}
-      <div className="mb-8">
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-2">
-          <h1 className="text-3xl md:text-4xl font-bold">{displayData.HotelName}</h1>
+      <div className="mb-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-4">
+          <h1 className="min-w-0 text-3xl font-black leading-tight text-[#0F172A] md:text-4xl">
+            {displayData.HotelName}
+          </h1>
           {displayData.StarRating && displayData.StarRating > 0 && (
-            <div className="flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-lg">
-              <HugeiconsIcon icon={StarIcon} className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-              <span className="font-semibold">{displayData.StarRating} {t('hotels.starHotel')}</span>
+            <div className="flex shrink-0 items-center gap-1 rounded-xl bg-orange-50 px-3 py-2 text-[#F97316]">
+              <HugeiconsIcon icon={StarIcon} className="h-5 w-5 fill-current" />
+              <span className="font-black">{displayData.StarRating} {t('hotels.starHotel')}</span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <HugeiconsIcon icon={MapPinIcon} className="h-4 w-4" />
-          <span>{displayData.Address}, {displayData.CityName}</span>
+        <div className="flex items-start gap-2 text-sm text-muted-foreground">
+          <HugeiconsIcon icon={MapPinIcon} className="mt-0.5 h-4 w-4 shrink-0 text-[#F97316]" />
+          <span>{displayLocation || t("hotelDetails.locationUnavailable")}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Left Column - Hotel Info */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="space-y-8 lg:col-span-2">
           {/* Image Gallery */}
-          {displayData.Images && displayData.Images.length > 0 && (
-            <HotelImageGallery 
-              images={displayData.Images} 
-              hotelName={displayData.HotelName || ''}
-            />
-          )}
+          <HotelImageGallery 
+            images={displayData.Images || []} 
+            hotelName={displayData.HotelName || ''}
+          />
 
           {/* Room Selector */}
           {hotel.Options && hotel.Options.length > 0 && (
@@ -436,34 +461,34 @@ interface HotelDetailsData {
 
           {/* Hotel Details Tabs */}
           <Tabs defaultValue="description" className="w-full">
-            <TabsList className="w-full justify-start">
+            <TabsList className="grid h-auto w-full grid-cols-3 bg-slate-100 p-1">
               <TabsTrigger value="description">{t('hotelDetails.description')}</TabsTrigger>
               <TabsTrigger value="facilities">{t('hotelDetails.facilities')}</TabsTrigger>
               <TabsTrigger value="location">{t('hotelDetails.location')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="description" className="mt-6">
-              <Card>
+              <Card className="border-slate-200 shadow-sm">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">{t('hotelDetails.aboutHotel')}</h3>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {displayData.Description}
+                  <h3 className="mb-4 text-lg font-black text-[#0F172A]">{t('hotelDetails.aboutHotel')}</h3>
+                  <p className="whitespace-pre-line text-sm leading-7 text-slate-600">
+                    {displayData.Description || t("hotelDetails.noDescription")}
                   </p>
                 </CardContent>
               </Card>
             </TabsContent>
             
             <TabsContent value="facilities" className="mt-6">
-              <Card>
+              <Card className="border-slate-200 shadow-sm">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">{t('hotelDetails.hotelFacilities')}</h3>
+                  <h3 className="mb-4 text-lg font-black text-[#0F172A]">{t('hotelDetails.hotelFacilities')}</h3>
                   {displayData.Facilities && displayData.Facilities.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                       {displayData.Facilities.map((facility: string, index: number) => (
                         <Badge 
                           key={index} 
                           variant="secondary"
-                          className="justify-center py-2 text-sm"
+                          className="min-h-10 justify-center whitespace-normal py-2 text-center text-sm"
                         >
                           {facility}
                         </Badge>
@@ -477,17 +502,23 @@ interface HotelDetailsData {
             </TabsContent>
             
             <TabsContent value="location" className="mt-6">
-              <Card>
+              <Card className="border-slate-200 shadow-sm">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">{t('hotelDetails.location')}</h3>
-                  <div className="space-y-3">
-                    <p><strong>{t('hotelDetails.address')}:</strong> {displayData.Address}</p>
-                    <p><strong>{t('hotelDetails.city')}:</strong> {displayData.CityName}</p>
-                    <p><strong>{t('hotelDetails.country')}:</strong> {displayData.CountryName || hotel.CountryName}</p>
+                  <h3 className="mb-4 text-lg font-black text-[#0F172A]">{t('hotelDetails.location')}</h3>
+                  <div className="grid gap-3 text-sm sm:grid-cols-2">
+                    <DetailItem label={t('hotelDetails.address')} value={displayData.Address} />
+                    <DetailItem label={t('hotelDetails.city')} value={displayData.CityName} />
+                    <DetailItem
+                      label={t('hotelDetails.country')}
+                      value={displayData.CountryName || hotel.CountryName}
+                    />
                     {hotelDetails?.Phone && (
-                      <p className="flex items-center gap-2">
+                      <p className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-3">
                         <HugeiconsIcon icon={AiPhoneIcon} className="h-4 w-4 text-muted-foreground" />
-                        <strong>{t('hotelDetails.phone')}:</strong> {hotelDetails.Phone}
+                        <span>
+                          <strong className="text-[#0F172A]">{t('hotelDetails.phone')}:</strong>{" "}
+                          {hotelDetails.Phone}
+                        </span>
                       </p>
                     )}
                   </div>
@@ -498,14 +529,21 @@ interface HotelDetailsData {
         </div>
 
         {/* Right Column - Booking Card */}
-        <div>
-          <Card className="sticky top-8">
+        <div className="min-w-0">
+          <Card className="sticky top-8 overflow-hidden border-slate-200 shadow-lg shadow-slate-950/5">
+            <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
+              <h2 className="font-black text-[#0F172A]">{t("hotelDetails.bookingSummary")}</h2>
+            </div>
             <CardContent className="p-6">
               {selectedOption ? (
                 <>
                   <div className="mb-6">
-                    <h3 className="text-xl font-bold mb-2">{selectedOption.RoomType || 'Room'}</h3>
-                    <p className="text-muted-foreground">{selectedOption.BoardType || ''}</p>
+                    <h3 className="mb-2 text-xl font-black text-[#0F172A]">
+                      {selectedOption.RoomType || selectedOption.RoomName || t("hotels.standardRoom")}
+                    </h3>
+                    {selectedOption.BoardType && (
+                      <p className="text-sm text-muted-foreground">{selectedOption.BoardType}</p>
+                    )}
                   </div>
 
                   <div className="space-y-3 mb-6">
@@ -522,7 +560,8 @@ interface HotelDetailsData {
                         <>
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">
-                              {formatCurrency(price, currency)} x {nights} nights
+                              {formatCurrency(price, currency)} × {nights}{" "}
+                              {nights === 1 ? t("hotels.night") : t("hotels.nights")}
                             </span>
                             <span>{formatCurrency(price * nights, currency)}</span>
                           </div>
@@ -533,13 +572,16 @@ interface HotelDetailsData {
                             </div>
                           )}
                           <div className="border-t pt-3">
-                            <div className="flex justify-between font-bold text-lg">
+                            <div className="flex justify-between text-lg font-black text-[#0F172A]">
                               <span>{t('booking.total')}</span>
-                              <span>
+                              <span className="text-[#F97316]">
                                 {formatCurrency((price + taxes) * nights, currency)}
                               </span>
                             </div>
                           </div>
+                          <p className="text-xs leading-5 text-muted-foreground">
+                            {t("hotelDetails.taxNotice")}
+                          </p>
                         </>
                       );
                     })()}
@@ -575,7 +617,7 @@ interface HotelDetailsData {
                   )}
 
                   <Button 
-                    className="w-full" 
+                    className="w-full bg-[#F97316] font-black text-white shadow-lg shadow-orange-500/20 hover:bg-[#EA580C]" 
                     size="lg"
                     onClick={handleBookNow}
                     disabled={!selectedOption}
@@ -583,7 +625,7 @@ interface HotelDetailsData {
                     {t('hotelDetails.bookNow')}
                   </Button>
 
-                  <p className="text-xs text-muted-foreground text-center mt-4">
+                  <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
                     {t('hotelDetails.wontBeCharged')}
                   </p>
                 </>
@@ -597,16 +639,51 @@ interface HotelDetailsData {
                   </p>
                   <Button 
                     variant="outline" 
-                    onClick={() => router.push('/')}
+                    className="font-bold"
+                    onClick={() => router.push(`/${locale}`)}
                   >
                     {t('hotelDetails.modifySearch')}
                   </Button>
                 </div>
               )}
             </CardContent>
+            <div className="border-t border-slate-100 bg-slate-50 px-5 py-4">
+              <div className="grid gap-3 text-xs font-bold text-slate-600">
+                <TrustItem icon={CreditCardIcon} text={t("hotelDetails.trust.securePayment")} />
+                <TrustItem icon={CustomerServiceIcon} text={t("hotelDetails.trust.customerSupport")} />
+                <TrustItem icon={Shield02Icon} text={t("hotelDetails.trust.supplierConfirmation")} />
+              </div>
+            </div>
           </Card>
         </div>
       </div>
+    </div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value?: string }) {
+  if (!value) return null;
+
+  return (
+    <p className="rounded-xl bg-slate-50 px-4 py-3">
+      <strong className="text-[#0F172A]">{label}:</strong> {value}
+    </p>
+  );
+}
+
+function TrustItem({
+  icon,
+  text,
+}: {
+  icon: typeof CheckmarkCircle02Icon;
+  text: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F97316]">
+        <HugeiconsIcon icon={icon} className="h-4 w-4" />
+      </span>
+      <span>{text}</span>
     </div>
   );
 }

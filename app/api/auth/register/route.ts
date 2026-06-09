@@ -3,6 +3,7 @@ import { generateToken } from '@/lib/jwt';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 import { createUser, publicUser } from '@/lib/firebase-store';
+import { createAdminNotificationSafely } from '@/lib/admin-notifications';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -40,6 +41,19 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
+    await createAdminNotificationSafely({
+      type: 'user_created',
+      title: 'New user account',
+      message: `A new user account was created for ${user.email}.`,
+      severity: 'info',
+      targetRole: 'admin',
+      relatedType: 'user',
+      relatedId: user.id,
+      data: {
+        customer: user.name || user.email,
+        reference: user.id,
+      },
+    });
 
     // Generate token
     const token = generateToken({

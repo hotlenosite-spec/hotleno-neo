@@ -3,6 +3,7 @@ import type { Document } from 'mongodb';
 import { verifyToken } from '@/lib/jwt';
 import { getFirestoreMongoDb } from '@/lib/firestore-mongo';
 import { getUserById } from '@/lib/firebase-store';
+import { requireStaffPermission } from '@/lib/staff-permissions';
 
 type StringIdDocument = Document & { _id: string };
 
@@ -80,6 +81,9 @@ function needsReview(booking: Document) {
 
 export async function GET(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, 'dashboard.view'))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const token = req.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!token) {

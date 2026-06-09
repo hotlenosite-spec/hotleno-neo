@@ -1,68 +1,106 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Document } from "mongodb";
 import { verifyToken } from "@/lib/jwt";
 import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { getUserById } from "@/lib/firebase-store";
-
-type StringIdDocument = Document & { _id: string };
+import { requireStaffPermission } from "@/lib/staff-permissions";
+import {
+  isSupportTicketCategory,
+  isSupportTicketPriority,
+  isSupportTicketStatus,
+  normalizeSupportText,
+  serializeSupportTicket,
+  type SupportTicketDocument,
+} from "@/lib/support-tickets";
 
 async function requireAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) return { error: "No token provided", status: 401 } as const;
+  if (!token) return { error: "Authentication required", status: 401 } as const;
 
   const decoded = verifyToken(token);
   const currentUser = await getUserById(decoded.userId);
   if (!currentUser || currentUser.role !== "admin") {
-    return { error: "Unauthorized - Admin access required", status: 403 } as const;
+    return { error: "Admin access required", status: 403 } as const;
   }
 
-  return { currentUser };
+  return { decoded, currentUser };
 }
 
-function matchesTicketFilters(ticket: Record<string, unknown>, searchParams: URLSearchParams) {
+function matchesTicketFilters(ticket: SupportTicketDocument, searchParams: URLSearchParams) {
   const status = searchParams.get("status");
   const priority = searchParams.get("priority");
-  if (status && String(ticket.status ?? "") !== status) return false;
-  if (priority && String(ticket.priority ?? "") !== priority) return false;
+  const category = searchParams.get("category");
+  const search = searchParams.get("search")?.trim().toLowerCase();
+
+  if (status && (!isSupportTicketStatus(status) || ticket.status !== status)) return false;
+  if (priority && (!isSupportTicketPriority(priority) || ticket.priority !== priority)) return false;
+  if (category && (!isSupportTicketCategory(category) || ticket.category !== category)) return false;
+  if (
+    search &&
+    ![
+      ticket.ticketNumber,
+      ticket.subject,
+      ticket.customerName,
+      ticket.customerEmail,
+      ticket.bookingId,
+      ticket.bookingReference,
+    ].some((value) => String(value ?? "").toLowerCase().includes(search))
+  ) {
+    return false;
+  }
+
   return true;
 }
 
 export async function GET(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, "support.view"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const auth = await requireAdmin(req);
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { searchParams } = new URL(req.url);
-    const page = Math.max(parseInt(searchParams.get("page") || "1"), 1);
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    const page = Math.max(Number.parseInt(searchParams.get("page") || "1", 10), 1);
+    const limit = Math.min(
+      Math.max(Number.parseInt(searchParams.get("limit") || "20", 10), 1),
+      100,
+    );
     const skip = (page - 1) * limit;
     const db = await getFirestoreMongoDb();
-    const allTickets = (await db
-      .collection<StringIdDocument>("support_tickets")
+    const allTickets = await db
+      .collection<SupportTicketDocument>("support_tickets")
       .find({})
-      .sort({ createdAt: -1 })
-      .toArray()) as Record<string, unknown>[];
-    const filteredTickets = allTickets
-      .filter((ticket) => ticket._id !== "_meta")
-      .filter((ticket) => matchesTicketFilters(ticket, searchParams));
-    const tickets = filteredTickets.slice(skip, skip + limit);
-    const activeTickets = allTickets.filter(
-      (ticket) => !["resolved", "closed"].includes(String(ticket.status ?? "")),
+      .toArray();
+    const realTickets = allTickets.filter((ticket) => ticket._id !== "_meta");
+    const filteredTickets = realTickets
+      .filter((ticket) => matchesTicketFilters(ticket, searchParams))
+      .sort(
+        (left, right) =>
+          new Date(right.lastMessageAt || right.updatedAt).getTime() -
+          new Date(left.lastMessageAt || left.updatedAt).getTime(),
+      );
+    const tickets = filteredTickets.slice(skip, skip + limit).map((ticket) => ({
+      ...serializeSupportTicket(ticket),
+      messageCount: Array.isArray(ticket.messages) ? ticket.messages.length : 0,
+    }));
+    const activeTickets = realTickets.filter(
+      (ticket) => !["resolved", "closed"].includes(ticket.status),
     );
 
-    console.info("[admin/support] collection=support_tickets count=%d", filteredTickets.length);
-
+    console.info("[admin/support] route=list collection=support_tickets count=%d", filteredTickets.length);
     return NextResponse.json({
       success: true,
       tickets,
       stats: {
-        total: allTickets.length,
-        open: allTickets.filter((ticket) => ticket.status === "open").length,
-        inProgress: allTickets.filter((ticket) => ticket.status === "in_progress").length,
-        waiting: allTickets.filter((ticket) => ticket.status === "waiting").length,
-        resolved: allTickets.filter((ticket) => ticket.status === "resolved").length,
+        total: realTickets.length,
+        open: realTickets.filter((ticket) => ticket.status === "open").length,
+        waitingCustomer: realTickets.filter((ticket) => ticket.status === "waiting_customer").length,
+        waitingAdmin: realTickets.filter((ticket) => ticket.status === "waiting_admin").length,
+        waitingSupplier: realTickets.filter((ticket) => ticket.status === "waiting_supplier").length,
+        resolved: realTickets.filter((ticket) => ticket.status === "resolved").length,
+        closed: realTickets.filter((ticket) => ticket.status === "closed").length,
         urgent: activeTickets.filter((ticket) => ticket.priority === "urgent").length,
       },
       pagination: {
@@ -74,7 +112,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error(
-      "[admin/support] fetch failed:",
+      "[admin/support] list failed:",
       error instanceof Error ? error.message : "Unknown error",
     );
     return NextResponse.json({ error: "Failed to fetch tickets" }, { status: 500 });
@@ -83,36 +121,66 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    if (!(await requireStaffPermission(req, "support.manage"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const auth = await requireAdmin(req);
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const body = await req.json();
-    const ticketId = typeof body.ticketId === "string" ? body.ticketId : "";
-    if (!ticketId) {
-      return NextResponse.json({ error: "Ticket ID is required" }, { status: 400 });
-    }
+    const ticketId = normalizeSupportText(body.ticketId, 160);
+    if (!ticketId) return NextResponse.json({ error: "Ticket ID is required" }, { status: 400 });
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
-    if (typeof body.status === "string") updateData.status = body.status;
-    if (typeof body.priority === "string") updateData.priority = body.priority;
-    if (typeof body.assignedTo === "string") updateData.assignedTo = body.assignedTo;
-    if (body.status === "resolved") updateData.resolvedAt = new Date();
+    if (body.status !== undefined) {
+      if (!isSupportTicketStatus(body.status)) {
+        return NextResponse.json({ error: "Invalid ticket status" }, { status: 400 });
+      }
+      updateData.status = body.status;
+      updateData.closedAt = body.status === "closed" ? new Date() : null;
+    }
+    if (body.priority !== undefined) {
+      if (!isSupportTicketPriority(body.priority)) {
+        return NextResponse.json({ error: "Invalid ticket priority" }, { status: 400 });
+      }
+      updateData.priority = body.priority;
+    }
+    if (body.category !== undefined) {
+      if (!isSupportTicketCategory(body.category)) {
+        return NextResponse.json({ error: "Invalid ticket category" }, { status: 400 });
+      }
+      updateData.category = body.category;
+    }
+    if (body.bookingId !== undefined) {
+      updateData.bookingId = normalizeSupportText(body.bookingId, 120) || null;
+    }
+    if (body.bookingReference !== undefined) {
+      updateData.bookingReference = normalizeSupportText(body.bookingReference, 120) || null;
+    }
+    if (body.assignedTo !== undefined) {
+      const assignedTo = normalizeSupportText(body.assignedTo, 160);
+      const assignee = assignedTo ? await getUserById(assignedTo) : null;
+      if (assignedTo && (!assignee || assignee.role !== "admin")) {
+        return NextResponse.json({ error: "invalid_admin_assignee" }, { status: 400 });
+      }
+      updateData.assignedTo = assignedTo || null;
+      updateData.assignedToName = assignee?.name || null;
+    }
 
     const db = await getFirestoreMongoDb();
-    const tickets = db.collection<StringIdDocument>("support_tickets");
-    await tickets.updateOne({ _id: ticketId }, { $set: updateData });
-    const ticket = await tickets.findOne({ _id: ticketId });
+    const collection = db.collection<SupportTicketDocument>("support_tickets");
+    const result = await collection.updateOne({ _id: ticketId }, { $set: updateData });
+    if (!result.matchedCount) {
+      return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+    }
+    const ticket = await collection.findOne({ _id: ticketId });
 
-    if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
-
-    console.info("[admin/support] collection=support_tickets updated=1");
-
+    console.info("[admin/support] route=update collection=support_tickets updated=1");
     return NextResponse.json({
       success: true,
-      message: "Ticket updated successfully",
-      ticket,
+      ticket: ticket ? serializeSupportTicket(ticket) : null,
     });
   } catch (error) {
     console.error(
