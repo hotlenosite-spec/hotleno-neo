@@ -113,6 +113,13 @@ export interface HotelOption {
   Currency: string;
   CancellationDeadline?: string;
   IsNonRefundable?: boolean;
+  rspPrice?: number;
+  roomPromotions?: unknown[];
+  supplements?: unknown[];
+  inclusions?: string[];
+  cancellationPolicies?: unknown[];
+  rateConditions?: unknown[];
+  amenities?: string[];
 }
 
 export interface HotelSearchResult {
@@ -168,7 +175,7 @@ export interface HotelPoliciesResponse extends TravellandaResponse {
 
 // HotelBooking Request & Response
 export interface TravelerName {
-  Title?: 'Mr' | 'Mrs' | 'Miss' | 'Ms' | 'Dr';
+  Title?: 'Mr' | 'Mrs' | 'Ms';
   FirstName: string;
   LastName: string;
 }

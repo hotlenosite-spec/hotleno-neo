@@ -70,6 +70,10 @@ const TBO_DUBAI_SUGGESTION: HotelbedsSearchSuggestion = {
   countryCode: "AE",
 };
 
+const MAX_TBO_ROOMS = 6;
+const MAX_TBO_ADULTS_PER_ROOM = 6;
+const MAX_TBO_CHILDREN_PER_ROOM = 4;
+
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -403,6 +407,7 @@ export default function SearchForm() {
 
   const [nationality, setNationality] = useState("US");
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY_CODE);
+  const [guestValidationError, setGuestValidationError] = useState("");
 
   useEffect(() => {
     if (!tboCertificationMode || certificationDefaultsApplied.current) return;
@@ -445,6 +450,20 @@ export default function SearchForm() {
   };
 
   const handleSearch = async () => {
+    if (guests.rooms > MAX_TBO_ROOMS) {
+      setGuestValidationError("You can select up to 6 rooms.");
+      return;
+    }
+    if (guests.adults > MAX_TBO_ADULTS_PER_ROOM) {
+      setGuestValidationError("Each room can include up to 6 adults.");
+      return;
+    }
+    if (guests.children > MAX_TBO_CHILDREN_PER_ROOM) {
+      setGuestValidationError("Each room can include up to 4 children.");
+      return;
+    }
+    setGuestValidationError("");
+
     if (!destination) {
       if (!tboCertificationMode) {
         alert(t("search.selectDestination"));
@@ -568,6 +587,12 @@ export default function SearchForm() {
           {loading ? t("search.searching") : copy.search}
         </Button>
       </div>
+
+      {guestValidationError && (
+        <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+          {guestValidationError}
+        </p>
+      )}
 
       <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <label className="flex items-center gap-3 text-sm font-bold text-slate-600">
@@ -712,7 +737,7 @@ function HotelbedsDestinationAutocomplete({
       controller.abort();
       clearTimeout(timeout);
     };
-  }, [onChange, query, tboCertificationMode]);
+  }, [onChange, query, t, tboCertificationMode]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

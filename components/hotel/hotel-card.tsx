@@ -55,6 +55,12 @@ const AMENITY_ICONS: Record<string, typeof WifiIcon> = {
 // Default hotel placeholder image
 const HOTEL_PLACEHOLDER = '/hotel-image-placeholder.jpg';
 
+function getOptionInclusions(option?: HotelOption) {
+  return (option?.inclusions || [])
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter(Boolean);
+}
+
 export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
   const t = useTranslations();
   const [images, setImages] = useState<HotelImage[]>(hotel.Images || []);
@@ -146,6 +152,7 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
     bestOption?.supplierTotalFare !== undefined || bestOption?.TotalPrice !== undefined;
   const perNightPrice =
     hasExplicitTotal && nights > 0 ? totalPrice / nights : undefined;
+  const bestOptionInclusions = getOptionInclusions(bestOption);
 
   // Get facility icons
   const getFacilityIcon = (facility: string): typeof WifiIcon | null => {
@@ -279,6 +286,19 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
                       <p className="mt-1 text-xs text-muted-foreground">
                         {bestOption.BoardType}
                       </p>
+                    )}
+                    {bestOptionInclusions.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {bestOptionInclusions.slice(0, 3).map((inclusion) => (
+                          <Badge
+                            key={inclusion}
+                            variant="outline"
+                            className="border-green-200 bg-green-50 text-xs font-bold text-green-700"
+                          >
+                            {inclusion}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}

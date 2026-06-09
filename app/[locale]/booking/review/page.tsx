@@ -63,6 +63,13 @@ interface HotelData {
   checkOut?: string;
   guests?: SearchParamsData["guests"];
   nights?: number;
+  rspPrice?: number;
+  roomPromotions?: unknown[];
+  supplements?: unknown[];
+  inclusions?: string[];
+  cancellationPolicies?: unknown[];
+  rateConditions?: unknown[];
+  amenities?: string[];
 }
 
 interface PoliciesData {
@@ -93,6 +100,41 @@ function toNumber(value: unknown) {
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
+}
+
+function asCleanTextArray(value: unknown): string[] {
+  const values = Array.isArray(value) ? value : [value];
+
+  return values.flatMap((item): string[] => {
+    if (Array.isArray(item)) return asCleanTextArray(item);
+    if (typeof item === "string") return item.trim() ? [item.trim()] : [];
+    if (!item || typeof item !== "object") return [];
+
+    const record = item as Record<string, unknown>;
+    const label = String(
+      record.Description ||
+        record.Name ||
+        record.Type ||
+        record.Policy ||
+        record.Text ||
+        "",
+    ).trim();
+    const price = toNumber(record.Price || record.Amount || record.Value);
+    const currency = typeof record.Currency === "string" ? record.Currency.trim() : "";
+    const priceText = price > 0 ? `${currency ? `${currency} ` : ""}${price}` : "";
+    const text = [label, priceText].filter(Boolean).join(" - ");
+
+    return text ? [text] : [];
+  });
+}
+
+function isValidGuestName(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length >= 3 && trimmed.length <= 25 && /^[\p{L}\s]+$/u.test(trimmed);
+}
+
+function normalizeGuestTitle(value?: string): "Mr" | "Mrs" | "Ms" {
+  return value === "Mrs" || value === "Ms" ? value : "Mr";
 }
 
 function calculateNights(checkIn?: string, checkOut?: string) {
@@ -201,6 +243,15 @@ const normalizeSelectedRoomForReview = useCallback((
     checkOut: String(selectedRoom.checkOut || searchData.dates.checkOut || ""),
     guests: searchData.guests,
     nights,
+    rspPrice: toNumber(selectedRoom.rspPrice) || undefined,
+    roomPromotions: Array.isArray(selectedRoom.roomPromotions) ? selectedRoom.roomPromotions : [],
+    supplements: Array.isArray(selectedRoom.supplements) ? selectedRoom.supplements : [],
+    inclusions: asCleanTextArray(selectedRoom.inclusions),
+    cancellationPolicies: Array.isArray(selectedRoom.cancellationPolicies)
+      ? selectedRoom.cancellationPolicies
+      : [],
+    rateConditions: Array.isArray(selectedRoom.rateConditions) ? selectedRoom.rateConditions : [],
+    amenities: asCleanTextArray(selectedRoom.amenities),
   };
 }, []);
 
@@ -222,7 +273,7 @@ interface SearchParamsData {
   currency?: string;
 }
 
-type Title = "Mr" | "Mrs" | "Ms" | "Miss" | "Child";
+type Title = "Mr" | "Mrs" | "Ms" | "Child";
 
 interface TravelerForm {
   roomIndex: number;
@@ -239,7 +290,7 @@ interface TravelerForm {
   email: string;
 }
 
-const TITLES: Title[] = ["Mr", "Mrs", "Ms", "Miss"];
+const TITLES: Title[] = ["Mr", "Mrs", "Ms"];
 
 const DOCUMENT_TYPES = [
   "passport",
@@ -389,7 +440,7 @@ const DOCUMENT_TYPES = [
 
         const data = await response.json();
         setPolicies(data);
-      } catch (err: unknown) {
+      } catch (_err: unknown) {
         setError(t("booking.loadErrorDescription"));
       } finally {
         setLoading(false);
@@ -402,14 +453,28 @@ const DOCUMENT_TYPES = [
     createSupplierFallbackPolicies,
     normalizeSelectedRoomForReview,
     buildInitialTravelers,
+    t,
   ]);
 
   const validateTravelers = () => {
+    const seenNames = new Set<string>();
     for (const traveler of travelers) {
       if (!traveler.firstName.trim() || !traveler.lastName.trim()) {
         setError(t("checkout.errors.travelerNames"));
         return false;
       }
+      if (!isValidGuestName(traveler.firstName) || !isValidGuestName(traveler.lastName)) {
+        setError("Guest names must be 3-25 letters and spaces only.");
+        return false;
+      }
+      const fullNameKey = `${traveler.firstName.trim()} ${traveler.lastName.trim()}`
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+      if (seenNames.has(fullNameKey)) {
+        setError("Duplicate guest names are not allowed in the same booking.");
+        return false;
+      }
+      seenNames.add(fullNameKey);
       if (!traveler.nationality.trim()) {
         setError(t("checkout.errors.travelerNationality"));
         return false;
@@ -475,7 +540,7 @@ const DOCUMENT_TYPES = [
         roomIndex: traveler.roomIndex,
         travelerType: traveler.travelerType,
         index: traveler.index,
-        title: traveler.title || (traveler.travelerType === "child" ? "Child" : "Mr"),
+        title: traveler.travelerType === "child" ? "Child" : normalizeGuestTitle(traveler.title),
         firstName: traveler.firstName.trim(),
         lastName: traveler.lastName.trim(),
         age: traveler.age,
@@ -520,7 +585,7 @@ const DOCUMENT_TYPES = [
           rooms,
           travelers: bookingTravelers,
           leadGuest: leadTraveler
-            ? `${leadTraveler.title || "Mr"} ${leadTraveler.firstName} ${leadTraveler.lastName}`
+            ? `${normalizeGuestTitle(leadTraveler.title)} ${leadTraveler.firstName} ${leadTraveler.lastName}`
             : "Guest",
           contactEmail: leadTraveler?.email || "",
           contactPhone: leadTraveler?.phone || "",
@@ -539,6 +604,13 @@ const DOCUMENT_TYPES = [
           metadata: {
             checkoutFlow: "review_traveler_details_before_booking",
             supplierTotalFare: hotel.supplierTotalFare || totalPrice,
+            rspPrice: hotel.rspPrice || null,
+            roomPromotions: hotel.roomPromotions || [],
+            supplements: hotel.supplements || [],
+            inclusions: hotel.inclusions || [],
+            cancellationPolicies: hotel.cancellationPolicies || [],
+            rateConditions: hotel.rateConditions || [],
+            amenities: hotel.amenities || [],
           },
         }),
       });
@@ -556,7 +628,7 @@ const DOCUMENT_TYPES = [
       } else {
         setNotice(t("booking.requestCreated", { bookingId: bookingReference }));
       }
-    } catch (err) {
+    } catch (_err) {
       setError(t("checkout.errors.bookingFailed"));
     } finally {
       setSubmitting(false);
@@ -610,8 +682,18 @@ const DOCUMENT_TYPES = [
     calculateNights(searchParams?.dates.checkIn, searchParams?.dates.checkOut);
   const nightlyPrice = hotel?.Price || 0;
   const taxes = hotel?.Taxes || 0;
-const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
+  const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
   const guestRooms = Math.max(searchParams?.guests.rooms || 1, 1);
+  const tboDetailGroups = hotel
+    ? [
+        { title: "Inclusions", items: asCleanTextArray(hotel.inclusions) },
+        { title: "Room promotions", items: asCleanTextArray(hotel.roomPromotions) },
+        { title: "Supplements", items: asCleanTextArray(hotel.supplements) },
+        { title: "Cancellation policy", items: asCleanTextArray(hotel.cancellationPolicies) },
+        { title: "Rate conditions", items: asCleanTextArray(hotel.rateConditions) },
+        { title: "Amenities", items: asCleanTextArray(hotel.amenities) },
+      ].filter((group) => group.items.length > 0)
+    : [];
   const childAges = (searchParams?.guests.childrenAges || [])
     .map((age) => Number(age))
     .filter((age) => Number.isFinite(age) && age >= 0);
@@ -1008,6 +1090,35 @@ const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {(hotel?.rspPrice || tboDetailGroups.length > 0) && (
+                <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <h4 className="mb-3 font-bold text-[#0F172A]">TBO rate details</h4>
+                  {hotel?.rspPrice ? (
+                    <p className="mb-3 text-sm text-slate-700">
+                      <span className="font-bold">RSP Price:</span>{" "}
+                      {hotel.Currency} {hotel.rspPrice}
+                    </p>
+                  ) : null}
+                  <div className="space-y-4">
+                    {tboDetailGroups.map((group) => (
+                      <div key={group.title}>
+                        <p className="mb-2 text-sm font-bold text-[#0F172A]">{group.title}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {group.items.map((item) => (
+                            <span
+                              key={`${group.title}-${item}`}
+                              className="rounded-full border border-white bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm"
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

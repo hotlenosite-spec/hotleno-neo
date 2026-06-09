@@ -26,6 +26,12 @@ export interface SupplierHotelRate {
   currency: string;
   refundable: boolean;
   cancellationPolicies?: unknown[];
+  rspPrice?: number;
+  roomPromotions?: unknown[];
+  supplements?: unknown[];
+  inclusions?: string[];
+  rateConditions?: unknown[];
+  amenities?: string[];
   metadata?: Record<string, unknown>;
 }
 
@@ -76,6 +82,12 @@ export interface SupplierPreBookResponse {
   currency: string;
   available: boolean;
   cancellationPolicies?: unknown[];
+  rspPrice?: number;
+  roomPromotions?: unknown[];
+  supplements?: unknown[];
+  inclusions?: string[];
+  rateConditions?: unknown[];
+  amenities?: string[];
   rawSupplierRequest?: unknown;
   rawSupplierResponse?: unknown;
 }

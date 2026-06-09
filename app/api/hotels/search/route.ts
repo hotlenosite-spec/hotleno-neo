@@ -29,6 +29,9 @@ import type { HotelSearchResponse } from "@/types/travellanda";
 
 export const runtime = "nodejs";
 const DEFAULT_SUPPLIER_SEARCH_TIMEOUT_MS = 8000;
+const MAX_TBO_ROOMS = 6;
+const MAX_TBO_ADULTS_PER_ROOM = 6;
+const MAX_TBO_CHILDREN_PER_ROOM = 4;
 
 const SUPPLIER_NAMES: SupplierProviderName[] = [
   "mock",
@@ -96,6 +99,23 @@ function toSupplierRooms(rooms: unknown): SupplierGuestOccupancy[] {
       childrenAges,
     };
   });
+}
+
+function validateTboGuestLimits(rooms: SupplierGuestOccupancy[]) {
+  if (rooms.length > MAX_TBO_ROOMS) {
+    return "You can select up to 6 rooms.";
+  }
+
+  for (const room of rooms) {
+    if ((room.adults || 0) > MAX_TBO_ADULTS_PER_ROOM) {
+      return "Each room can include up to 6 adults.";
+    }
+    if ((room.children || room.childrenAges?.length || 0) > MAX_TBO_CHILDREN_PER_ROOM) {
+      return "Each room can include up to 4 children.";
+    }
+  }
+
+  return "";
 }
 
 function getSupplierSearchTimeoutMs() {
@@ -238,6 +258,13 @@ export async function POST(req: NextRequest) {
     const checkOut = body.checkOutDate ?? body.CheckOutDate ?? body.checkOut;
     const currency = body.currency ?? body.Currency ?? "USD";
     const rooms = toSupplierRooms(body.rooms ?? body.Rooms);
+    const tboGuestLimitError = validateTboGuestLimits(rooms);
+    if (tboGuestLimitError) {
+      return NextResponse.json(
+        { error: "TBO_GUEST_LIMIT_EXCEEDED", message: tboGuestLimitError },
+        { status: 400 },
+      );
+    }
     const authUser = getAuthUserFromRequest(req);
     const tboCertificationSearch = isTboCertificationSearch(authUser);
     const providers = await getSearchProviders({

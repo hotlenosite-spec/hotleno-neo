@@ -10,6 +10,7 @@ import {
   TboSupplierProvider,
 } from "@/lib/suppliers/tbo-provider";
 import type {
+  SupplierBookingDetailsResponse,
   SupplierBookRequest,
   SupplierBookResponse,
   SupplierGuestOccupancy,
@@ -82,7 +83,7 @@ function safeErrorMessage(error: unknown) {
 
 function splitName(value?: unknown) {
   const cleanName = String(value || "")
-    .replace(/^(Mr|Mrs|Miss|Ms|Dr|Child)\.?\s+/i, "")
+    .replace(/^(Mr|Mrs|Ms|Child)\.?\s+/i, "")
     .trim();
   const [firstName = "Guest", ...rest] = cleanName.split(/\s+/).filter(Boolean);
 
@@ -92,7 +93,56 @@ function splitName(value?: unknown) {
   };
 }
 
+function normalizeGuestTitle(value?: unknown) {
+  return value === "Mrs" || value === "Ms" ? value : "Mr";
+}
+
+function isValidGuestName(value: unknown) {
+  const trimmed = String(value || "").trim();
+  return trimmed.length >= 3 && trimmed.length <= 25 && /^[\p{L}\s]+$/u.test(trimmed);
+}
+
+function validateBookingTravelers(travelers: unknown[]) {
+  const seenNames = new Set<string>();
+
+  for (const traveler of travelers) {
+    if (!traveler || typeof traveler !== "object") {
+      return "Traveler details are invalid.";
+    }
+
+    const record = traveler as Record<string, unknown>;
+    const firstName = String(record.firstName || "").trim();
+    const lastName = String(record.lastName || "").trim();
+
+    if (!isValidGuestName(firstName) || !isValidGuestName(lastName)) {
+      return "Guest names must be 3-25 letters and spaces only.";
+    }
+
+    if (record.travelerType !== "child") {
+      const title = normalizeGuestTitle(record.title);
+      if (!["Mr", "Ms", "Mrs"].includes(title)) {
+        return "Guest title must be Mr, Ms, or Mrs.";
+      }
+    }
+
+    const fullNameKey = `${firstName} ${lastName}`.replace(/\s+/g, " ").toLowerCase();
+    if (seenNames.has(fullNameKey)) {
+      return "Duplicate guest names are not allowed in the same booking.";
+    }
+    seenNames.add(fullNameKey);
+  }
+
+  return "";
+}
+
 function getRawSupplierObject(response: SupplierBookResponse) {
+  return response.rawSupplierResponse &&
+    typeof response.rawSupplierResponse === "object"
+    ? (response.rawSupplierResponse as Record<string, unknown>)
+    : {};
+}
+
+function getRawSupplierDetailsObject(response: SupplierBookingDetailsResponse) {
   return response.rawSupplierResponse &&
     typeof response.rawSupplierResponse === "object"
     ? (response.rawSupplierResponse as Record<string, unknown>)
@@ -123,6 +173,23 @@ function getFirstSupplierResponseValue(
 ) {
   for (const key of keys) {
     const value = getSupplierResponseValue(response, key);
+    if (value) return value;
+  }
+
+  return "";
+}
+
+function getSupplierDetailsValue(response: SupplierBookingDetailsResponse, key: string) {
+  const value = getRawSupplierDetailsObject(response)[key];
+  return typeof value === "string" ? value : "";
+}
+
+function getFirstSupplierDetailsValue(
+  response: SupplierBookingDetailsResponse,
+  keys: string[],
+) {
+  for (const key of keys) {
+    const value = getSupplierDetailsValue(response, key);
     if (value) return value;
   }
 
@@ -185,7 +252,7 @@ function buildTboBookRequest(booking: BookingDocument): SupplierBookRequest {
     leadGuest: {
       title:
         typeof leadTraveler?.title === "string"
-          ? leadTraveler.title
+          ? normalizeGuestTitle(leadTraveler.title)
           : "Mr",
       firstName:
         typeof leadTraveler?.firstName === "string" && leadTraveler.firstName
@@ -201,7 +268,10 @@ function buildTboBookRequest(booking: BookingDocument): SupplierBookRequest {
     guests: travelers
       .filter((traveler) => traveler.firstName || traveler.lastName)
       .map((traveler) => ({
-        title: typeof traveler.title === "string" ? traveler.title : "Mr",
+        title:
+          traveler.travelerType === "child"
+            ? "Child"
+            : normalizeGuestTitle(traveler.title),
         firstName: String(traveler.firstName || "Guest"),
         lastName: String(traveler.lastName || "Hotleno"),
         type: traveler.travelerType === "child" ? "child" : "adult",
@@ -223,6 +293,142 @@ function buildTboBookRequest(booking: BookingDocument): SupplierBookRequest {
       source: "user_bookings_certification_flow",
     },
   };
+}
+
+async function runTboBookingDetailFallback(params: {
+  bookingsCollection: Collection<BookingDocument>;
+  booking: BookingDocument;
+  supplierReference: string;
+  supplierConfirmationNo?: string;
+  reason: string;
+}) {
+  const {
+    bookingsCollection,
+    booking,
+    supplierReference,
+    supplierConfirmationNo,
+    reason,
+  } = params;
+  const provider = new TboSupplierProvider();
+  const now = new Date();
+  let firebaseUpdated = false;
+
+  try {
+    const details = await provider.getBookingDetails({
+      supplierBookingReference: supplierReference,
+      metadata: {
+        bookingId: booking._id,
+        supplierConfirmationNo,
+        reason,
+      },
+    });
+    const detailsBookingId = getFirstSupplierDetailsValue(details, [
+      "bookingId",
+      "BookingId",
+      "BookingID",
+    ]);
+    const detailsConfirmationNo = getFirstSupplierDetailsValue(details, [
+      "confirmationNo",
+      "confirmationNumber",
+      "ConfirmationNo",
+      "ConfirmationNumber",
+    ]);
+    const detailsReference =
+      getFirstSupplierDetailsValue(details, [
+        "supplierReference",
+        "bookingReferenceId",
+        "BookingReferenceId",
+        "BookingRefNo",
+      ]) || supplierReference;
+    const raw = getRawSupplierDetailsObject(details);
+    const statusRecord =
+      raw.status && typeof raw.status === "object"
+        ? (raw.status as Record<string, unknown>)
+        : {};
+    const statusDescription =
+      typeof statusRecord.Description === "string"
+        ? statusRecord.Description
+        : getSupplierDetailsValue(details, "responseStatus");
+
+    const updates: Partial<BookingDocument> & Record<string, unknown> = {
+      bookingStatus: "supplier_booking_confirmed",
+      status: "supplier_booking_confirmed",
+      supplierStatus: "confirmed",
+      supplierBookingReference: detailsReference,
+      supplierBookingId: detailsBookingId,
+      supplierConfirmationNo: detailsConfirmationNo || supplierConfirmationNo || "",
+      supplierReference: detailsReference,
+      supplierResponseStatus: statusDescription,
+      rawSupplierResponse: details.rawSupplierResponse ?? null,
+      "metadata.supplierSubmission": "confirmed_by_booking_detail",
+      "metadata.bookingDetailCheckedAt": now.toISOString(),
+      "metadata.bookingDetailReason": reason,
+      updatedAt: now,
+    };
+
+    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+    firebaseUpdated = true;
+    console.info(
+      "[TBO BookingDetail Diagnostics]",
+      JSON.stringify({
+        internalBookingId: booking._id,
+        confirmationNumberFound: Boolean(detailsConfirmationNo || supplierConfirmationNo),
+        statusDescription: statusDescription || null,
+        firebaseUpdated,
+      }),
+    );
+
+    return { ...booking, ...updates } as BookingDocument;
+  } catch (error) {
+    const message = safeErrorMessage(error);
+    const updates: Partial<BookingDocument> & Record<string, unknown> = {
+      bookingStatus: "supplier_booking_verification_pending",
+      status: "supplier_booking_verification_pending",
+      supplierStatus: "verification_pending",
+      failureReason: message,
+      "metadata.supplierSubmission": "booking_detail_pending",
+      "metadata.bookingDetailCheckedAt": now.toISOString(),
+      "metadata.bookingDetailReason": reason,
+      "metadata.bookingDetailError": message,
+      updatedAt: now,
+    };
+
+    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+    firebaseUpdated = true;
+    console.info(
+      "[TBO BookingDetail Diagnostics]",
+      JSON.stringify({
+        internalBookingId: booking._id,
+        confirmationNumberFound: Boolean(supplierConfirmationNo),
+        statusDescription: message,
+        firebaseUpdated,
+      }),
+    );
+
+    return { ...booking, ...updates } as BookingDocument;
+  }
+}
+
+function scheduleTboBookingDetailFallback(params: {
+  bookingsCollection: Collection<BookingDocument>;
+  booking: BookingDocument;
+  supplierReference: string;
+  supplierConfirmationNo?: string;
+  reason: string;
+}) {
+  setTimeout(() => {
+    runTboBookingDetailFallback(params).catch((error) => {
+      console.info(
+        "[TBO BookingDetail Diagnostics]",
+        JSON.stringify({
+          internalBookingId: params.booking._id,
+          confirmationNumberFound: Boolean(params.supplierConfirmationNo),
+          statusDescription: safeErrorMessage(error),
+          firebaseUpdated: false,
+        }),
+      );
+    });
+  }, 120_000);
 }
 
 async function submitTboCertificationBooking(params: {
@@ -349,10 +555,17 @@ async function submitTboCertificationBooking(params: {
     const supplierResponseStatus =
       getFirstSupplierResponseValue(supplierResponse, ["responseStatus"]) ||
       getStatusDescription(supplierResponse);
+    const needsBookingDetailFollowUp =
+      !supplierConfirmationNo ||
+      /pending|processing|timeout|in progress|unknown/i.test(supplierResponseStatus);
     const updates: Partial<BookingDocument> & Record<string, unknown> = {
-      bookingStatus: "supplier_booking_confirmed",
-      status: "supplier_booking_confirmed",
-      supplierStatus: "confirmed",
+      bookingStatus: needsBookingDetailFollowUp
+        ? "supplier_booking_verification_pending"
+        : "supplier_booking_confirmed",
+      status: needsBookingDetailFollowUp
+        ? "supplier_booking_verification_pending"
+        : "supplier_booking_confirmed",
+      supplierStatus: needsBookingDetailFollowUp ? "verification_pending" : "confirmed",
       supplierBookingReference: supplierReference,
       supplierBookingId,
       supplierConfirmationNo,
@@ -364,11 +577,28 @@ async function submitTboCertificationBooking(params: {
       rawSupplierResponse: supplierResponse.rawSupplierResponse ?? null,
       "metadata.supplierSubmission": "sent_to_supplier",
       "metadata.supplierSubmittedAt": now.toISOString(),
+      "metadata.bookingDetailScheduled": needsBookingDetailFollowUp,
+      "metadata.preBookRspPrice": preBookResponse.rspPrice ?? null,
+      "metadata.roomPromotions": preBookResponse.roomPromotions || [],
+      "metadata.supplements": preBookResponse.supplements || [],
+      "metadata.inclusions": preBookResponse.inclusions || [],
+      "metadata.cancellationPolicies": preBookResponse.cancellationPolicies || [],
+      "metadata.rateConditions": preBookResponse.rateConditions || [],
+      "metadata.amenities": preBookResponse.amenities || [],
       "metadata.stripeBypassedForCertification": !stripeCheckoutEnabled,
       updatedAt: now,
     };
 
     await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+    if (needsBookingDetailFollowUp) {
+      scheduleTboBookingDetailFallback({
+        bookingsCollection,
+        booking: { ...booking, ...updates } as BookingDocument,
+        supplierReference,
+        supplierConfirmationNo,
+        reason: "book_response_requires_verification",
+      });
+    }
     logTboCertificationBookingDiagnostics({
       internalBookingId: booking._id,
       tboBookingEnabled,
@@ -390,7 +620,7 @@ async function submitTboCertificationBooking(params: {
       },
       response: {
         bookingId: booking._id,
-        supplierStatus: "confirmed",
+        supplierStatus: needsBookingDetailFollowUp ? "verification_pending" : "confirmed",
         supplierBookingIdPresent: Boolean(supplierBookingId),
       },
     });
@@ -399,6 +629,15 @@ async function submitTboCertificationBooking(params: {
   } catch (error) {
     const message = safeErrorMessage(error);
     const supplierError = getSupplierStageErrorCode("book", message);
+    const shouldVerifyWithBookingDetail = /timeout|aborted|network|fetch failed|unknown/i.test(message);
+    if (shouldVerifyWithBookingDetail) {
+      return runTboBookingDetailFallback({
+        bookingsCollection,
+        booking,
+        supplierReference: String(booking.yourReference || booking.bookingReference || booking._id),
+        reason: "book_error_requires_verification",
+      });
+    }
     const updates: Partial<BookingDocument> & Record<string, unknown> = {
       bookingStatus: "supplier_booking_failed",
       status: "supplier_booking_failed",
@@ -547,6 +786,15 @@ export async function POST(req: NextRequest) {
     const supplier = String(body.supplier || "none").toLowerCase();
     const shouldSubmitTboCertificationBooking =
       supplier === "tbo" && tboCertificationMode && tboBookingEnabled;
+    const travelerValidationError = Array.isArray(body.travelers)
+      ? validateBookingTravelers(body.travelers)
+      : "Traveler details are required.";
+    if (travelerValidationError) {
+      return NextResponse.json(
+        { error: "GUEST_VALIDATION_FAILED", message: travelerValidationError },
+        { status: 400 },
+      );
+    }
     const internalOnlyBooking =
       !stripeCheckoutEnabled && !shouldSubmitTboCertificationBooking;
     const bookingStatus = internalOnlyBooking
@@ -587,7 +835,17 @@ export async function POST(req: NextRequest) {
       checkInDate: toDate(body.checkInDate),
       checkOutDate: toDate(body.checkOutDate),
       rooms: Array.isArray(body.rooms) ? body.rooms : [],
-      travelers: Array.isArray(body.travelers) ? body.travelers : [],
+      travelers: Array.isArray(body.travelers)
+        ? body.travelers.map((traveler: Record<string, unknown>) => ({
+            ...traveler,
+            title:
+              traveler.travelerType === "child"
+                ? "Child"
+                : normalizeGuestTitle(traveler.title),
+            firstName: String(traveler.firstName || "").trim(),
+            lastName: String(traveler.lastName || "").trim(),
+          }))
+        : [],
       leadGuest: body.leadGuest || "Guest",
       contactEmail: body.contactEmail || user?.email || "",
       contactPhone: body.contactPhone || "",
@@ -644,6 +902,17 @@ export async function POST(req: NextRequest) {
     };
 
     const bookingsCollection = db.collection<BookingDocument>("bookings");
+    const existingBooking = await bookingsCollection.findOne({ _id: booking._id });
+    if (existingBooking) {
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Booking already exists",
+          booking: existingBooking,
+        },
+        { status: 200 },
+      );
+    }
     await bookingsCollection.insertOne(booking);
     await createAdminNotificationSafely({
       type: "booking_created",

@@ -44,7 +44,7 @@ import {
   warnDevPreviewAllPagesEnabled,
 } from "@/lib/security/dev-flags";
 
-type Title = "Mr" | "Mrs" | "Miss" | "Ms" | "Dr" | "Child";
+type Title = "Mr" | "Mrs" | "Ms" | "Child";
 
 interface Traveler {
   savedTravelerId?: string;
@@ -128,13 +128,22 @@ interface BookingData {
   };
 }
 
-const TITLES: Title[] = ["Mr", "Mrs", "Miss", "Ms", "Dr", "Child"];
+const TITLES: Title[] = ["Mr", "Mrs", "Ms", "Child"];
 
 const DOCUMENT_TYPES = [
   { value: "passport" },
   { value: "national_id" },
   { value: "residence_permit" },
 ] as const;
+
+function normalizeGuestTitle(value?: string): "Mr" | "Mrs" | "Ms" {
+  return value === "Mrs" || value === "Ms" ? value : "Mr";
+}
+
+function isValidGuestName(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length >= 3 && trimmed.length <= 25 && /^[\p{L}\s]+$/u.test(trimmed);
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -282,7 +291,10 @@ export default function CheckoutPage() {
     updatedTravelers[index] = {
       ...updatedTravelers[index],
       savedTravelerId: saved._id,
-      title: saved.title || updatedTravelers[index].title,
+      title:
+        updatedTravelers[index].travelerType === "child"
+          ? "Child"
+          : normalizeGuestTitle(saved.title),
       firstName: saved.firstName || "",
       lastName: saved.lastName || "",
       gender: saved.gender || "",
@@ -307,11 +319,26 @@ export default function CheckoutPage() {
   };
 
   const validateForm = (): boolean => {
+    const seenNames = new Set<string>();
     for (const traveler of travelers) {
       if (!traveler.firstName.trim() || !traveler.lastName.trim()) {
         setError(t("errors.travelerNames"));
         return false;
       }
+
+      if (!isValidGuestName(traveler.firstName) || !isValidGuestName(traveler.lastName)) {
+        setError("Guest names must be 3-25 letters and spaces only.");
+        return false;
+      }
+
+      const fullNameKey = `${traveler.firstName.trim()} ${traveler.lastName.trim()}`
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+      if (seenNames.has(fullNameKey)) {
+        setError("Duplicate guest names are not allowed in the same booking.");
+        return false;
+      }
+      seenNames.add(fullNameKey);
 
       if (!traveler.nationality?.trim()) {
         setError(t("errors.travelerNationality"));
@@ -412,7 +439,7 @@ export default function CheckoutPage() {
         const room = roomsMap.get(traveler.roomIndex)!;
 
         if (traveler.travelerType === "adult") {
-          const adultTitle = traveler.title === "Child" ? "Mr" : traveler.title || "Mr";
+          const adultTitle = normalizeGuestTitle(traveler.title);
           room.AdultNames.push({
             Title: adultTitle,
             FirstName: traveler.firstName.trim(),
@@ -468,7 +495,7 @@ export default function CheckoutPage() {
         roomIndex: traveler.roomIndex,
         travelerType: traveler.travelerType,
         index: traveler.index,
-        title: traveler.title || (traveler.travelerType === "child" ? "Child" : "Mr"),
+        title: traveler.travelerType === "child" ? "Child" : normalizeGuestTitle(traveler.title),
         firstName: traveler.firstName.trim(),
         lastName: traveler.lastName.trim(),
         gender: traveler.gender || "",
@@ -540,7 +567,7 @@ export default function CheckoutPage() {
         })),
         travelers: bookingTravelers,
         leadGuest: leadGuest
-          ? `${leadGuest.title || "Mr"} ${leadGuest.firstName} ${leadGuest.lastName}`
+          ? `${normalizeGuestTitle(leadGuest.title)} ${leadGuest.firstName} ${leadGuest.lastName}`
           : "Guest",
         contactEmail: contactInfo.email,
         contactPhone: combinedPhone,

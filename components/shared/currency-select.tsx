@@ -44,11 +44,7 @@ export function CurrencySelect({
   const isAr = locale === "ar";
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [internalValue, setInternalValue] = useState(DEFAULT_CURRENCY_CODE);
-
-  useEffect(() => {
-    setInternalValue(value || getStoredCurrencyCode());
-  }, [value]);
+  const [internalValue, setInternalValue] = useState(() => getStoredCurrencyCode());
 
   useEffect(() => {
     if (value) return;

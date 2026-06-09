@@ -23,6 +23,9 @@ type TboRoom = {
   Name?: string[];
   BookingCode?: string;
   TotalFare?: number;
+  RSP?: number;
+  RSPPrice?: number;
+  RSPPricePublished?: number;
   TotalTax?: number;
   Currency?: string;
   MealType?: string;
@@ -30,7 +33,9 @@ type TboRoom = {
   CancelPolicies?: unknown[];
   Supplements?: unknown[];
   Inclusion?: string;
+  Inclusions?: string[];
   RoomPromotion?: unknown[];
+  Amenities?: string[];
 };
 
 type TboHotelResult = {
@@ -517,6 +522,33 @@ function getRoomName(room: TboRoom) {
   return Array.isArray(room.Name) ? room.Name.filter(Boolean).join(", ") : "Room";
 }
 
+function asTextArray(value: unknown): string[] {
+  if (typeof value === "string") {
+    return value
+      .split(/[,|;]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter(Boolean);
+}
+
+function getTboRoomInclusions(room?: TboRoom) {
+  if (!room) return [];
+  return [
+    ...asTextArray(room.Inclusion),
+    ...asTextArray(room.Inclusions),
+  ].filter((value, index, items) => items.indexOf(value) === index);
+}
+
+function getTboRspPrice(room?: TboRoom) {
+  const value = room?.RSP ?? room?.RSPPrice ?? room?.RSPPricePublished;
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : undefined;
+}
+
 function mapSearchResponse(
   body: TboResponse,
   request: SupplierSearchHotelsRequest,
@@ -536,11 +568,21 @@ function mapSearchResponse(
           currency,
           refundable: room.IsRefundable !== false,
           cancellationPolicies: room.CancelPolicies || [],
+          rspPrice: getTboRspPrice(room),
+          roomPromotions: room.RoomPromotion || [],
+          supplements: room.Supplements || [],
+          inclusions: getTboRoomInclusions(room),
+          rateConditions: hotel.RateConditions || [],
+          amenities: asTextArray(room.Amenities),
           metadata: {
             supplements: room.Supplements || [],
             inclusion: room.Inclusion || null,
+            inclusions: getTboRoomInclusions(room),
             roomPromotion: room.RoomPromotion || [],
             totalTax: room.TotalTax ?? null,
+            rspPrice: getTboRspPrice(room) ?? null,
+            rateConditions: hotel.RateConditions || [],
+            amenities: asTextArray(room.Amenities),
           },
         }));
 
@@ -876,8 +918,23 @@ export class TboSupplierProvider implements SupplierProvider {
       currency: hotel?.Currency || request.currency || "USD",
       available: Boolean(room?.BookingCode),
       cancellationPolicies: room?.CancelPolicies || [],
+      rspPrice: getTboRspPrice(room),
+      roomPromotions: room?.RoomPromotion || [],
+      supplements: room?.Supplements || [],
+      inclusions: getTboRoomInclusions(room),
+      rateConditions: hotel?.RateConditions || [],
+      amenities: asTextArray(room?.Amenities),
       rawSupplierRequest: { supplier: "tbo", action: "PreBook" },
-      rawSupplierResponse: { status: body.Status },
+      rawSupplierResponse: {
+        status: body.Status,
+        rspPrice: getTboRspPrice(room) ?? null,
+        roomPromotions: room?.RoomPromotion || [],
+        supplements: room?.Supplements || [],
+        inclusions: getTboRoomInclusions(room),
+        cancellationPolicies: room?.CancelPolicies || [],
+        rateConditions: hotel?.RateConditions || [],
+        amenities: asTextArray(room?.Amenities),
+      },
     };
   }
 
@@ -983,18 +1040,35 @@ export class TboSupplierProvider implements SupplierProvider {
   async getBookingDetails(
     request: SupplierBookingDetailsRequest,
   ): Promise<SupplierBookingDetailsResponse> {
+    const bookingReference =
+      getMetadataString(request.metadata, "supplierConfirmationNo") ||
+      request.supplierBookingReference;
     const body = await requestTbo("BookingDetail", {
-      BookingReferenceId: request.supplierBookingReference,
+      BookingReferenceId: bookingReference,
       PaymentMode: PAYMENT_MODE,
-    });
+    }, request.metadata);
     assertTboSuccess(body, "TBO BookingDetail");
+    const confirmationFields = getTboConfirmationFields(body);
 
     return {
       supplier: "tbo",
       supplierBookingReference: request.supplierBookingReference,
       status: "confirmed",
       rawSupplierRequest: { supplier: "tbo", action: "BookingDetail" },
-      rawSupplierResponse: { status: body.Status },
+      rawSupplierResponse: {
+        status: body.Status,
+        httpStatusCode: body.__httpStatusCode,
+        bookingId: confirmationFields.bookingId || body.BookingId || null,
+        confirmationNo:
+          confirmationFields.confirmationNo || body.ConfirmationNumber || null,
+        confirmationNumber:
+          confirmationFields.confirmationNo || body.ConfirmationNumber || null,
+        bookingReferenceId:
+          confirmationFields.reference || body.BookingReferenceId || null,
+        supplierReference:
+          confirmationFields.reference || body.BookingReferenceId || null,
+        responseStatus: confirmationFields.responseStatus || null,
+      },
     };
   }
 

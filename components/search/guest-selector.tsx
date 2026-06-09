@@ -34,15 +34,40 @@ interface GuestSelectorProps {
   onChange: (guests: GuestData) => void;
 }
 
+const MAX_ROOMS = 6;
+const MAX_ADULTS_PER_ROOM = 6;
+const MAX_CHILDREN_PER_ROOM = 4;
+
 export function GuestSelector({ guests, onChange }: GuestSelectorProps) {
   const t = useTranslations('search');
   const [open, setOpen] = useState(false);
+  const [validationMessage, setValidationMessage] = useState("");
 
   const updateGuests = (field: 'rooms' | 'adults' | 'children', delta: number) => {
-    const newValue = Math.max(
+    const maxValue =
+      field === "rooms"
+        ? MAX_ROOMS
+        : field === "adults"
+          ? MAX_ADULTS_PER_ROOM
+          : MAX_CHILDREN_PER_ROOM;
+    const attemptedValue = guests[field] + delta;
+    const newValue = Math.min(maxValue, Math.max(
       field === 'children' ? 0 : 1,
-      guests[field] + delta
-    );
+      attemptedValue
+    ));
+
+    if (delta > 0 && attemptedValue > maxValue) {
+      setValidationMessage(
+        field === "rooms"
+          ? "You can select up to 6 rooms."
+          : field === "adults"
+            ? "Each room can include up to 6 adults."
+            : "Each room can include up to 4 children.",
+      );
+      return;
+    }
+
+    setValidationMessage("");
 
     const updated = { ...guests, [field]: newValue };
 
@@ -116,7 +141,7 @@ export function GuestSelector({ guests, onChange }: GuestSelectorProps) {
                 variant="outline"
                 size="icon"
                 onClick={() => updateGuests('rooms', 1)}
-                disabled={guests.rooms >= 10}
+                disabled={guests.rooms >= MAX_ROOMS}
               >
                 <HugeiconsIcon icon={PlusSignFreeIcons} className="h-4 w-4" />
               </Button>
@@ -150,7 +175,7 @@ export function GuestSelector({ guests, onChange }: GuestSelectorProps) {
                 variant="outline"
                 size="icon"
                 onClick={() => updateGuests('adults', 1)}
-                disabled={guests.adults >= 8}
+                disabled={guests.adults >= MAX_ADULTS_PER_ROOM}
               >
                 <HugeiconsIcon icon={PlusSignFreeIcons} className="h-4 w-4" />
               </Button>
@@ -184,7 +209,7 @@ export function GuestSelector({ guests, onChange }: GuestSelectorProps) {
                 variant="outline"
                 size="icon"
                 onClick={() => updateGuests('children', 1)}
-                disabled={guests.children >= 6}
+                disabled={guests.children >= MAX_CHILDREN_PER_ROOM}
               >
                 <HugeiconsIcon icon={PlusSignFreeIcons} className="h-4 w-4" />
               </Button>
@@ -226,6 +251,12 @@ export function GuestSelector({ guests, onChange }: GuestSelectorProps) {
                 </div>
               </div>
             </>
+          )}
+
+          {validationMessage && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+              {validationMessage}
+            </p>
           )}
 
           <div className="pt-4">

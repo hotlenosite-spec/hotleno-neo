@@ -182,6 +182,13 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
     Taxes: 0,
     Currency: rate.currency || hotel.currency,
     IsNonRefundable: !rate.refundable,
+    rspPrice: rate.rspPrice,
+    roomPromotions: rate.roomPromotions,
+    supplements: rate.supplements,
+    inclusions: rate.inclusions,
+    cancellationPolicies: rate.cancellationPolicies,
+    rateConditions: rate.rateConditions,
+    amenities: rate.amenities,
   }));
 
   return {

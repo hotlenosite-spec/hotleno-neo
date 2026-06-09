@@ -62,6 +62,33 @@ function toNumber(value: unknown) {
   return 0;
 }
 
+function asCleanTextArray(value: unknown): string[] {
+  const values = Array.isArray(value) ? value : [value];
+
+  return values.flatMap((item): string[] => {
+    if (Array.isArray(item)) return asCleanTextArray(item);
+    if (typeof item === "string") return item.trim() ? [item.trim()] : [];
+    if (!item || typeof item !== "object") return [];
+
+    const record = item as Record<string, unknown>;
+    const label = String(
+      record.Description ||
+        record.Name ||
+        record.Type ||
+        record.Policy ||
+        record.Text ||
+        "",
+    ).trim();
+    const number = Number(record.Price || record.Amount || record.Value);
+    const price = Number.isFinite(number) && number > 0 ? number : 0;
+    const currency = typeof record.Currency === "string" ? record.Currency.trim() : "";
+    const priceText = price > 0 ? `${currency ? `${currency} ` : ""}${price}` : "";
+    const text = [label, priceText].filter(Boolean).join(" - ");
+
+    return text ? [text] : [];
+  });
+}
+
 function getSelectedRoomSnapshot(
   option: HotelOption,
   hotelId: string,
@@ -99,6 +126,13 @@ function getSelectedRoomSnapshot(
     TotalPrice: option.TotalPrice ?? price,
     Taxes: taxes,
     Currency: currency,
+    rspPrice: option.rspPrice,
+    roomPromotions: option.roomPromotions || [],
+    supplements: option.supplements || [],
+    inclusions: option.inclusions || [],
+    cancellationPolicies: option.cancellationPolicies || [],
+    rateConditions: option.rateConditions || [],
+    amenities: option.amenities || [],
   };
 }
 
@@ -327,6 +361,15 @@ interface HotelDetailsData {
   };
 
   const nights = searchParams?.guests.nights || 1;
+  const selectedInclusions = asCleanTextArray(selectedOption?.inclusions);
+  const selectedAmenities = asCleanTextArray(selectedOption?.amenities);
+  const selectedTboDetailGroups = selectedOption
+    ? [
+        { title: "Room promotions", items: asCleanTextArray(selectedOption.roomPromotions) },
+        { title: "Supplements", items: asCleanTextArray(selectedOption.supplements) },
+        { title: "Rate conditions", items: asCleanTextArray(selectedOption.rateConditions) },
+      ].filter((group) => group.items.length > 0)
+    : [];
 
   if (loading) {
     return (
@@ -543,6 +586,50 @@ interface HotelDetailsData {
                     </h3>
                     {selectedOption.BoardType && (
                       <p className="text-sm text-muted-foreground">{selectedOption.BoardType}</p>
+                    )}
+                    {selectedInclusions.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {selectedInclusions.map((inclusion) => (
+                          <Badge
+                            key={inclusion}
+                            variant="outline"
+                            className="border-green-200 bg-green-50 text-xs font-bold text-green-700"
+                          >
+                            {inclusion}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {selectedAmenities.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {selectedAmenities.slice(0, 4).map((amenity) => (
+                          <Badge key={amenity} variant="secondary" className="text-xs">
+                            {amenity}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {(selectedOption.rspPrice || selectedTboDetailGroups.length > 0) && (
+                      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        {selectedOption.rspPrice ? (
+                          <p className="mb-2 text-xs text-slate-700">
+                            <span className="font-bold">RSP Price:</span>{" "}
+                            {selectedOption.Currency} {selectedOption.rspPrice}
+                          </p>
+                        ) : null}
+                        {selectedTboDetailGroups.map((group) => (
+                          <div key={group.title} className="mt-2">
+                            <p className="mb-1 text-xs font-bold text-[#0F172A]">{group.title}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {group.items.map((item) => (
+                                <Badge key={`${group.title}-${item}`} variant="outline" className="text-xs">
+                                  {item}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
 

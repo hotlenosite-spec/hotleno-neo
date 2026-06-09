@@ -41,6 +41,37 @@ interface RoomOptionCardProps {
   isLoadingPolicies: boolean;
 }
 
+function toNumber(value: unknown) {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function asCleanTextArray(value: unknown): string[] {
+  const values = Array.isArray(value) ? value : [value];
+
+  return values.flatMap((item): string[] => {
+    if (Array.isArray(item)) return asCleanTextArray(item);
+    if (typeof item === "string") return item.trim() ? [item.trim()] : [];
+    if (!item || typeof item !== "object") return [];
+
+    const record = item as Record<string, unknown>;
+    const label = String(
+      record.Description ||
+        record.Name ||
+        record.Type ||
+        record.Policy ||
+        record.Text ||
+        "",
+    ).trim();
+    const price = toNumber(record.Price || record.Amount || record.Value);
+    const currency = typeof record.Currency === "string" ? record.Currency.trim() : "";
+    const priceText = price > 0 ? `${currency ? `${currency} ` : ""}${price}` : "";
+    const text = [label, priceText].filter(Boolean).join(" - ");
+
+    return text ? [text] : [];
+  });
+}
+
 function RoomOptionCard({
   option,
   currency,
@@ -62,6 +93,13 @@ function RoomOptionCard({
   
   const totalPrice = (price + taxes) * nights;
   const pricePerNight = price + taxes;
+  const tboDetailGroups = [
+    { title: "Inclusions", items: asCleanTextArray(option.inclusions) },
+    { title: "Room promotions", items: asCleanTextArray(option.roomPromotions) },
+    { title: "Supplements", items: asCleanTextArray(option.supplements) },
+    { title: "Rate conditions", items: asCleanTextArray(option.rateConditions) },
+    { title: "Amenities", items: asCleanTextArray(option.amenities) },
+  ].filter((group) => group.items.length > 0);
   
   return (
     <Card 
@@ -144,6 +182,31 @@ function RoomOptionCard({
                 </Badge>
               )}
             </div>
+
+            {(option.rspPrice || tboDetailGroups.length > 0) && (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                {option.rspPrice ? (
+                  <p className="mb-2 text-xs text-slate-700">
+                    <span className="font-bold">RSP Price:</span>{" "}
+                    {option.Currency || safeCurrency} {option.rspPrice}
+                  </p>
+                ) : null}
+                <div className="space-y-2">
+                  {tboDetailGroups.map((group) => (
+                    <div key={group.title}>
+                      <p className="mb-1 text-xs font-bold text-[#0F172A]">{group.title}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.items.map((item) => (
+                          <Badge key={`${group.title}-${item}`} variant="outline" className="text-xs">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
