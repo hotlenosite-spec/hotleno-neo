@@ -46,6 +46,42 @@ function toNumber(value: unknown, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function isHotelbedsTesterToken() {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const token = localStorage.getItem("token") || "";
+    const [, payload] = token.split(".");
+    if (!payload) return false;
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const parsed = JSON.parse(atob(normalizedPayload)) as {
+      role?: string;
+      supplierScope?: string | null;
+    };
+
+    return parsed.role === "supplier_tester" && parsed.supplierScope === "hotelbeds";
+  } catch {
+    return false;
+  }
+}
+
+function getHotelbedsOptionStrategy(option: HotelOption) {
+  const rooms = option.hotelbedsSelectedRooms || [];
+  if (!rooms.length || rooms.some((room) => !room.rateType)) {
+    return "MISSING_HOTELBEDS_RATE_TYPE";
+  }
+
+  if (rooms.every((room) => String(room.rateType).toUpperCase() === "BOOKABLE")) {
+    return "BOOKABLE_DIRECT";
+  }
+
+  if (rooms.some((room) => String(room.rateType).toUpperCase() === "RECHECK")) {
+    return "CHECKRATE_ONE_RATE_KEY_PER_REQUEST";
+  }
+
+  return "CHECKRATE_REQUIRED";
+}
+
 function asCleanTextArray(value: unknown): string[] {
   const values = Array.isArray(value) ? value : [value];
 
@@ -89,8 +125,9 @@ function RoomOptionCard({
   const taxes = typeof option.Taxes === 'number' && !isNaN(option.Taxes) 
     ? option.Taxes 
     : parseFloat(option.Taxes as unknown as string) || 0;
-  const safeCurrency = currency || 'USD';
+  const safeCurrency = option.hotelbedsPackage?.currency || option.Currency || currency || 'USD';
   const isHotelbedsPackage = option.supplier === "hotelbeds";
+  const showHotelbedsDiagnostics = isHotelbedsPackage && isHotelbedsTesterToken();
   
   const totalPrice = isHotelbedsPackage ? price + taxes : (price + taxes) * nights;
   const pricePerNight = price + taxes;
@@ -185,6 +222,23 @@ function RoomOptionCard({
                 </Badge>
               )}
             </div>
+
+            {showHotelbedsDiagnostics && (
+              <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs font-bold text-blue-900">
+                <div className="mb-2">Hotelbeds tester diagnostics</div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">hotelCode: {option.HotelCode || option.supplierHotelId || "-"}</Badge>
+                  <Badge variant="outline">strategy: {getHotelbedsOptionStrategy(option)}</Badge>
+                  {(option.hotelbedsSelectedRooms || []).map((room) => (
+                    <Badge key={`${room.roomIndex}-${room.rateKey}`} variant="outline">
+                      room {room.roomIndex + 1}: {room.roomCode || "-"} /{" "}
+                      {room.rateType || "missing rateType"} / {room.rateClass || "-"} / allotment{" "}
+                      {room.allotment ?? "-"}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {(option.rspPrice || tboDetailGroups.length > 0) && (
               <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -323,14 +377,18 @@ export function CompactRoomSelector({ options, currency, onSelect, nights }: Com
     return best;
   }, options[0]);
 
-  const totalPrice = (bestOption.Price + (bestOption.Taxes || 0)) * nights;
+  const isHotelbedsPackage = bestOption.supplier === "hotelbeds";
+  const compactCurrency = bestOption.hotelbedsPackage?.currency || bestOption.Currency || currency;
+  const totalPrice = isHotelbedsPackage
+    ? bestOption.Price + (bestOption.Taxes || 0)
+    : (bestOption.Price + (bestOption.Taxes || 0)) * nights;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
           <div className="text-2xl font-bold">
-            {formatCurrency(totalPrice, currency)}
+            {formatCurrency(totalPrice, compactCurrency)}
           </div>
           <p className="text-sm text-muted-foreground">
             {t('hotels.for')} {nights} {nights !== 1 ? t('hotels.nights') : t('hotels.night')}

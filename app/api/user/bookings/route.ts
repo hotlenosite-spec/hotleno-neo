@@ -287,12 +287,19 @@ type HotelbedsSelectedRoom = {
   rateType?: string;
   rateClass?: string;
   allotment?: number;
+  packaging?: boolean;
+  net?: string | number;
+  sellingRate?: string | number;
+  sourceMarket?: string;
+  rateComments?: unknown[];
+  cancellationPolicies?: unknown[];
+  taxes?: unknown;
 };
 
 type HotelbedsCheckRateStrategy =
   | "BOOKABLE_DIRECT"
   | "CHECKRATE_REQUIRED"
-  | "CHECKRATE_ONE_RATE_KEY"
+  | "CHECKRATE_ONE_RATE_KEY_PER_REQUEST"
   | "CHECKRATE_MULTI_RATE_KEYS";
 
 function getHotelbedsSelectedRooms(booking: BookingDocument): HotelbedsSelectedRoom[] {
@@ -327,6 +334,19 @@ function getHotelbedsSelectedRooms(booking: BookingDocument): HotelbedsSelectedR
         allotment: Number.isFinite(Number(record.allotment))
           ? Number(record.allotment)
           : undefined,
+        packaging: typeof record.packaging === "boolean" ? record.packaging : undefined,
+        net:
+          typeof record.net === "string" || typeof record.net === "number"
+            ? record.net
+            : undefined,
+        sellingRate:
+          typeof record.sellingRate === "string" || typeof record.sellingRate === "number"
+            ? record.sellingRate
+            : undefined,
+        sourceMarket: asString(record.sourceMarket),
+        rateComments: asArray(record.rateComments),
+        cancellationPolicies: asArray(record.cancellationPolicies),
+        taxes: record.taxes,
       };
     })
     .filter((room) => room.rateKey)
@@ -376,11 +396,19 @@ function getHotelbedsCheckRateStrategy(params: {
     return "BOOKABLE_DIRECT";
   }
 
+  if (
+    params.selectedRooms.some(
+      (room) => String(room.rateType || "").toUpperCase() === "RECHECK",
+    )
+  ) {
+    return "CHECKRATE_ONE_RATE_KEY_PER_REQUEST";
+  }
+
   if (params.rateKeys.length <= 1) {
     return "CHECKRATE_REQUIRED";
   }
 
-  return "CHECKRATE_ONE_RATE_KEY";
+  return "CHECKRATE_ONE_RATE_KEY_PER_REQUEST";
 }
 
 function getHotelbedsSelectionSummarySafe(params: {
@@ -407,8 +435,12 @@ function getHotelbedsSelectionSummarySafe(params: {
         price: room.price || 0,
         currency: room.currency || params.booking.currency,
       }));
+  const warnings = params.selectedRooms.some((room) => !room.rateType)
+    ? ["MISSING_HOTELBEDS_RATE_TYPE"]
+    : [];
 
   return {
+    warnings,
     requestedRoomsCount: requestedOccupancies.length || 1,
     selectedRateRoomsCount: params.selectedRooms.length || (params.rateKeys.length ? 1 : 0),
     selectedRoomNames: params.selectedRooms.map((room) => room.roomName || ""),
@@ -431,6 +463,8 @@ function getHotelbedsSelectionSummarySafe(params: {
       rateType: room.rateType || "",
       rateClass: room.rateClass || "",
       allotment: room.allotment ?? null,
+      sourceMarket: room.sourceMarket || "",
+      packaging: room.packaging ?? null,
       rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
       hasSingleRoomOccupancyMarker: hasSingleRoomOccupancyMarker(room.rateKey),
     })),
@@ -446,6 +480,8 @@ function getHotelbedsSelectionSummarySafe(params: {
       rateType: room.rateType || "",
       rateClass: room.rateClass || "",
       allotment: room.allotment ?? null,
+      sourceMarket: room.sourceMarket || "",
+      packaging: room.packaging ?? null,
       rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
     })),
     generatedCheckRatePayload: {
@@ -898,7 +934,7 @@ async function submitHotelbedsTesterBooking(params: {
       strategy: checkRateStrategy,
       oneRateKeyPerRequest:
         checkRateStrategy === "CHECKRATE_REQUIRED" ||
-        checkRateStrategy === "CHECKRATE_ONE_RATE_KEY",
+        checkRateStrategy === "CHECKRATE_ONE_RATE_KEY_PER_REQUEST",
       bookableDirect: checkRateStrategy === "BOOKABLE_DIRECT",
     },
   };
@@ -972,6 +1008,7 @@ async function submitHotelbedsTesterBooking(params: {
     details: {
       selectedRooms: selectionSummarySafe.selectedRooms,
       generatedCheckRatePayload: selectionSummarySafe.generatedCheckRatePayload,
+      warnings: selectionSummarySafe.warnings,
     },
   });
   logHotelbedsBookingFlow({

@@ -40,6 +40,13 @@ export interface SupplierHotelRate {
     rateType?: string;
     rateClass?: string;
     allotment?: number;
+    packaging?: boolean;
+    net?: string | number;
+    sellingRate?: string | number;
+    sourceMarket?: string;
+    rateComments?: unknown[];
+    cancellationPolicies?: unknown[];
+    taxes?: unknown;
   }>;
   hotelbedsPackage?: {
     packageId: string;

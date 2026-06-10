@@ -89,6 +89,15 @@ const HOTELBEDS_BARCELONA_TEST_SUGGESTION: HotelbedsSearchSuggestion = {
   countryCode: "ES",
 };
 
+const HOTELBEDS_SERCOTEL_BASELINE_SUGGESTION: HotelbedsSearchSuggestion = {
+  type: "hotel",
+  label: "Sercotel Rosellon, Barcelona",
+  value: "120473",
+  hotelCode: "120473",
+  destinationCode: "BCN",
+  countryCode: "ES",
+};
+
 const MAX_TBO_ROOMS = 6;
 const MAX_TBO_ADULTS_PER_ROOM = 6;
 const MAX_TBO_CHILDREN_PER_ROOM = 4;
@@ -457,22 +466,17 @@ export default function SearchForm() {
   useEffect(() => {
     if (!hotelbedsTesterMode || hotelbedsDefaultsApplied.current) return;
 
-    const checkIn = new Date();
-    checkIn.setDate(checkIn.getDate() + 35);
-    const checkOut = new Date(checkIn);
-    checkOut.setDate(checkOut.getDate() + 1);
+    const checkIn = new Date("2026-08-17T12:00:00");
+    const checkOut = new Date("2026-08-18T12:00:00");
 
-    setDestination(HOTELBEDS_BARCELONA_TEST_SUGGESTION);
+    setDestination(HOTELBEDS_SERCOTEL_BASELINE_SUGGESTION);
     setDates({ checkIn, checkOut });
     setGuests({
-      rooms: 2,
+      rooms: 1,
       adults: 2,
-      children: 1,
-      childrenAges: [7],
-      roomDetails: [
-        { adults: 1, children: 0, childrenAges: [] },
-        { adults: 1, children: 1, childrenAges: [7] },
-      ],
+      children: 0,
+      childrenAges: [],
+      roomDetails: [{ adults: 2, children: 0, childrenAges: [] }],
     });
     setNationality("SA");
     hotelbedsDefaultsApplied.current = true;
@@ -532,7 +536,7 @@ export default function SearchForm() {
       const selectedDestination =
         destination ||
         (hotelbedsTesterMode
-          ? HOTELBEDS_BARCELONA_TEST_SUGGESTION
+          ? HOTELBEDS_SERCOTEL_BASELINE_SUGGESTION
           : buildTboCertificationSuggestion(TBO_CERTIFICATION_SUGGESTION.label));
       const searchParams = {
         destination: selectedDestination,
@@ -747,7 +751,10 @@ function HotelbedsDestinationAutocomplete({
     }
 
     if (hotelbedsTesterMode && term.length < 2) {
-      setSuggestions([HOTELBEDS_BARCELONA_TEST_SUGGESTION]);
+      setSuggestions([
+        HOTELBEDS_SERCOTEL_BASELINE_SUGGESTION,
+        HOTELBEDS_BARCELONA_TEST_SUGGESTION,
+      ]);
       setLoading(false);
       setSearchCompleted(true);
       setError("");

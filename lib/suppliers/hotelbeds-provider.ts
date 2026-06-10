@@ -49,6 +49,10 @@ type HotelbedsAvailabilityHotel = {
       boardName?: string;
       rateClass?: string;
       allotment?: number;
+      packaging?: boolean;
+      sourceMarket?: string;
+      rateComments?: unknown[];
+      taxes?: unknown;
       cancellationPolicies?: unknown[];
     }>;
   }>;
@@ -220,6 +224,13 @@ function buildHotelbedsSelectedRoom(params: {
     rateType: params.rate.rateType,
     rateClass: params.rate.rateClass,
     allotment: getRateAllotment(params.rate),
+    packaging: params.rate.packaging,
+    net: params.rate.net,
+    sellingRate: params.rate.sellingRate,
+    sourceMarket: params.rate.sourceMarket,
+    rateComments: params.rate.rateComments,
+    cancellationPolicies: params.rate.cancellationPolicies,
+    taxes: params.rate.taxes,
   };
 }
 

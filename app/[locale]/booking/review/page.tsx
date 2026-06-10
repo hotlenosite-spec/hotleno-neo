@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -33,6 +33,7 @@ import {
 export default function ReviewPage() {
   const router = useRouter();
   const t = useTranslations();
+  const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 interface HotelData {
@@ -62,6 +63,16 @@ interface HotelData {
     rateKey: string;
     price?: number;
     currency?: string;
+    rateType?: string;
+    rateClass?: string;
+    allotment?: number;
+    packaging?: boolean;
+    net?: string | number;
+    sellingRate?: string | number;
+    sourceMarket?: string;
+    rateComments?: unknown[];
+    cancellationPolicies?: unknown[];
+    taxes?: unknown;
   }>;
   hotelbedsPackage?: {
     packageId: string;
@@ -218,13 +229,18 @@ const normalizeSelectedRoomForReview = useCallback((
   const taxes = toNumber(selectedRoom.Taxes);
   const rawPrice = toNumber(selectedRoom.Price || selectedRoom.price);
   const rawTotalPrice = toNumber(selectedRoom.totalPrice || selectedRoom.TotalPrice);
-  const currency =
-    String(selectedRoom.Currency || selectedRoom.currency || searchData.currency || "USD");
   const supplier = String(selectedRoom.supplier || "").toLowerCase();
   const hotelbedsPackage =
     selectedRoom.hotelbedsPackage && typeof selectedRoom.hotelbedsPackage === "object"
       ? (selectedRoom.hotelbedsPackage as HotelData["hotelbedsPackage"])
       : undefined;
+  const currency = String(
+    hotelbedsPackage?.currency ||
+      selectedRoom.Currency ||
+      selectedRoom.currency ||
+      searchData.currency ||
+      "USD",
+  );
   const hotelbedsSelectedRooms = Array.isArray(selectedRoom.hotelbedsSelectedRooms)
     ? selectedRoom.hotelbedsSelectedRooms
         .map((room) => {
@@ -242,7 +258,28 @@ const normalizeSelectedRoomForReview = useCallback((
             boardName: String(record.boardName || ""),
             rateKey: String(record.rateKey || ""),
             price: toNumber(record.price),
-            currency: String(record.currency || currency),
+            currency: String(record.currency || hotelbedsPackage?.currency || currency),
+            rateType: String(record.rateType || ""),
+            rateClass: String(record.rateClass || ""),
+            allotment: Number.isFinite(Number(record.allotment))
+              ? Number(record.allotment)
+              : undefined,
+            packaging:
+              typeof record.packaging === "boolean" ? record.packaging : undefined,
+            net:
+              typeof record.net === "string" || typeof record.net === "number"
+                ? record.net
+                : undefined,
+            sellingRate:
+              typeof record.sellingRate === "string" || typeof record.sellingRate === "number"
+                ? record.sellingRate
+                : undefined,
+            sourceMarket: String(record.sourceMarket || ""),
+            rateComments: Array.isArray(record.rateComments) ? record.rateComments : [],
+            cancellationPolicies: Array.isArray(record.cancellationPolicies)
+              ? record.cancellationPolicies
+              : [],
+            taxes: record.taxes,
           };
         })
         .filter((room) => room.rateKey)
@@ -994,7 +1031,13 @@ const DOCUMENT_TYPES = [
 
               {roomPriceBreakdown.length > 0 ? (
                 <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                  <p className="mb-3 font-black text-[#0F172A]">{t("booking.roomDetails")}</p>
+                  <p className="mb-3 font-black text-[#0F172A]">
+                    {t("booking.roomDetails") === "booking.roomDetails"
+                      ? locale === "ar"
+                        ? "تفاصيل الغرف"
+                        : "Room details"
+                      : t("booking.roomDetails")}
+                  </p>
                   <div className="space-y-2 text-sm">
                     {roomPriceBreakdown.map((room) => (
                       <div
