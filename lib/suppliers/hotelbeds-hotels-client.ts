@@ -154,7 +154,7 @@ export function buildHotelbedsBookingBody(request: HotelbedsHotelBookingRequest)
       ? request.rooms.map((room, roomIndex) => ({
           rateKey: room.rateKey,
           paxes: room.guests.map((guest, guestIndex) => ({
-            roomId: roomIndex + 1,
+            roomId: guest.roomId || roomIndex + 1,
             type: guest.type || "AD",
             name: guest.name,
             surname: guest.surname,

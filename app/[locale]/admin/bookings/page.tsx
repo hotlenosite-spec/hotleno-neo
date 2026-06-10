@@ -1651,6 +1651,23 @@ export default function AdminBookingsPage() {
                   type="button"
                   size="sm"
                   variant="outline"
+                  onClick={() => {
+                    const locale = window.location.pathname.split("/")[1] || "ar";
+                    const bookingId = selectedBooking?._id || selectedBooking?.bookingReference;
+                    if (bookingId) {
+                      window.open(`/${locale}/account/bookings/${bookingId}/voucher`, "_blank");
+                    }
+                  }}
+                  disabled={!selectedBooking}
+                  className="rounded-2xl"
+                >
+                  طباعة الفاوتشر
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleBookingAction("retry_supplier_booking")}
                   disabled={
                     selectedBooking

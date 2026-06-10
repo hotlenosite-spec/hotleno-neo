@@ -9,6 +9,10 @@ import type { HotelbedsHotelVoucher as HotelbedsHotelVoucherType } from "@/types
 type AccountBooking = {
   _id: string;
   bookingReference?: string;
+  supplierReference?: string;
+  supplierBookingReference?: string;
+  supplierBookingId?: string;
+  supplierConfirmationNo?: string;
   supplier?: string;
   hotelName?: string;
   location?: string;
@@ -25,6 +29,7 @@ type AccountBooking = {
     firstName?: string;
     lastName?: string;
     travelerType?: string;
+    roomIndex?: number;
     age?: number;
   }>;
   leadGuest?: string;
@@ -38,24 +43,47 @@ type AccountBooking = {
   restrictions?: Array<{ Description?: string; description?: string }>;
 };
 
+function formatVoucherDate(value?: string) {
+  if (!value) return undefined;
+  const dateOnly = String(value).slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateOnly) ? dateOnly : value;
+}
+
+function formatVoucherStatus(value?: string) {
+  const normalized = String(value || "").toLowerCase();
+  if (
+    normalized === "supplier_booking_confirmed" ||
+    normalized === "confirmed" ||
+    normalized === "success"
+  ) {
+    return "Booking Confirmed";
+  }
+
+  return value;
+}
+
 function toVoucher(booking: AccountBooking): HotelbedsHotelVoucherType {
+  const supplierReference =
+    booking.supplierReference ||
+    booking.supplierBookingReference ||
+    booking.supplierBookingId ||
+    booking.supplierConfirmationNo;
+
   return {
     supplier: "hotelbeds-accommodation",
     hotlenoReference: booking._id,
-    bookingReference: booking.bookingReference,
-    supplierReference: booking.bookingReference,
+    bookingReference: supplierReference,
+    supplierReference,
     hotelName: booking.hotelName,
     hotelAddress: booking.location,
-    checkIn: booking.checkInDate,
-    checkOut: booking.checkOutDate,
+    checkIn: formatVoucherDate(booking.checkInDate),
+    checkOut: formatVoucherDate(booking.checkOutDate),
     roomName: booking.rooms?.[0]?.roomName,
     boardName: booking.rooms?.[0]?.boardName,
     holderName: booking.leadGuest,
     customerEmail: booking.contactEmail,
     customerPhone: booking.contactPhone,
-    amount: booking.totalPrice,
-    currency: booking.currency,
-    status: booking.status,
+    status: formatVoucherStatus(booking.status),
     cancellationStatus: booking.cancellationStatus,
     rooms: booking.rooms?.map((room, index) => ({
       name: room.roomName,
@@ -64,7 +92,12 @@ function toVoucher(booking: AccountBooking): HotelbedsHotelVoucherType {
       children: room.children,
       childAges: room.childAges,
       guestNames: booking.travelers
-        ?.filter((traveler) => index === 0 || traveler.travelerType)
+        ?.filter((traveler) => {
+          const travelerRecord = traveler as typeof traveler & { roomIndex?: number };
+          return typeof travelerRecord.roomIndex === "number"
+            ? travelerRecord.roomIndex === index
+            : index === 0;
+        })
         .map((traveler) => [traveler.firstName, traveler.lastName].filter(Boolean).join(" "))
         .filter(Boolean),
     })),
@@ -115,8 +148,33 @@ export default function AccountBookingVoucherPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="voucher-print-root mx-auto max-w-5xl space-y-5">
+      <style>{`
+        @media print {
+          header, nav, aside, footer, .print-hidden {
+            display: none !important;
+          }
+          body {
+            background: #fff !important;
+          }
+          .container {
+            max-width: none !important;
+            padding: 0 !important;
+          }
+          main, .voucher-print-root {
+            display: block !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+          }
+          .voucher-print-root section,
+          .voucher-print-root [data-print-card] {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+        }
+      `}</style>
+      <div className="print-hidden flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-black text-[#F97316]">HOTLENO voucher</p>
           <h1 className="text-3xl font-black text-[#0F172A]">Booking voucher</h1>

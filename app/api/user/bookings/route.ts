@@ -257,6 +257,18 @@ function isHotelbedsCheckRateBookable(payload: unknown) {
 }
 
 function getHotelbedsRequestSummarySafe(request: HotelbedsHotelBookingRequest) {
+  const roomDiagnostics = (request.rooms || []).map((room, roomIndex) => ({
+    roomIndex,
+    rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
+    paxesCount: room.guests.length,
+    paxRoomIds: room.guests.map((guest) => guest.roomId ?? null),
+    paxTypes: room.guests.map((guest) => guest.type || "AD"),
+    paxNamePresent: room.guests.map((guest) => Boolean(guest.name && guest.surname)),
+    childAges: room.guests
+      .filter((guest) => guest.type === "CH")
+      .map((guest) => guest.age ?? null),
+  }));
+
   return {
     clientReference: request.clientReference,
     holderPresent: Boolean(request.holder.name && request.holder.surname),
@@ -269,6 +281,7 @@ function getHotelbedsRequestSummarySafe(request: HotelbedsHotelBookingRequest) {
     childAgesPresent: request.guests
       .filter((guest) => guest.type === "CH")
       .every((guest) => Number.isFinite(Number(guest.age))),
+    bookingRqPaxDistribution: roomDiagnostics,
   };
 }
 
@@ -744,7 +757,27 @@ function buildHotelbedsBookingRequest(
       : [String(booking.supplierRateKey || "")];
   const primaryRateKey = String(effectiveRateKeys[0] || booking.supplierRateKey || "");
 
-  const guests: HotelbedsHotelGuest[] = travelers.map((traveler) => {
+  const requestedRooms = selectedRooms.length
+    ? selectedRooms.map((room) => ({
+        roomIndex: room.roomIndex,
+        adults: room.adults,
+        children: room.children,
+        childAges: room.childAges || [],
+        rateKey: room.rateKey,
+      }))
+    : (Array.isArray(booking.rooms) ? (booking.rooms as Array<Record<string, unknown>>) : []).map(
+        (room, roomIndex) => ({
+          roomIndex,
+          adults: Math.max(1, toNumber(room.adults, 1)),
+          children: Math.max(0, toNumber(room.children)),
+          childAges: Array.isArray(room.childrenAges)
+            ? room.childrenAges.map((age) => toNumber(age)).filter(Number.isFinite)
+            : [],
+          rateKey: String(effectiveRateKeys[roomIndex] || primaryRateKey),
+        }),
+      );
+
+  const normalizedTravelers: HotelbedsHotelGuest[] = travelers.map((traveler) => {
     const isChild = traveler.travelerType === "child";
     const childAge = Number(traveler.age);
     return {
@@ -756,9 +789,46 @@ function buildHotelbedsBookingRequest(
       age: isChild && Number.isFinite(childAge) ? childAge : undefined,
     };
   });
-  const roomIds = [...new Set(guests.map((guest) => guest.roomId || 1))].sort(
-    (left, right) => left - right,
-  );
+  const travelersByRoom = requestedRooms.map((room, roomIndex) => {
+    const expectedRoomId = roomIndex + 1;
+    const directMatches = normalizedTravelers.filter(
+      (guest) => (guest.roomId || 1) === expectedRoomId,
+    );
+    const expectedCount = room.adults + room.children;
+
+    if (directMatches.length === expectedCount) {
+      return directMatches.map((guest) => ({ ...guest, roomId: expectedRoomId }));
+    }
+
+    return [] as HotelbedsHotelGuest[];
+  });
+
+  if (travelersByRoom.some((roomGuests) => roomGuests.length === 0)) {
+    const adults = normalizedTravelers.filter((guest) => guest.type !== "CH");
+    const children = normalizedTravelers.filter((guest) => guest.type === "CH");
+    let adultIndex = 0;
+    let childIndex = 0;
+
+    requestedRooms.forEach((room, roomIndex) => {
+      const roomId = roomIndex + 1;
+      const roomAdults = adults
+        .slice(adultIndex, adultIndex + room.adults)
+        .map((guest) => ({ ...guest, roomId }));
+      const roomChildren = children
+        .slice(childIndex, childIndex + room.children)
+        .map((guest, index) => ({
+          ...guest,
+          roomId,
+          age: guest.age ?? room.childAges[index],
+        }));
+
+      travelersByRoom[roomIndex] = [...roomAdults, ...roomChildren];
+      adultIndex += room.adults;
+      childIndex += room.children;
+    });
+  }
+
+  const guests = travelersByRoom.flat();
 
   return {
     clientReference: String(booking.bookingReference || booking._id),
@@ -773,9 +843,9 @@ function buildHotelbedsBookingRequest(
           : fallbackLeadGuest.lastName,
     },
     rateKey: primaryRateKey,
-    rooms: roomIds.map((roomId, index) => ({
-      rateKey: String(effectiveRateKeys[index] || primaryRateKey),
-      guests: guests.filter((guest) => (guest.roomId || 1) === roomId),
+    rooms: requestedRooms.map((room, index) => ({
+      rateKey: String(effectiveRateKeys[index] || room.rateKey || primaryRateKey),
+      guests: travelersByRoom[index] || [],
     })),
     guests,
     remark: "Hotelbeds Accommodation supplier tester booking.",
@@ -810,8 +880,18 @@ function validateHotelbedsBookingRequest(
   if (rooms.length > 0 && request.rooms?.length !== rooms.length) {
     errors.push("room count does not match selected occupancy");
   }
+  if (request.rooms?.length) {
+    const totalRoomPaxes = request.rooms.reduce(
+      (sum, room) => sum + room.guests.length,
+      0,
+    );
+    if (totalRoomPaxes !== request.guests.length) {
+      errors.push("total room paxes does not match traveler count");
+    }
+  }
 
   request.rooms?.forEach((room, roomIndex) => {
+    const expectedRoomId = roomIndex + 1;
     if (!room.rateKey) {
       errors.push(`room ${roomIndex + 1} rateKey is required`);
     }
@@ -827,9 +907,21 @@ function validateHotelbedsBookingRequest(
     if (expectedRoom && children !== expectedChildren) {
       errors.push(`room ${roomIndex + 1} child count mismatch`);
     }
+    if (expectedRoom && room.guests.length !== expectedAdults + expectedChildren) {
+      errors.push(`room ${roomIndex + 1} pax count mismatch`);
+    }
     room.guests.forEach((guest, guestIndex) => {
+      if (guest.roomId !== expectedRoomId) {
+        errors.push(`room ${roomIndex + 1} pax ${guestIndex + 1} roomId mismatch`);
+      }
+      if ((guest.roomId || 0) < 1 || (request.rooms && (guest.roomId || 0) > request.rooms.length)) {
+        errors.push(`room ${roomIndex + 1} pax ${guestIndex + 1} roomId out of range`);
+      }
       if (!guest.name.trim() || !guest.surname.trim()) {
         errors.push(`room ${roomIndex + 1} pax ${guestIndex + 1} name is required`);
+      }
+      if (!["AD", "CH"].includes(guest.type || "AD")) {
+        errors.push(`room ${roomIndex + 1} pax ${guestIndex + 1} type is invalid`);
       }
       if (guest.type === "CH" && !Number.isFinite(Number(guest.age))) {
         errors.push(`room ${roomIndex + 1} child ${guestIndex + 1} age is required`);
@@ -1198,6 +1290,12 @@ async function submitHotelbedsTesterBooking(params: {
         rooms: (bookingRequest.rooms || []).map((room) => ({
           rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
           paxes: room.guests.length,
+          paxRoomIds: room.guests.map((guest) => guest.roomId ?? null),
+          paxTypes: room.guests.map((guest) => guest.type || "AD"),
+          paxNamePresent: room.guests.map((guest) => Boolean(guest.name && guest.surname)),
+          childAges: room.guests
+            .filter((guest) => guest.type === "CH")
+            .map((guest) => guest.age ?? null),
         })),
         roomsCount: bookingRequest.rooms?.length || 0,
         paxesCount: bookingRequest.guests.length,
@@ -1216,9 +1314,13 @@ async function submitHotelbedsTesterBooking(params: {
         bookingsCollection,
         booking,
         now,
-        message: "Hotelbeds booking validation failed.",
-        failedAt: "validation",
-        validationErrors,
+        message: validationErrors.some((item) => /roomId|pax|traveler|room count/i.test(item))
+          ? "HOTELBEDS_INVALID_PAX_ROOM_DISTRIBUTION"
+          : "Hotelbeds booking validation failed.",
+        failedAt: "local_validation",
+        validationErrors: validationErrors.some((item) => /roomId|pax|traveler|room count/i.test(item))
+          ? ["HOTELBEDS_INVALID_PAX_ROOM_DISTRIBUTION", ...validationErrors]
+          : validationErrors,
         checkRateStatus,
         checkRateBookable,
         checkRateResponseSafe,
