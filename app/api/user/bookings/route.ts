@@ -697,6 +697,12 @@ async function submitHotelbedsTesterBooking(params: {
   }
 
   const client = createHotelbedsHotelsClient({ allowTesterBookingOverride: true });
+  let checkRateStatus = "";
+  let checkRateBookable: boolean | undefined;
+  let checkRateResponseSafe: Record<string, unknown> | undefined;
+  let requestSummarySafe:
+    | ReturnType<typeof getHotelbedsRequestSummarySafe>
+    | undefined;
   logHotelbedsBookingFlow({
     internalBookingId: booking._id,
     step: "checkrate_enabled_for_tester",
@@ -720,12 +726,13 @@ async function submitHotelbedsTesterBooking(params: {
       language: "en",
     });
     const checkedRateKeys = extractHotelbedsRateKeys(checkRateResponse);
-    const checkRateResponseSafe = getHotelbedsFlowSafeResponse(checkRateResponse);
-    const checkRateBookable = isHotelbedsCheckRateBookable(checkRateResponse);
+    checkRateStatus = getHotelbedsStatus(checkRateResponse);
+    checkRateResponseSafe = getHotelbedsFlowSafeResponse(checkRateResponse);
+    checkRateBookable = isHotelbedsCheckRateBookable(checkRateResponse);
     logHotelbedsBookingFlow({
       internalBookingId: booking._id,
       step: "checkrate_response",
-      status: getHotelbedsStatus(checkRateResponse),
+      status: checkRateStatus,
       bookable: checkRateBookable,
     });
 
@@ -736,7 +743,7 @@ async function submitHotelbedsTesterBooking(params: {
         now,
         message: "CheckRate returned not bookable.",
         failedAt: "checkrate",
-        checkRateStatus: getHotelbedsStatus(checkRateResponse),
+        checkRateStatus,
         checkRateBookable,
         checkRateResponseSafe,
       });
@@ -746,7 +753,7 @@ async function submitHotelbedsTesterBooking(params: {
       booking,
       checkedRateKeys.length ? checkedRateKeys : [rateKey],
     );
-    const requestSummarySafe = getHotelbedsRequestSummarySafe(bookingRequest);
+    requestSummarySafe = getHotelbedsRequestSummarySafe(bookingRequest);
     const validationErrors = validateHotelbedsBookingRequest(booking, bookingRequest);
 
     if (validationErrors.length > 0) {
@@ -763,7 +770,7 @@ async function submitHotelbedsTesterBooking(params: {
         message: "Hotelbeds booking validation failed.",
         failedAt: "validation",
         validationErrors,
-        checkRateStatus: getHotelbedsStatus(checkRateResponse),
+        checkRateStatus,
         checkRateBookable,
         checkRateResponseSafe,
         requestSummarySafe,
@@ -795,12 +802,12 @@ async function submitHotelbedsTesterBooking(params: {
       rawSupplierResponse: bookingResponseSafe,
       "metadata.supplierSubmission": "sent_to_supplier",
       "metadata.supplierSubmittedAt": now.toISOString(),
-      "metadata.hotelbedsCheckRateStatus": getHotelbedsStatus(checkRateResponse),
+      "metadata.hotelbedsCheckRateStatus": checkRateStatus,
       "metadata.hotelbedsBookingStatus": status,
       "metadata.hotelbedsBookingReference": hotelbedsReference,
       "metadata.hotelbedsBookingResponseSafe": bookingResponseSafe,
       "metadata.hotelbedsFlow": buildHotelbedsFlowMetadata({
-        checkRateStatus: getHotelbedsStatus(checkRateResponse),
+        checkRateStatus,
         checkRateBookable,
         bookingStatus: status,
         hotelbedsReference,
@@ -846,6 +853,10 @@ async function submitHotelbedsTesterBooking(params: {
       now,
       message,
       failedAt: "hotelbeds_booking",
+      checkRateStatus,
+      checkRateBookable,
+      checkRateResponseSafe,
+      requestSummarySafe,
     });
     await createLog({
       type: "supplier_booking_failed",
