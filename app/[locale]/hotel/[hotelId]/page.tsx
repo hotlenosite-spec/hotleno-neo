@@ -136,6 +136,55 @@ function getSelectedRoomSnapshot(
   };
 }
 
+function getBookingSupplier(hotel: HotelSearchResult, option: HotelOption) {
+  if (shouldSkipTravellandaForTbo(hotel)) return "tbo";
+
+  const supplier = String(option.supplier || "").toLowerCase();
+  return supplier || "travellanda";
+}
+
+function buildRoomsPayloadFromSearch(searchParams: SavedSearch) {
+  const roomDetails = searchParams.guests.roomDetails || [];
+
+  if (roomDetails.length > 0) {
+    return roomDetails.map((room) => ({
+      NumAdults: Math.max(Number(room.adults || 1), 1),
+      Children:
+        room.children > 0
+          ? room.childrenAges.slice(0, room.children)
+          : undefined,
+    }));
+  }
+
+  const roomCount = Math.max(Number(searchParams.guests.rooms || 1), 1);
+  const adultTotal = Math.max(Number(searchParams.guests.adults || 1), 1);
+  const childAges = (searchParams.guests.childrenAges || [])
+    .map((age) => Number(age))
+    .filter((age) => Number.isFinite(age) && age >= 0)
+    .slice(0, Math.max(Number(searchParams.guests.children || 0), 0));
+  const childTotal = Math.max(Number(searchParams.guests.children || childAges.length || 0), 0);
+  const rooms = Array.from({ length: roomCount }, () => ({
+    NumAdults: 0,
+    Children: [] as number[],
+  }));
+
+  for (let index = 0; index < adultTotal; index += 1) {
+    rooms[index % roomCount].NumAdults += 1;
+  }
+
+  for (let index = 0; index < childTotal; index += 1) {
+    const age = childAges[index];
+    if (age !== undefined) {
+      rooms[index % roomCount].Children.push(age);
+    }
+  }
+
+  return rooms.map((room) => ({
+    NumAdults: Math.max(room.NumAdults, 1),
+    Children: room.Children.length > 0 ? room.Children : undefined,
+  }));
+}
+
 export default function HotelDetailsPage() {
   const router = useRouter();
   const params = useParams();
@@ -248,12 +297,7 @@ interface HotelDetailsData {
             CityIds: [detailsData.Hotels?.[0]?.CityId],
             CheckInDate: formatDate(parsedSearch.dates.checkIn),
             CheckOutDate: formatDate(parsedSearch.dates.checkOut),
-            Rooms: [{
-              NumAdults: parsedSearch.guests.adults,
-              Children: parsedSearch.guests.children > 0 
-                ? parsedSearch.guests.childrenAges.slice(0, parsedSearch.guests.children)
-                : undefined,
-            }],
+            Rooms: buildRoomsPayloadFromSearch(parsedSearch),
             Nationality: parsedSearch.nationality,
             Currency: parsedSearch.currency,
             AvailableOnly: 1,
@@ -330,7 +374,7 @@ interface HotelDetailsData {
 
   const handleBookNow = () => {
     if (selectedOption && hotel && searchParams) {
-      const supplier = shouldSkipTravellandaForTbo(hotel) ? "tbo" : "travellanda";
+      const supplier = getBookingSupplier(hotel, selectedOption);
       const selectedRoom = getSelectedRoomSnapshot(
         selectedOption,
         hotelId,

@@ -269,6 +269,11 @@ interface SearchParamsData {
     childrenAges?: number[];
     rooms: number;
     nights?: number;
+    roomDetails?: Array<{
+      adults: number;
+      children: number;
+      childrenAges?: number[];
+    }>;
   };
   currency?: string;
 }
@@ -302,15 +307,73 @@ const DOCUMENT_TYPES = [
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState("");
 
+  const getRoomOccupancies = useCallback((searchData?: SearchParamsData | null) => {
+    const guests = searchData?.guests;
+    const savedRooms =
+      guests?.roomDetails
+        ?.map((room) => {
+          const children = Math.max(Number(room?.children || 0), 0);
+          return {
+            adults: Math.max(Number(room?.adults || 0), 1),
+            children,
+            childrenAges: (room?.childrenAges || [])
+              .map((age) => Number(age))
+              .filter((age) => Number.isFinite(age) && age >= 0)
+              .slice(0, children),
+          };
+        })
+        .filter((room) => room.adults > 0) || [];
+    const roomCount = Math.max(guests?.rooms || savedRooms.length || 1, 1);
+
+    if (savedRooms.length > 0) {
+      return Array.from({ length: roomCount }, (_, index) => {
+        const room = savedRooms[index];
+        return {
+          adults: room?.adults || 1,
+          children: room?.children || 0,
+          childrenAges: room?.childrenAges || [],
+        };
+      });
+    }
+
+    const adultTotal = Math.max(Number(guests?.adults || 1), 1);
+    const childAges = (guests?.childrenAges || [])
+      .map((age) => Number(age))
+      .filter((age) => Number.isFinite(age) && age >= 0)
+      .slice(0, Math.max(Number(guests?.children || 0), 0));
+    const childTotal = Math.max(Number(guests?.children || childAges.length || 0), 0);
+    const rooms = Array.from({ length: roomCount }, () => ({
+      adults: 0,
+      children: 0,
+      childrenAges: [] as number[],
+    }));
+
+    for (let index = 0; index < adultTotal; index += 1) {
+      rooms[index % roomCount].adults += 1;
+    }
+
+    for (let index = 0; index < childTotal; index += 1) {
+      const room = rooms[index % roomCount];
+      room.children += 1;
+      const age = childAges[index];
+      if (age !== undefined) {
+        room.childrenAges.push(age);
+      }
+    }
+
+    return rooms.map((room) => ({
+      adults: Math.max(room.adults, 1),
+      children: room.children,
+      childrenAges: room.childrenAges.slice(0, room.children),
+    }));
+  }, []);
+
   const buildInitialTravelers = useCallback((searchData: SearchParamsData): TravelerForm[] => {
     const nextTravelers: TravelerForm[] = [];
-    const rooms = Math.max(searchData.guests.rooms || 1, 1);
-    const adults = Math.max(searchData.guests.adults || 1, 1);
-    const children = Math.max(searchData.guests.children || 0, 0);
-    const ages = searchData.guests.childrenAges || [];
+    const roomOccupancies = getRoomOccupancies(searchData);
 
-    for (let roomIndex = 0; roomIndex < rooms; roomIndex += 1) {
-      for (let index = 0; index < adults; index += 1) {
+    roomOccupancies.forEach((room, roomIndex) => {
+      for (let index = 0; index < room.adults; index += 1) {
         nextTravelers.push({
           roomIndex,
           travelerType: "adult",
@@ -326,8 +389,8 @@ const DOCUMENT_TYPES = [
         });
       }
 
-      for (let index = 0; index < children; index += 1) {
-        const childAge = Number(ages[roomIndex * children + index] ?? ages[index]);
+      for (let index = 0; index < room.children; index += 1) {
+        const childAge = Number(room.childrenAges[index]);
         nextTravelers.push({
           roomIndex,
           travelerType: "child",
@@ -343,10 +406,10 @@ const DOCUMENT_TYPES = [
           email: "",
         });
       }
-    }
+    });
 
     return nextTravelers;
-  }, []);
+  }, [getRoomOccupancies]);
 
   const updateTraveler = (
     travelerIndex: number,
@@ -683,7 +746,23 @@ const DOCUMENT_TYPES = [
   const nightlyPrice = hotel?.Price || 0;
   const taxes = hotel?.Taxes || 0;
   const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
-  const guestRooms = Math.max(searchParams?.guests.rooms || 1, 1);
+  const roomOccupancies = getRoomOccupancies(searchParams);
+  const guestRooms = roomOccupancies.length;
+  const totalAdults = roomOccupancies.reduce((sum, room) => sum + room.adults, 0);
+  const totalChildren = roomOccupancies.reduce((sum, room) => sum + room.children, 0);
+  const supplierName = String(hotel?.supplier || "").toLowerCase();
+  const isHotelbedsFlow = supplierName.includes("hotelbeds");
+  const isTboFlow = supplierName === "tbo";
+  const rateDetailsTitle = isHotelbedsFlow
+    ? "تفاصيل السعر من Hotelbeds"
+    : isTboFlow
+      ? t("booking.tbo.rateDetails")
+      : "تفاصيل السعر من المزود";
+  const rateDetailsDescription = isHotelbedsFlow
+    ? "راجع تفاصيل السعر والسياسات الواردة من Hotelbeds قبل تأكيد الحجز."
+    : isTboFlow
+      ? t("booking.tbo.rateDetailsDescription")
+      : "راجع تفاصيل السعر والسياسات الواردة من المزود قبل تأكيد الحجز.";
   const tboDetailGroups = hotel
     ? [
         { title: t("booking.tbo.inclusions"), items: asCleanTextArray(hotel.inclusions) },
@@ -713,9 +792,6 @@ const DOCUMENT_TYPES = [
       return Boolean(traveler.phone.trim() && traveler.email.trim());
     });
   const canConfirmBooking = acceptedTerms && areTravelersComplete && !submitting;
-  const childAges = (searchParams?.guests.childrenAges || [])
-    .map((age) => Number(age))
-    .filter((age) => Number.isFinite(age) && age >= 0);
   const formatChildAges = (ages: number[]) =>
     ages.length > 0
       ? ages.map((age) => t("booking.ageValue", { age })).join(", ")
@@ -832,21 +908,16 @@ const DOCUMENT_TYPES = [
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {searchParams?.guests.adults} {t('hotelDetails.adults')}
-                  {searchParams?.guests.children && searchParams.guests.children > 0 && 
-                    `, ${searchParams.guests.children} ${t('search.children')}`
+                  {totalAdults} {t('hotelDetails.adults')}
+                  {totalChildren > 0 &&
+                    `, ${totalChildren} ${t('search.children')}`
                   }
-                  {searchParams?.guests.rooms && searchParams.guests.rooms > 1 && 
-                    `, ${searchParams.guests.rooms} ${t('search.rooms')}`
+                  {guestRooms > 1 &&
+                    `, ${guestRooms} ${t('search.rooms')}`
                   }
                 </p>
                 <div className="mt-3 space-y-2 rounded-xl bg-slate-50 p-3 text-sm">
-                  {Array.from({ length: guestRooms }).map((_, roomIndex) => {
-                    const roomChildAges = childAges.slice(
-                      roomIndex * (searchParams?.guests.children || 0),
-                      (roomIndex + 1) * (searchParams?.guests.children || 0),
-                    );
-
+                  {roomOccupancies.map((room, roomIndex) => {
                     return (
                       <div key={roomIndex} className="text-slate-700">
                         <p className="flex items-center gap-2 font-bold">
@@ -854,12 +925,12 @@ const DOCUMENT_TYPES = [
                           {t("booking.room")} {roomIndex + 1}
                         </p>
                         <p>
-                          {t("hotelDetails.adults")}: {searchParams?.guests.adults || 0}
+                          {t("hotelDetails.adults")}: {room.adults}
                           {", "}
-                          {t("hotelDetails.children")}: {searchParams?.guests.children || 0}
+                          {t("hotelDetails.children")}: {room.children}
                         </p>
-                        {(searchParams?.guests.children || 0) > 0 ? (
-                          <p>{t("booking.childAges")}: {formatChildAges(roomChildAges)}</p>
+                        {room.children > 0 ? (
+                          <p>{t("booking.childAges")}: {formatChildAges(room.childrenAges)}</p>
                         ) : null}
                       </div>
                     );
@@ -1111,9 +1182,9 @@ const DOCUMENT_TYPES = [
           {hasPolicyDetails ? (
             <Card className="border-orange-100 shadow-sm">
               <div className="border-b border-orange-100 bg-orange-50 px-6 py-4">
-                <h3 className="text-xl font-black text-[#0F172A]">{t("booking.tbo.rateDetails")}</h3>
+                <h3 className="text-xl font-black text-[#0F172A]">{rateDetailsTitle}</h3>
                 <p className="mt-1 text-sm font-semibold text-slate-600">
-                  {t("booking.tbo.rateDetailsDescription")}
+                  {rateDetailsDescription}
                 </p>
               </div>
               <CardContent className="space-y-5 p-6">
