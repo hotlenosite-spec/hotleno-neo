@@ -752,9 +752,12 @@ const DOCUMENT_TYPES = [
           typeof result?.booking?.failureReason === "string"
             ? result.booking.failureReason
             : "";
+        const friendlyFailureReason = /insufficient allotment/i.test(failureReason)
+          ? "الغرفة المختارة لم تعد متاحة بالعدد المطلوب. يرجى اختيار غرفة أخرى أو تقليل عدد الغرف."
+          : failureReason;
         setNotice(
           bookingSupplier === "hotelbeds" && typeof result?.message === "string"
-            ? `${result.message} رقم الطلب: ${bookingReference}${failureReason ? ` السبب: ${failureReason}` : ""}`
+            ? `${result.message} رقم الطلب: ${bookingReference}${friendlyFailureReason ? ` السبب: ${friendlyFailureReason}` : ""}`
             : t("checkout.notices.failed", { bookingId: bookingReference }),
         );
       } else {

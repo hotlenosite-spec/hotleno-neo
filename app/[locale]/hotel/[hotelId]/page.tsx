@@ -206,6 +206,14 @@ function buildRoomsPayloadFromSearch(searchParams: SavedSearch) {
   }));
 }
 
+function getRoomOccupanciesFromSearch(searchParams: SavedSearch) {
+  return buildRoomsPayloadFromSearch(searchParams).map((room) => ({
+    adults: room.NumAdults,
+    children: room.Children?.length || 0,
+    childrenAges: room.Children || [],
+  }));
+}
+
 export default function HotelDetailsPage() {
   const router = useRouter();
   const params = useParams();
@@ -232,6 +240,7 @@ interface HotelDetailsData {
   const [selectedOption, setSelectedOption] = useState<HotelOption | null>(null);
   const [searchParams, setSearchParams] = useState<SavedSearch | null>(null);
   const [policies, setPolicies] = useState<HotelPoliciesResponse | null>(null);
+  const [bookingError, setBookingError] = useState("");
   
   const { fetchPolicies, loading: policiesLoading } = useHotelPolicies();
 
@@ -356,6 +365,7 @@ interface HotelDetailsData {
   };
 
   const handleRoomSelect = async (option: HotelOption, _fetchedPolicies: HotelPoliciesResponse) => {
+    setBookingError("");
     // Ensure option has valid numeric values
     const sanitizedOption = {
       ...option,
@@ -396,6 +406,25 @@ interface HotelDetailsData {
   const handleBookNow = () => {
     if (selectedOption && hotel && searchParams) {
       const supplier = getBookingSupplier(hotel, selectedOption);
+      const requestedRoomsCount = Math.max(searchParams.guests.roomDetails?.length || searchParams.guests.rooms || 1, 1);
+      const selectedRateRoomsCount = selectedOption.hotelbedsSelectedRooms?.length || 0;
+      const hasExplicitRoomSelection = Array.from({ length: requestedRoomsCount }).every(
+        (_, roomIndex) =>
+          selectedOption.hotelbedsSelectedRooms?.some(
+            (room) => room.roomIndex === roomIndex && Boolean(room.rateKey),
+          ),
+      );
+
+      if (
+        supplier === "hotelbeds" &&
+        (selectedRateRoomsCount !== requestedRoomsCount || !hasExplicitRoomSelection)
+      ) {
+        setBookingError(
+          "الغرفة المختارة لا تدعم عدد الغرف المطلوب أو لم تعد متاحة بالكمية المطلوبة. يرجى اختيار عرض آخر.",
+        );
+        return;
+      }
+
       const selectedRoom = getSelectedRoomSnapshot(
         selectedOption,
         hotelId,
@@ -426,6 +455,13 @@ interface HotelDetailsData {
   };
 
   const nights = searchParams?.guests.nights || 1;
+  const roomOccupancies = searchParams
+    ? getRoomOccupanciesFromSearch(searchParams)
+    : [];
+  const selectorSupplier =
+    hotel && (isHotelbedsTesterToken() || String((hotel as { supplier?: unknown }).supplier || "").toLowerCase() === "hotelbeds")
+      ? "hotelbeds"
+      : undefined;
   const selectedInclusions = asCleanTextArray(selectedOption?.inclusions);
   const selectedAmenities = asCleanTextArray(selectedOption?.amenities);
   const selectedTboDetailGroups = selectedOption
@@ -564,6 +600,8 @@ interface HotelDetailsData {
               nights={nights}
               selectedOptionId={selectedOption?.OptionId}
               isLoadingPolicies={policiesLoading}
+              supplier={selectorSupplier}
+              roomOccupancies={roomOccupancies}
             />
           )}
 
@@ -767,6 +805,12 @@ interface HotelDetailsData {
                       ))}
                     </div>
                   )}
+
+                  {bookingError ? (
+                    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">
+                      {bookingError}
+                    </div>
+                  ) : null}
 
                   <Button 
                     className="w-full bg-[#F97316] font-black text-white shadow-lg shadow-orange-500/20 hover:bg-[#EA580C]" 

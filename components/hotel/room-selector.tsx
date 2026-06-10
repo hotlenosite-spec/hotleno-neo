@@ -30,6 +30,12 @@ interface RoomSelectorProps {
   nights: number;
   selectedOptionId?: number;
   isLoadingPolicies?: boolean;
+  supplier?: string;
+  roomOccupancies?: Array<{
+    adults: number;
+    children: number;
+    childrenAges?: number[];
+  }>;
 }
 
 interface RoomOptionCardProps {
@@ -41,9 +47,92 @@ interface RoomOptionCardProps {
   isLoadingPolicies: boolean;
 }
 
-function toNumber(value: unknown) {
+function toNumber(value: unknown, fallback = 0) {
   const number = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(number) ? number : 0;
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function getOptionSelectedRoom(
+  option: HotelOption,
+  roomIndex: number,
+  occupancy: { adults: number; children: number; childrenAges?: number[] },
+) {
+  const source = option.hotelbedsSelectedRooms?.[0];
+
+  return {
+    roomIndex,
+    adults: Math.max(1, toNumber(occupancy.adults, 1)),
+    children: Math.max(0, toNumber(occupancy.children)),
+    childAges: (occupancy.childrenAges || []).slice(0, Math.max(0, toNumber(occupancy.children))),
+    roomCode: source?.roomCode || "",
+    roomName: source?.roomName || option.RoomName || option.RoomType || "Hotelbeds room",
+    boardCode: source?.boardCode || "",
+    boardName: source?.boardName || option.BoardName || option.BoardType || "",
+    rateKey: source?.rateKey || option.supplierRateKey || option.rateKey || option.BookingCode || "",
+    price: toNumber(source?.price ?? option.Price),
+    currency: source?.currency || option.Currency || "",
+  };
+}
+
+function optionMatchesOccupancy(
+  option: HotelOption,
+  occupancy: { adults: number; children: number },
+) {
+  const source = option.hotelbedsSelectedRooms?.[0];
+  if (!source) return false;
+
+  return (
+    toNumber(source.adults, 1) === Math.max(1, toNumber(occupancy.adults, 1)) &&
+    toNumber(source.children) === Math.max(0, toNumber(occupancy.children))
+  );
+}
+
+function compositeOptionId(options: HotelOption[]) {
+  return options.reduce((hash, option) => {
+    const value = String(option.OptionId || option.rateKey || option.supplierRateKey || "");
+    for (let index = 0; index < value.length; index += 1) {
+      hash = (hash * 31 + value.charCodeAt(index)) % 900000;
+    }
+    return hash;
+  }, 100000);
+}
+
+function buildHotelbedsMultiRoomOption(
+  selectedByRoom: Record<number, HotelOption>,
+  roomOccupancies: NonNullable<RoomSelectorProps["roomOccupancies"]>,
+): HotelOption {
+  const selectedOptions = roomOccupancies.map((_, roomIndex) => selectedByRoom[roomIndex]);
+  const baseOption = selectedOptions[0];
+  const selectedRooms = selectedOptions.map((option, roomIndex) =>
+    getOptionSelectedRoom(option, roomIndex, roomOccupancies[roomIndex]),
+  );
+  const price = selectedOptions.reduce((sum, option) => sum + toNumber(option.Price), 0);
+  const taxes = selectedOptions.reduce((sum, option) => sum + toNumber(option.Taxes), 0);
+  const roomNames = selectedRooms.map((room) => room.roomName).filter(Boolean);
+
+  return {
+    ...baseOption,
+    OptionId: compositeOptionId(selectedOptions),
+    rateKey: selectedRooms[0]?.rateKey || baseOption.rateKey,
+    supplierRateKey: selectedRooms[0]?.rateKey || baseOption.supplierRateKey,
+    BookingCode: selectedRooms[0]?.rateKey || baseOption.BookingCode,
+    hotelbedsSelectedRooms: selectedRooms,
+    RoomType: roomNames.join(" + ") || baseOption.RoomType,
+    RoomName: roomNames.join(" + ") || baseOption.RoomName,
+    Rooms: selectedRooms.map((room) => ({
+      RoomId: room.roomIndex + 1,
+      RoomName: room.roomName,
+      NumAdults: room.adults,
+      NumChildren: room.children,
+      RoomPrice: room.price || 0,
+    })),
+    Adults: selectedRooms.reduce((sum, room) => sum + room.adults, 0),
+    Children: selectedRooms.reduce((sum, room) => sum + room.children, 0),
+    Price: price,
+    TotalPrice: price,
+    Taxes: taxes,
+    Currency: baseOption.Currency,
+  };
 }
 
 function asCleanTextArray(value: unknown): string[] {
@@ -230,14 +319,36 @@ export function RoomSelector({
   onSelect,
   nights,
   selectedOptionId,
-  isLoadingPolicies = false
+  isLoadingPolicies = false,
+  supplier,
+  roomOccupancies = [],
 }: RoomSelectorProps) {
   const t = useTranslations();
   const [selectedId, setSelectedId] = useState<string>(selectedOptionId?.toString() || "");
+  const [selectedByRoom, setSelectedByRoom] = useState<Record<number, HotelOption>>({});
   const [_showPolicies, _setShowPolicies] = useState(false);
   const [_selectedOption, _setSelectedOption] = useState<HotelOption | null>(null);
+  const isHotelbedsMultiRoom =
+    supplier === "hotelbeds" && roomOccupancies.length > 1;
 
-  const handleSelect = (option: HotelOption) => {
+  const handleSelect = (option: HotelOption, roomIndex?: number) => {
+    if (isHotelbedsMultiRoom && roomIndex !== undefined) {
+      setSelectedByRoom((current) => {
+        const next = { ...current, [roomIndex]: option };
+        const isComplete = roomOccupancies.every((_, index) => Boolean(next[index]));
+
+        if (isComplete) {
+          const compositeOption = buildHotelbedsMultiRoomOption(next, roomOccupancies);
+          setSelectedId(compositeOption.OptionId.toString());
+          _setSelectedOption(compositeOption);
+          onSelect(compositeOption, {} as HotelPoliciesResponse);
+        }
+
+        return next;
+      });
+      return;
+    }
+
     setSelectedId(option.OptionId.toString());
     _setSelectedOption(option);
     // Fetch policies before confirming selection
@@ -263,6 +374,49 @@ export function RoomSelector({
         </p>
       </div>
 
+      {isHotelbedsMultiRoom ? (
+        <div className="space-y-6">
+          {roomOccupancies.map((occupancy, roomIndex) => {
+            const roomOptions = options.filter((option) =>
+              optionMatchesOccupancy(option, occupancy),
+            );
+
+            return (
+              <div key={roomIndex} className="space-y-3">
+                <h4 className="font-semibold text-lg text-muted-foreground">
+                  {t("booking.room")} {roomIndex + 1} - {occupancy.adults}{" "}
+                  {t("hotelDetails.adults")}
+                  {occupancy.children > 0
+                    ? ` + ${occupancy.children} ${t("hotelDetails.children")}`
+                    : ""}
+                </h4>
+                {roomOptions.map((option) => {
+                  const isOptionSelected =
+                    selectedByRoom[roomIndex]?.OptionId === option.OptionId;
+                  return (
+                    <RoomOptionCard
+                      key={`${roomIndex}-${option.OptionId}`}
+                      option={option}
+                      currency={currency}
+                      nights={nights}
+                      isSelected={isOptionSelected}
+                      onSelect={() => handleSelect(option, roomIndex)}
+                      isLoadingPolicies={isOptionSelected && isLoadingPolicies}
+                    />
+                  );
+                })}
+                {roomOptions.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-5 text-sm font-bold text-red-700">
+                      الغرفة المختارة لا تدعم عدد الغرف المطلوب أو لم تعد متاحة بالكمية المطلوبة. يرجى اختيار عرض آخر.
+                    </CardContent>
+                  </Card>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
       <div className="space-y-4">
         {Object.entries(groupedOptions).map(([roomType, roomOptions]) => (
           <div key={roomType} className="space-y-3">
@@ -284,6 +438,7 @@ export function RoomSelector({
           </div>
         ))}
       </div>
+      )}
 
       {options.length === 0 && (
         <Card>

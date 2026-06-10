@@ -230,6 +230,20 @@ function getHotelbedsFlowSafeResponse(payload: unknown) {
   };
 }
 
+function getHotelbedsClientErrorSafeResponse(error: unknown) {
+  if (error instanceof HotelbedsHotelsClientError) {
+    return {
+      statusCode: error.status,
+      code: error.code,
+      errorMessage: error.message,
+    };
+  }
+
+  return {
+    errorMessage: safeErrorMessage(error),
+  };
+}
+
 function isHotelbedsCheckRateBookable(payload: unknown) {
   const rateKeys = extractHotelbedsRateKeys(payload);
   const status = getHotelbedsStatus(payload).toLowerCase();
@@ -354,6 +368,23 @@ function getHotelbedsSelectionSummarySafe(params: {
       rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
       hasSingleRoomOccupancyMarker: hasSingleRoomOccupancyMarker(room.rateKey),
     })),
+    selectedRooms: params.selectedRooms.map((room) => ({
+      roomIndex: room.roomIndex,
+      roomCode: room.roomCode || "",
+      roomName: room.roomName || "",
+      boardCode: room.boardCode || "",
+      boardName: room.boardName || "",
+      adults: room.adults,
+      children: room.children,
+      childAges: room.childAges,
+      rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
+    })),
+    generatedCheckRatePayload: {
+      rooms: params.rateKeys.map((key) => ({
+        rateKeyPrefix: getHotelbedsRateKeyPrefix(key),
+      })),
+      roomsCount: params.rateKeys.length,
+    },
     supplierRateKeyPrefix: getHotelbedsRateKeyPrefix(String(params.booking.supplierRateKey || "")),
     hasSingleRoomOccupancyMarker: hasSingleRoomOccupancyMarker(
       String(params.booking.supplierRateKey || ""),
@@ -403,6 +434,7 @@ function logHotelbedsBookingFlow(params: {
   bookable?: boolean;
   rooms?: number;
   paxes?: number;
+  details?: Record<string, unknown>;
 }) {
   console.info(
     "[Hotelbeds Booking Flow]",
@@ -421,6 +453,7 @@ function logHotelbedsBookingFlow(params: {
       bookable: params.bookable,
       rooms: params.rooms,
       paxes: params.paxes,
+      details: params.details,
     }),
   );
 }
@@ -785,6 +818,10 @@ async function submitHotelbedsTesterBooking(params: {
   });
   const requestedRoomsCount = Number(selectionSummarySafe.requestedRoomsCount || 1);
   const selectedRateRoomsCount = Number(selectionSummarySafe.selectedRateRoomsCount || 0);
+  const hasExplicitRoomSelection = Array.from({ length: requestedRoomsCount }).every(
+    (_, roomIndex) =>
+      selectedRooms.some((room) => room.roomIndex === roomIndex && Boolean(room.rateKey)),
+  );
   const bookingBaseUrl = getHotelbedsBaseUrls().bookingBaseUrl;
 
   logHotelbedsBookingFlow({
@@ -817,7 +854,7 @@ async function submitHotelbedsTesterBooking(params: {
     });
   }
 
-  if (selectedRateRoomsCount < requestedRoomsCount) {
+  if (selectedRateRoomsCount < requestedRoomsCount || !hasExplicitRoomSelection) {
     const message =
       "SELECTED_RATE_DOES_NOT_COVER_ALL_ROOMS: السعر المختار لا يغطي جميع الغرف المطلوبة، يرجى اختيار عرض آخر.";
     return failHotelbedsBooking({
@@ -854,6 +891,11 @@ async function submitHotelbedsTesterBooking(params: {
       step: "before_checkrate",
       rateKeyPresent: rateKeys.length > 0,
       rooms: rateKeys.length,
+      details: {
+        selectedRooms: selectionSummarySafe.selectedRooms,
+        requestedOccupancies: selectionSummarySafe.requestedOccupancies,
+        generatedCheckRatePayload: selectionSummarySafe.generatedCheckRatePayload,
+      },
     });
     const checkRateResponse = await client.checkRate({
       rateKey: rateKeys[0],
@@ -892,6 +934,7 @@ async function submitHotelbedsTesterBooking(params: {
       error instanceof HotelbedsHotelsClientError
         ? `${error.code}: ${error.message}`
         : safeErrorMessage(error);
+    checkRateResponseSafe = getHotelbedsClientErrorSafeResponse(error);
     const updatedBooking = await failHotelbedsBooking({
       bookingsCollection,
       booking,
@@ -930,6 +973,14 @@ async function submitHotelbedsTesterBooking(params: {
     requestSummarySafe = {
       ...selectionSummarySafe,
       ...getHotelbedsRequestSummarySafe(bookingRequest),
+      generatedBookingPayload: {
+        rooms: (bookingRequest.rooms || []).map((room) => ({
+          rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
+          paxes: room.guests.length,
+        })),
+        roomsCount: bookingRequest.rooms?.length || 0,
+        paxesCount: bookingRequest.guests.length,
+      },
     };
     const validationErrors = validateHotelbedsBookingRequest(booking, bookingRequest);
 
@@ -964,6 +1015,9 @@ async function submitHotelbedsTesterBooking(params: {
       step: "before_booking",
       rooms: toNumber(requestSummarySafe.rooms),
       paxes: toNumber(requestSummarySafe.paxes),
+      details: {
+        generatedBookingPayload: requestSummarySafe.generatedBookingPayload,
+      },
     });
     const bookingResponse = await client.book(bookingRequest);
     const hotelbedsReference = extractHotelbedsBookingReference(bookingResponse);
@@ -1033,6 +1087,7 @@ async function submitHotelbedsTesterBooking(params: {
       checkRateStatus,
       checkRateBookable,
       checkRateResponseSafe,
+      bookingResponseSafe: getHotelbedsClientErrorSafeResponse(error),
       requestSummarySafe,
     });
     await createLog({

@@ -186,7 +186,23 @@ function buildHotelbedsSelectedRoom(params: {
   rate: NonNullable<NonNullable<HotelbedsAvailabilityHotel["rooms"]>[number]["rates"]>[number];
   currency: string;
 }) {
-  const requestedRoom = getRequestedRoom(params.request, params.roomIndex);
+  const parsedOccupancy = getRateOccupancy(params.rate.rateKey);
+  const matchingRequestedRoom = parsedOccupancy
+    ? params.request.rooms
+        .map((_, index) => getRequestedRoom(params.request, index))
+        .find(
+          (room) =>
+            room.adults === parsedOccupancy.adults &&
+            room.children === parsedOccupancy.children,
+        )
+    : undefined;
+  const requestedRoom = parsedOccupancy
+    ? {
+        adults: parsedOccupancy.adults,
+        children: parsedOccupancy.children,
+        childAges: matchingRequestedRoom?.childAges || [],
+      }
+    : getRequestedRoom(params.request, params.roomIndex);
 
   return {
     roomIndex: params.roomIndex,
@@ -203,25 +219,11 @@ function buildHotelbedsSelectedRoom(params: {
   };
 }
 
-function getRateBoardKey(rate: {
-  boardCode?: string;
-  boardName?: string;
-  rateClass?: string;
-  rateType?: string;
-}) {
-  return [
-    rate.boardCode || rate.boardName || "RO",
-    rate.rateClass || "",
-    rate.rateType || "",
-  ].join("|");
-}
-
 function mapHotelbedsRatesForRequest(
   hotel: HotelbedsAvailabilityHotel,
   request: SupplierSearchHotelsRequest,
   currency: string,
 ): SupplierHotelRate[] {
-  const roomCount = Math.max(request.rooms.length, 1);
   const rawRates = (hotel.rooms ?? []).flatMap((room) =>
     (room.rates ?? [])
       .filter((rate) => rate.rateKey)
@@ -233,100 +235,35 @@ function mapHotelbedsRatesForRequest(
       })),
   );
 
-  if (roomCount <= 1) {
-    return rawRates.map(({ room, rate, index }) => {
-      const selectedRoom = buildHotelbedsSelectedRoom({
-        roomIndex: 0,
-        request,
-        room,
-        rate,
-        currency,
-      });
-
-      return {
-        rateKey:
-          rate.rateKey ||
-          `hotelbeds-${hotel.code ?? "unknown"}-${room.code ?? "room"}-${index}`,
-        roomName: room.name || room.code || "Hotelbeds room",
-        boardName: rate.boardName || rate.boardCode || "Room Only",
-        price: toHotelbedsPrice(rate),
-        currency: rate.currency || hotel.currency || currency,
-        refundable: rate.rateClass !== "NRF",
-        hotelbedsSelectedRooms: [selectedRoom],
-        cancellationPolicies: rate.cancellationPolicies,
-        metadata: {
-          rateType: rate.rateType,
-          rateClass: rate.rateClass,
-          boardCode: rate.boardCode,
-          net: rate.net,
-        },
-      };
+  return rawRates.map(({ room, rate, index }) => {
+    const selectedRoom = buildHotelbedsSelectedRoom({
+      roomIndex: 0,
+      request,
+      room,
+      rate,
+      currency,
     });
-  }
 
-  const groups = new Map<string, typeof rawRates>();
-  rawRates.forEach((item) => {
-    const key = getRateBoardKey(item.rate);
-    groups.set(key, [...(groups.get(key) || []), item]);
+    return {
+      rateKey:
+        rate.rateKey ||
+        `hotelbeds-${hotel.code ?? "unknown"}-${room.code ?? "room"}-${index}`,
+      roomName: room.name || room.code || "Hotelbeds room",
+      boardName: rate.boardName || rate.boardCode || "Room Only",
+      price: toHotelbedsPrice(rate),
+      currency: rate.currency || hotel.currency || currency,
+      refundable: rate.rateClass !== "NRF",
+      hotelbedsSelectedRooms: [selectedRoom],
+      cancellationPolicies: rate.cancellationPolicies,
+      metadata: {
+        rateType: rate.rateType,
+        rateClass: rate.rateClass,
+        boardCode: rate.boardCode,
+        net: rate.net,
+        hotelbedsAutoPairingDisabled: true,
+      },
+    };
   });
-
-  return Array.from(groups.values())
-    .map((items, groupIndex): SupplierHotelRate | null => {
-      const selectedItems: typeof rawRates = [];
-      const usedRateKeys = new Set<string>();
-
-      for (let roomIndex = 0; roomIndex < roomCount; roomIndex += 1) {
-        const requestedRoom = getRequestedRoom(request, roomIndex);
-        const match = items.find((item) => {
-          const rateKey = String(item.rate.rateKey || "");
-          if (!rateKey || usedRateKeys.has(rateKey)) return false;
-          if (!item.occupancy) return false;
-          return (
-            item.occupancy.rooms === 1 &&
-            item.occupancy.adults === requestedRoom.adults &&
-            item.occupancy.children === requestedRoom.children
-          );
-        });
-
-        if (!match) return null;
-        usedRateKeys.add(String(match.rate.rateKey || ""));
-        selectedItems.push(match);
-      }
-
-      const selectedRooms = selectedItems.map((item, roomIndex) =>
-        buildHotelbedsSelectedRoom({
-          roomIndex,
-          request,
-          room: item.room,
-          rate: item.rate,
-          currency,
-        }),
-      );
-      const totalPrice = selectedRooms.reduce((sum, room) => sum + (room.price || 0), 0);
-      const firstRate = selectedItems[0]?.rate;
-      const firstRoom = selectedItems[0]?.room;
-
-      return {
-        rateKey: selectedRooms[0]?.rateKey || `hotelbeds-${hotel.code}-${groupIndex}`,
-        roomName: selectedRooms.map((room) => room.roomName).filter(Boolean).join(" + "),
-        boardName: firstRate?.boardName || firstRate?.boardCode || "Room Only",
-        price: totalPrice,
-        currency: firstRate?.currency || hotel.currency || currency,
-        refundable: selectedItems.every((item) => item.rate.rateClass !== "NRF"),
-        hotelbedsSelectedRooms: selectedRooms,
-        cancellationPolicies: firstRate?.cancellationPolicies,
-        metadata: {
-          rateType: firstRate?.rateType,
-          rateClass: firstRate?.rateClass,
-          boardCode: firstRate?.boardCode,
-          net: totalPrice,
-          hotelbedsSelectedRoomsCount: selectedRooms.length,
-          hotelbedsMultiRoomComposite: true,
-          firstRoomCode: firstRoom?.code,
-        },
-      };
-    })
-    .filter((rate): rate is SupplierHotelRate => Boolean(rate));
 }
 
 function mapHotelbedsAvailabilityResponse(
