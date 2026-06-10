@@ -54,6 +54,17 @@ const NATIONALITIES = [
 ];
 
 type UnknownRecord = Record<string, unknown>;
+type SearchGuestState = {
+  rooms: number;
+  adults: number;
+  children: number;
+  childrenAges: number[];
+  roomDetails?: Array<{
+    adults: number;
+    children: number;
+    childrenAges: number[];
+  }>;
+};
 
 const TBO_CERTIFICATION_SUGGESTION: HotelbedsSearchSuggestion = {
   type: "destination",
@@ -68,6 +79,14 @@ const TBO_DUBAI_SUGGESTION: HotelbedsSearchSuggestion = {
   destinationCode: "115936",
   cityCode: "115936",
   countryCode: "AE",
+};
+
+const HOTELBEDS_BARCELONA_TEST_SUGGESTION: HotelbedsSearchSuggestion = {
+  type: "destination",
+  label: "Barcelona, Spain",
+  value: "Barcelona",
+  destinationCode: "BCN",
+  countryCode: "ES",
 };
 
 const MAX_TBO_ROOMS = 6;
@@ -383,14 +402,19 @@ export default function SearchForm() {
   const [tboCertificationMode, setTboCertificationMode] = useState(
     () => process.env.NEXT_PUBLIC_TBO_CERTIFICATION_MODE === "true",
   );
+  const [hotelbedsTesterMode, setHotelbedsTesterMode] = useState(false);
   const certificationDefaultsApplied = useRef(false);
+  const hotelbedsDefaultsApplied = useRef(false);
 
   useEffect(() => {
     const isTboTester =
       user?.email?.toLowerCase() === "tbo.tester@hotleno.com" ||
       (user?.role === "supplier_tester" && user?.supplierScope === "tbo");
+    const isHotelbedsTester =
+      user?.role === "supplier_tester" && user?.supplierScope === "hotelbeds";
 
-    setTboCertificationMode(getClientTboCertificationMode() || isTboTester);
+    setHotelbedsTesterMode(isHotelbedsTester);
+    setTboCertificationMode(!isHotelbedsTester && (getClientTboCertificationMode() || isTboTester));
   }, [user?.email, user?.role, user?.supplierScope]);
 
   const [dates, setDates] = useState({
@@ -398,11 +422,12 @@ export default function SearchForm() {
     checkOut: new Date(new Date().setDate(new Date().getDate() + 1)),
   });
 
-  const [guests, setGuests] = useState({
+  const [guests, setGuests] = useState<SearchGuestState>({
     rooms: 1,
     adults: 2,
     children: 0,
     childrenAges: [] as number[],
+    roomDetails: [{ adults: 2, children: 0, childrenAges: [] as number[] }],
   });
 
   const [nationality, setNationality] = useState("US");
@@ -418,10 +443,40 @@ export default function SearchForm() {
     checkOut.setDate(checkOut.getDate() + 2);
 
     setDates({ checkIn, checkOut });
-    setGuests({ rooms: 1, adults: 1, children: 0, childrenAges: [] });
+    setGuests({
+      rooms: 1,
+      adults: 1,
+      children: 0,
+      childrenAges: [],
+      roomDetails: [{ adults: 1, children: 0, childrenAges: [] }],
+    });
     setNationality("SA");
     certificationDefaultsApplied.current = true;
   }, [tboCertificationMode]);
+
+  useEffect(() => {
+    if (!hotelbedsTesterMode || hotelbedsDefaultsApplied.current) return;
+
+    const checkIn = new Date();
+    checkIn.setDate(checkIn.getDate() + 35);
+    const checkOut = new Date(checkIn);
+    checkOut.setDate(checkOut.getDate() + 1);
+
+    setDestination(HOTELBEDS_BARCELONA_TEST_SUGGESTION);
+    setDates({ checkIn, checkOut });
+    setGuests({
+      rooms: 2,
+      adults: 2,
+      children: 1,
+      childrenAges: [7],
+      roomDetails: [
+        { adults: 1, children: 0, childrenAges: [] },
+        { adults: 1, children: 1, childrenAges: [7] },
+      ],
+    });
+    setNationality("SA");
+    hotelbedsDefaultsApplied.current = true;
+  }, [hotelbedsTesterMode]);
 
   useEffect(() => {
     const syncCurrency = () => setCurrency(getStoredCurrencyCode());
@@ -475,7 +530,10 @@ export default function SearchForm() {
 
     try {
       const selectedDestination =
-        destination || buildTboCertificationSuggestion(TBO_CERTIFICATION_SUGGESTION.label);
+        destination ||
+        (hotelbedsTesterMode
+          ? HOTELBEDS_BARCELONA_TEST_SUGGESTION
+          : buildTboCertificationSuggestion(TBO_CERTIFICATION_SUGGESTION.label));
       const searchParams = {
         destination: selectedDestination,
         dates,
@@ -495,6 +553,11 @@ export default function SearchForm() {
         children: String(guests.children),
         childrenAges: guests.childrenAges.slice(0, guests.children).join(","),
         rooms: String(guests.rooms),
+        roomsJson: JSON.stringify(
+          guests.roomDetails?.length
+            ? guests.roomDetails
+            : [{ adults: guests.adults, children: guests.children, childrenAges: guests.childrenAges }],
+        ),
         nationality,
         currency,
       });
@@ -549,6 +612,7 @@ export default function SearchForm() {
             placeholder={copy.destinationPlaceholder}
             onChange={setDestination}
             tboCertificationMode={tboCertificationMode}
+            hotelbedsTesterMode={hotelbedsTesterMode}
           />
         </SearchField>
 
@@ -580,7 +644,7 @@ export default function SearchForm() {
 
         <Button
           onClick={handleSearch}
-          disabled={loading || (!destination && !tboCertificationMode)}
+          disabled={loading || (!destination && !tboCertificationMode && !hotelbedsTesterMode)}
           className="h-[74px] rounded-2xl bg-[#F97316] px-6 text-base font-black text-white shadow-lg shadow-orange-500/25 hover:bg-[#EA580C] disabled:opacity-60"
         >
           <HugeiconsIcon icon={Search01Icon} className="h-5 w-5" />
@@ -637,11 +701,13 @@ function HotelbedsDestinationAutocomplete({
   placeholder,
   onChange,
   tboCertificationMode,
+  hotelbedsTesterMode,
 }: {
   value: HotelbedsSearchSuggestion | null;
   placeholder: string;
   onChange: (value: HotelbedsSearchSuggestion | null) => void;
   tboCertificationMode: boolean;
+  hotelbedsTesterMode: boolean;
 }) {
   const t = useTranslations("search");
   const [open, setOpen] = useState(false);
@@ -663,10 +729,10 @@ function HotelbedsDestinationAutocomplete({
   );
 
   useEffect(() => {
-    if (tboCertificationMode) return;
+    if (tboCertificationMode || hotelbedsTesterMode) return;
     if (query.trim() === selectedLabel) return;
     onChange(null);
-  }, [onChange, query, selectedLabel, tboCertificationMode]);
+  }, [onChange, query, selectedLabel, tboCertificationMode, hotelbedsTesterMode]);
 
   useEffect(() => {
     const term = query.trim();
@@ -680,6 +746,14 @@ function HotelbedsDestinationAutocomplete({
       return;
     }
 
+    if (hotelbedsTesterMode && term.length < 2) {
+      setSuggestions([HOTELBEDS_BARCELONA_TEST_SUGGESTION]);
+      setLoading(false);
+      setSearchCompleted(true);
+      setError("");
+      return;
+    }
+
     if (term.length < 2) {
       setSuggestions([]);
       setLoading(false);
@@ -688,7 +762,7 @@ function HotelbedsDestinationAutocomplete({
       return;
     }
 
-    if (isDubaiSearchTerm(term)) {
+    if (!hotelbedsTesterMode && isDubaiSearchTerm(term)) {
       const dubaiSuggestion = {
         ...TBO_DUBAI_SUGGESTION,
         label:
@@ -737,7 +811,7 @@ function HotelbedsDestinationAutocomplete({
       controller.abort();
       clearTimeout(timeout);
     };
-  }, [onChange, query, t, tboCertificationMode]);
+  }, [onChange, query, t, tboCertificationMode, hotelbedsTesterMode]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -791,6 +865,8 @@ function HotelbedsDestinationAutocomplete({
                 heading={
                   tboCertificationMode
                     ? "TBO Certification"
+                    : hotelbedsTesterMode
+                      ? "Hotelbeds Accommodation"
                     : suggestions.some((suggestion) => suggestion.cityCode === "115936")
                       ? t("autocomplete.tboNormalSearch")
                       : t("autocomplete.hotelbedsResults")

@@ -141,6 +141,13 @@ function isTboCertificationTester(user: {
   );
 }
 
+function isHotelbedsSupplierTester(user: {
+  role?: string;
+  supplierScope?: string | null;
+} | null) {
+  return user?.role === "supplier_tester" && user?.supplierScope === "hotelbeds";
+}
+
 function isTboCertificationSearch(user: {
   email?: string;
   role?: string;
@@ -266,12 +273,22 @@ export async function POST(req: NextRequest) {
       );
     }
     const authUser = getAuthUserFromRequest(req);
-    const tboCertificationSearch = isTboCertificationSearch(authUser);
+    const hotelbedsSupplierTester = isHotelbedsSupplierTester(authUser);
+    const tboCertificationSearch = hotelbedsSupplierTester
+      ? false
+      : isTboCertificationSearch(authUser);
     const providers = await getSearchProviders({
       providerOverride: body.provider ?? body.supplierProvider,
       role: authUser?.role,
       supplierScope: authUser?.supplierScope,
     });
+    if (process.env.NODE_ENV !== "production" && authUser?.role === "supplier_tester") {
+      console.info("[Supplier Tester Search]", {
+        scope: authUser.supplierScope,
+        provider: providers.map((provider) => provider.name).join(","),
+        supplierSettingsBypassed: true,
+      });
+    }
     const timeoutMs = tboCertificationSearch
       ? Math.max(getSupplierSearchTimeoutMs(), getTboCertificationTimeoutMs())
       : getSupplierSearchTimeoutMs();
@@ -283,7 +300,7 @@ export async function POST(req: NextRequest) {
       .map(String)
       .filter(Boolean);
     const tboNormalHotelIds =
-      explicitHotelIds.length > 0 || tboCertificationSearch
+      explicitHotelIds.length > 0 || tboCertificationSearch || hotelbedsSupplierTester
         ? []
         : await getTboNormalSearchHotelCodes({
             destination: body.destination,
@@ -354,6 +371,7 @@ export async function POST(req: NextRequest) {
         supplierScope: authUser?.supplierScope,
         tboNormalSearch: tboNormalHotelIds.length > 0,
         disableEnvHotelCodes:
+          hotelbedsSupplierTester ||
           tboNormalHotelIds.length > 0 ||
           (!tboCertificationSearch && isTboNormalSearchEnabled()),
       },

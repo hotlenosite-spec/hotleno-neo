@@ -278,6 +278,11 @@ export interface SavedSearch {
     adults: number;
     children: number;
     childrenAges: number[];
+    roomDetails?: Array<{
+      adults: number;
+      children: number;
+      childrenAges: number[];
+    }>;
     nights: number;
   };
   nationality: string;

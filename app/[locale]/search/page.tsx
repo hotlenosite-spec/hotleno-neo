@@ -53,6 +53,35 @@ function parseChildrenAges(value: string | null, children: number) {
     .slice(0, children);
 }
 
+function parseRoomsJson(value: string | null) {
+  if (!value) return null;
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return null;
+
+    const rooms = parsed
+      .map((room) => {
+        if (!room || typeof room !== "object") return null;
+        const record = room as { adults?: unknown; children?: unknown; childrenAges?: unknown };
+        const childrenAges = Array.isArray(record.childrenAges)
+          ? record.childrenAges.map(Number).filter((age) => Number.isFinite(age) && age >= 0)
+          : [];
+        const children = Number(record.children ?? childrenAges.length);
+        return {
+          adults: Math.max(1, Number(record.adults) || 1),
+          children: Math.max(0, Number.isFinite(children) ? children : childrenAges.length),
+          childrenAges,
+        };
+      })
+      .filter(Boolean) as Array<{ adults: number; children: number; childrenAges: number[] }>;
+
+    return rooms.length ? rooms : null;
+  } catch {
+    return null;
+  }
+}
+
 function buildCertificationRooms(params: {
   rooms: number;
   adults: number;
@@ -76,6 +105,50 @@ function buildCertificationRooms(params: {
     NumAdults: Math.max(room.NumAdults, 1),
     Children: room.Children.length > 0 ? room.Children : undefined,
   }));
+}
+
+function buildRoomsPayload(request: {
+  roomDetails?: Array<{ adults: number; children: number; childrenAges: number[] }> | null;
+  rooms: number;
+  adults: number;
+  children: number;
+  childrenAges: number[];
+}, isTboCertificationSearch: boolean) {
+  if (request.roomDetails?.length) {
+    return request.roomDetails.map((room) => ({
+      NumAdults: room.adults,
+      Children:
+        room.children > 0
+          ? room.childrenAges.length > 0
+            ? room.childrenAges.slice(0, room.children)
+            : Array.from({ length: room.children }, () => 8)
+          : undefined,
+    }));
+  }
+
+  if (isTboCertificationSearch) {
+    return buildCertificationRooms({
+      rooms: request.rooms,
+      adults: request.adults,
+      children: request.children,
+      childrenAges:
+        request.childrenAges.length > 0
+          ? request.childrenAges
+          : Array.from({ length: request.children }, () => 8),
+    });
+  }
+
+  return [
+    {
+      NumAdults: request.adults,
+      Children:
+        request.children > 0
+          ? request.childrenAges.length > 0
+            ? request.childrenAges
+            : Array.from({ length: request.children }, () => 8)
+          : undefined,
+    },
+  ];
 }
 
 function getOptionTotal(option?: HotelOption) {
@@ -123,6 +196,17 @@ function buildSavedSearch(params: URLSearchParams): SavedSearch {
   const children = toNumber(params.get("children"), 0);
   const childrenAges = parseChildrenAges(params.get("childrenAges"), children);
   const rooms = toNumber(params.get("rooms"), 1);
+  const roomDetails = parseRoomsJson(params.get("roomsJson"));
+  const guestTotals = roomDetails
+    ? roomDetails.reduce(
+        (sum, room) => ({
+          adults: sum.adults + room.adults,
+          children: sum.children + room.children,
+          childrenAges: [...sum.childrenAges, ...room.childrenAges.slice(0, room.children)],
+        }),
+        { adults: 0, children: 0, childrenAges: [] as number[] },
+      )
+    : { adults, children, childrenAges };
 
   return {
     destination: {
@@ -139,10 +223,11 @@ function buildSavedSearch(params: URLSearchParams): SavedSearch {
       checkOut,
     },
     guests: {
-      rooms,
-      adults,
-      children,
-      childrenAges,
+      rooms: roomDetails?.length || rooms,
+      adults: guestTotals.adults,
+      children: guestTotals.children,
+      childrenAges: guestTotals.childrenAges,
+      roomDetails: roomDetails || undefined,
       nights: calculateNights(checkIn, checkOut),
     },
     nationality: params.get("nationality") || "US",
@@ -177,6 +262,7 @@ export default function SearchPage() {
     const children = toNumber(params.get("children"), 0);
     const childrenAges = parseChildrenAges(params.get("childrenAges"), children);
     const rooms = toNumber(params.get("rooms"), 1);
+    const roomDetails = parseRoomsJson(params.get("roomsJson"));
     const hotelCode = params.get("hotelCode") || undefined;
     const hotelIds = params
       .get("hotelIds")
@@ -193,6 +279,7 @@ export default function SearchPage() {
       children,
       childrenAges,
       rooms,
+      roomDetails,
       nationality: params.get("nationality") || "US",
       currency: params.get("currency") || "USD",
       countryCode: params.get("countryCode") || undefined,
@@ -256,27 +343,7 @@ export default function SearchPage() {
             hotelIds: request.hotelIds,
             CheckInDate: request.checkIn,
             CheckOutDate: request.checkOut,
-            Rooms: isTboCertificationSearch
-              ? buildCertificationRooms({
-                  rooms: request.rooms,
-                  adults: request.adults,
-                  children: request.children,
-                  childrenAges:
-                    request.childrenAges.length > 0
-                      ? request.childrenAges
-                      : Array.from({ length: request.children }, () => 8),
-                })
-              : [
-                  {
-                    NumAdults: request.adults,
-                    Children:
-                      request.children > 0
-                        ? request.childrenAges.length > 0
-                          ? request.childrenAges
-                          : Array.from({ length: request.children }, () => 8)
-                        : undefined,
-                  },
-                ],
+            Rooms: buildRoomsPayload(request, isTboCertificationSearch),
             Nationality: isTboCertificationSearch ? "SA" : request.nationality,
             Currency: request.currency,
             AvailableOnly: 1,
@@ -376,8 +443,13 @@ export default function SearchPage() {
     return bScore - aScore;
   });
   const displayDestination = request.destination || t("selectedDestination");
-  const guestsSummary = `${request.rooms} ${t("rooms")} • ${request.adults} ${t("adults")}${
-    request.children > 0 ? ` • ${request.children} ${t("children")}` : ""
+  const summaryRooms = request.roomDetails?.length ?? request.rooms;
+  const summaryAdults =
+    request.roomDetails?.reduce((sum, room) => sum + room.adults, 0) ?? request.adults;
+  const summaryChildren =
+    request.roomDetails?.reduce((sum, room) => sum + room.children, 0) ?? request.children;
+  const guestsSummary = `${summaryRooms} ${t("rooms")} • ${summaryAdults} ${t("adults")}${
+    summaryChildren > 0 ? ` • ${summaryChildren} ${t("children")}` : ""
   }`;
   const editSearchHref = `/${locale}`;
   const currencyForDisplay = results?.Currency || request.currency;
