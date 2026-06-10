@@ -71,6 +71,7 @@ export type HotelbedsHotelVoucher = {
   bookingReference?: string;
   hotelName?: string;
   hotelAddress?: string;
+  hotelPhone?: string;
   checkIn?: string;
   checkOut?: string;
   roomName?: string;
@@ -82,6 +83,11 @@ export type HotelbedsHotelVoucher = {
     children?: number;
     childAges?: number[];
     guestNames?: string[];
+    guests?: Array<{
+      name: string;
+      type?: "AD" | "CH";
+      age?: number;
+    }>;
   }>;
   holderName?: string;
   customerEmail?: string;

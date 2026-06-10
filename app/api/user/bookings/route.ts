@@ -535,6 +535,7 @@ function getHotelbedsSelectionSummarySafe(params: {
   const requestedOccupancies = getRequestedOccupancies(params.booking);
   const metadata = asRecord(params.booking.metadata);
   const hotelbedsPackage = asRecord(params.booking.hotelbedsPackage || metadata.hotelbedsPackage);
+  const packageCurrency = asString(hotelbedsPackage.currency) || asString(params.booking.currency);
   const expectedTotalPrice =
     toNumber(hotelbedsPackage.totalPrice) ||
     params.selectedRooms.reduce((sum, room) => sum + toNumber(room.price), 0);
@@ -542,7 +543,7 @@ function getHotelbedsSelectionSummarySafe(params: {
     toNumber(metadata.actualReviewPrice) ||
     toNumber(metadata.supplierTotalFare) ||
     toNumber(params.booking.totalPrice);
-  const roomPriceBreakdown = asArray(metadata.roomPriceBreakdown).length
+  const rawRoomPriceBreakdown = asArray(metadata.roomPriceBreakdown).length
     ? asArray(metadata.roomPriceBreakdown)
     : params.selectedRooms.map((room) => ({
         roomIndex: room.roomIndex,
@@ -551,6 +552,16 @@ function getHotelbedsSelectionSummarySafe(params: {
         price: room.price || 0,
         currency: room.currency || params.booking.currency,
       }));
+  const roomBreakdownCurrencies = rawRoomPriceBreakdown
+    .map((room) => asString(asRecord(room).currency))
+    .filter(Boolean);
+  const currencyMismatch = Boolean(packageCurrency) && roomBreakdownCurrencies.some(
+    (roomCurrency) => roomCurrency !== packageCurrency,
+  );
+  const roomPriceBreakdown = rawRoomPriceBreakdown.map((room) => ({
+    ...asRecord(room),
+    currency: packageCurrency || asString(asRecord(room).currency) || params.booking.currency,
+  }));
   const warnings = params.selectedRooms.some((room) => !room.rateType)
     ? ["MISSING_HOTELBEDS_RATE_TYPE"]
     : [];
@@ -561,6 +572,10 @@ function getHotelbedsSelectionSummarySafe(params: {
     selectedRateRoomsCount: params.selectedRooms.length || (params.rateKeys.length ? 1 : 0),
     selectedRoomNames: params.selectedRooms.map((room) => room.roomName || ""),
     roomPriceBreakdown,
+    packageCurrency,
+    roomBreakdownCurrencies,
+    currencyMismatch,
+    currencyMismatchFixed: currencyMismatch,
     expectedTotalPrice,
     actualReviewPrice,
     priceMismatch:

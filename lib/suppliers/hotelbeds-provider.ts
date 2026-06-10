@@ -357,12 +357,18 @@ function mapHotelbedsRatesForRequest(
           .map((room) => getRateKeyPrefix(room.rateKey))
           .join("-")}`;
 
+        const packageCurrency = firstRate?.currency || hotel.currency || currency;
+        const roomBreakdownCurrencies = selectedRooms.map((room) => room.currency).filter(Boolean);
+        const currencyMismatch = roomBreakdownCurrencies.some(
+          (roomCurrency) => roomCurrency !== packageCurrency,
+        );
+
         packages.push({
           rateKey: selectedRooms[0]?.rateKey || `hotelbeds-${hotel.code}-${packageIndex}`,
           roomName: displayRoomName,
           boardName: firstRate?.boardName || firstRate?.boardCode || "Room Only",
           price: totalPrice,
-          currency: firstRate?.currency || hotel.currency || currency,
+          currency: packageCurrency,
           refundable: selectedItems.every((item) => item.rate.rateClass !== "NRF"),
           hotelbedsSelectedRooms: selectedRooms,
           hotelbedsPackage: {
@@ -371,7 +377,7 @@ function mapHotelbedsRatesForRequest(
             displayRoomName,
             roomsCount: selectedRooms.length,
             totalPrice,
-            currency: firstRate?.currency || hotel.currency || currency,
+            currency: packageCurrency,
             boardName: firstRate?.boardName || firstRate?.boardCode || "Room Only",
             boardCode: firstRate?.boardCode,
             roomPriceBreakdown: selectedRooms.map((room) => ({
@@ -379,7 +385,7 @@ function mapHotelbedsRatesForRequest(
               roomName: room.roomName || "Hotelbeds room",
               roomCode: room.roomCode,
               price: room.price || 0,
-              currency: room.currency,
+              currency: packageCurrency,
             })),
             allRateKeyPrefixes: selectedRooms.map((room) =>
               getRateKeyPrefix(room.rateKey),
@@ -397,6 +403,10 @@ function mapHotelbedsRatesForRequest(
             hotelbedsAllotments: selectedItems.map((item) =>
               getRateAllotment(item.rate),
             ),
+            packageCurrency,
+            roomBreakdownCurrencies,
+            currencyMismatch,
+            currencyMismatchFixed: currencyMismatch,
           },
         });
       });
@@ -414,6 +424,12 @@ function mapHotelbedsRatesForRequest(
       currency,
     });
 
+    const packageCurrency = rate.currency || hotel.currency || currency;
+    const roomBreakdownCurrencies = [selectedRoom.currency].filter(Boolean);
+    const currencyMismatch = roomBreakdownCurrencies.some(
+      (roomCurrency) => roomCurrency !== packageCurrency,
+    );
+
     return {
       rateKey:
         rate.rateKey ||
@@ -421,7 +437,7 @@ function mapHotelbedsRatesForRequest(
       roomName: room.name || room.code || "Hotelbeds room",
       boardName: rate.boardName || rate.boardCode || "Room Only",
       price: toHotelbedsPrice(rate),
-      currency: rate.currency || hotel.currency || currency,
+      currency: packageCurrency,
       refundable: rate.rateClass !== "NRF",
       hotelbedsSelectedRooms: [selectedRoom],
       hotelbedsPackage: {
@@ -430,7 +446,7 @@ function mapHotelbedsRatesForRequest(
         displayRoomName: selectedRoom.roomName || room.name || room.code || "Hotelbeds room",
         roomsCount: 1,
         totalPrice: toHotelbedsPrice(rate),
-        currency: rate.currency || hotel.currency || currency,
+        currency: packageCurrency,
         boardName: rate.boardName || rate.boardCode || "Room Only",
         boardCode: rate.boardCode,
         roomPriceBreakdown: [
@@ -439,7 +455,7 @@ function mapHotelbedsRatesForRequest(
             roomName: selectedRoom.roomName || room.name || room.code || "Hotelbeds room",
             roomCode: selectedRoom.roomCode,
             price: selectedRoom.price || 0,
-            currency: selectedRoom.currency,
+            currency: packageCurrency,
           },
         ],
         allRateKeyPrefixes: [getRateKeyPrefix(selectedRoom.rateKey)],
@@ -451,6 +467,10 @@ function mapHotelbedsRatesForRequest(
         boardCode: rate.boardCode,
         net: rate.net,
         hotelbedsAutoPairingDisabled: true,
+        packageCurrency,
+        roomBreakdownCurrencies,
+        currencyMismatch,
+        currencyMismatchFixed: currencyMismatch,
       },
     };
   });

@@ -5,6 +5,20 @@ function clean(value?: string | number | null) {
   return text && text !== "undefined" && text !== "null" ? text : undefined;
 }
 
+function formatPolicy(policy: unknown) {
+  if (!policy || typeof policy !== "object") return clean(String(policy ?? ""));
+  const record = policy as Record<string, unknown>;
+  const amount = clean(record.amount as string | number | null) || clean(record.Amount as string | number | null);
+  const from = clean(record.from as string | number | null) || clean(record.From as string | number | null);
+  const description =
+    clean(record.description as string | number | null) ||
+    clean(record.Description as string | number | null);
+
+  return [description, amount ? `Amount: ${amount}` : "", from ? `From: ${String(from).slice(0, 10)}` : ""]
+    .filter(Boolean)
+    .join(" - ");
+}
+
 export function HotelbedsHotelVoucher({ voucher }: { voucher: HotelbedsHotelVoucher }) {
   return (
     <section className="rounded-[2rem] border border-slate-200 bg-white p-6 text-[#0F172A] print:rounded-none print:border-0 print:p-0">
@@ -15,10 +29,11 @@ export function HotelbedsHotelVoucher({ voucher }: { voucher: HotelbedsHotelVouc
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2">
-        <VoucherField label="HOTLENO reference" value={voucher.hotlenoReference} />
-        <VoucherField label="Hotelbeds reference" value={voucher.bookingReference || voucher.supplierReference} />
-        <VoucherField label="Hotel" value={voucher.hotelName} />
-        <VoucherField label="Hotel address" value={voucher.hotelAddress} />
+        <VoucherField label="HOTLENO Reference" value={voucher.hotlenoReference} fallback="-" />
+        <VoucherField label="Hotelbeds Reference" value={voucher.bookingReference || voucher.supplierReference} fallback="-" />
+        <VoucherField label="Hotel" value={voucher.hotelName} fallback="-" />
+        <VoucherField label="Hotel address" value={voucher.hotelAddress} fallback="-" />
+        <VoucherField label="Hotel phone" value={voucher.hotelPhone} fallback="-" />
         <VoucherField label="Status" value={voucher.status} />
         <VoucherField label="Check-in" value={voucher.checkIn} />
         <VoucherField label="Check-out" value={voucher.checkOut} />
@@ -40,9 +55,20 @@ export function HotelbedsHotelVoucher({ voucher }: { voucher: HotelbedsHotelVouc
                 {clean(room.board) ? <p className="text-sm font-bold text-slate-600">Board: {room.board}</p> : null}
                 <p className="text-sm font-bold text-slate-600">
                   Adults {room.adults || 0}, Children {room.children || 0}
-                  {room.childAges?.length ? `, child ages ${room.childAges.join(", ")}` : ""}
                 </p>
-                {room.guestNames?.length ? (
+                {room.childAges?.length ? (
+                  <p className="text-sm font-bold text-slate-600">Child ages: {room.childAges.join(", ")}</p>
+                ) : null}
+                {room.guests?.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm font-bold">
+                    {room.guests.map((guest, guestIndex) => (
+                      <li key={`${guest.name}-${guestIndex}`}>
+                        {guest.name}
+                        {guest.type === "CH" && guest.age !== undefined ? `, Child age: ${guest.age}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                ) : room.guestNames?.length ? (
                   <ul className="mt-2 list-disc space-y-1 pl-5 text-sm font-bold">
                     {room.guestNames.map((guest, guestIndex) => (
                       <li key={`${guest}-${guestIndex}`}>{guest}</li>
@@ -59,24 +85,33 @@ export function HotelbedsHotelVoucher({ voucher }: { voucher: HotelbedsHotelVouc
         <ListBlock title="Guests" items={voucher.guestNames} />
       ) : null}
 
-      {voucher.cancellationPolicies?.length ? (
-        <div className="mt-5 rounded-2xl bg-orange-50 p-4 text-sm font-bold text-orange-800">
-          Cancellation policies captured from CheckRate / BookingDetails.
-        </div>
-      ) : null}
+      <ListBlock
+        title="Cancellation policy"
+        items={
+          voucher.cancellationPolicies?.length
+            ? voucher.cancellationPolicies
+                .map(formatPolicy)
+                .filter((item): item is string => Boolean(item))
+            : ["No cancellation policy provided"]
+        }
+      />
 
-      <ListBlock title="Remarks" items={voucher.remarks} />
+      <ListBlock
+        title="Remarks"
+        items={voucher.remarks?.length ? voucher.remarks : ["No remarks provided"]}
+      />
     </section>
   );
 }
 
-function VoucherField({ label, value }: { label: string; value?: string }) {
-  if (!clean(value)) return null;
+function VoucherField({ label, value, fallback }: { label: string; value?: string; fallback?: string }) {
+  const displayValue = clean(value) || fallback;
+  if (!clean(displayValue)) return null;
 
   return (
     <div data-print-card className="rounded-2xl border border-slate-200 bg-slate-50 p-4 print:bg-white">
       <p className="text-xs font-black uppercase tracking-normal text-slate-500">{label}</p>
-      <p className="mt-1 text-base font-black">{value}</p>
+      <p className="mt-1 text-base font-black">{displayValue}</p>
     </div>
   );
 }

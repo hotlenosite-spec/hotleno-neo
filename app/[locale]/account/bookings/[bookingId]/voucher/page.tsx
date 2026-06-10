@@ -16,6 +16,8 @@ type AccountBooking = {
   supplier?: string;
   hotelName?: string;
   location?: string;
+  hotelAddress?: string;
+  hotelPhone?: string;
   checkInDate?: string;
   checkOutDate?: string;
   rooms?: Array<{
@@ -38,10 +40,28 @@ type AccountBooking = {
   totalPrice?: number;
   currency?: string;
   status?: string;
+  bookingStatus?: string;
+  supplierStatus?: string;
   cancellationStatus?: string;
   cancellationPolicies?: unknown[];
   restrictions?: Array<{ Description?: string; description?: string }>;
+  metadata?: Record<string, unknown>;
 };
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function asString(value: unknown) {
+  const text = String(value ?? "").trim();
+  return text && text !== "undefined" && text !== "null" ? text : undefined;
+}
 
 function formatVoucherDate(value?: string) {
   if (!value) return undefined;
@@ -63,51 +83,96 @@ function formatVoucherStatus(value?: string) {
 }
 
 function toVoucher(booking: AccountBooking): HotelbedsHotelVoucherType {
+  const metadata = asRecord(booking.metadata);
+  const hotelbedsFlow = asRecord(metadata.hotelbedsFlow);
+  const hotelbedsPackage = asRecord(metadata.hotelbedsPackage);
+  const hotelbedsSelectedRooms = asArray(metadata.hotelbedsSelectedRooms);
   const supplierReference =
     booking.supplierReference ||
     booking.supplierBookingReference ||
     booking.supplierBookingId ||
-    booking.supplierConfirmationNo;
+    booking.supplierConfirmationNo ||
+    asString(metadata.hotelbedsBookingReference) ||
+    asString(hotelbedsFlow.hotelbedsReference);
+  const bookingRooms =
+    booking.rooms?.length
+      ? booking.rooms
+      : hotelbedsSelectedRooms.map((room) => {
+          const record = asRecord(room);
+          return {
+            roomName: asString(record.roomName),
+            boardName: asString(record.boardName) || asString(record.boardCode),
+            adults: Number(record.adults || 0),
+            children: Number(record.children || 0),
+            childAges: Array.isArray(record.childAges)
+              ? record.childAges.map(Number).filter(Number.isFinite)
+              : [],
+          };
+        });
+  const cancellationPolicies =
+    booking.cancellationPolicies?.length
+      ? booking.cancellationPolicies
+      : asArray(metadata.cancellationPolicies).length
+        ? asArray(metadata.cancellationPolicies)
+        : asArray(hotelbedsPackage.cancellationPolicies);
+  const remarks =
+    booking.restrictions
+      ?.map((item) => item.Description || item.description)
+      .filter((item): item is string => Boolean(item)) ||
+    asArray(metadata.rateComments).map(String).filter(Boolean);
 
   return {
     supplier: "hotelbeds-accommodation",
-    hotlenoReference: booking._id,
+    hotlenoReference: booking.bookingReference || booking._id,
     bookingReference: supplierReference,
     supplierReference,
     hotelName: booking.hotelName,
-    hotelAddress: booking.location,
+    hotelAddress:
+      booking.hotelAddress ||
+      booking.location ||
+      asString(metadata.hotelAddress) ||
+      asString(metadata.address),
+    hotelPhone: booking.hotelPhone || asString(metadata.hotelPhone) || asString(metadata.phone),
     checkIn: formatVoucherDate(booking.checkInDate),
     checkOut: formatVoucherDate(booking.checkOutDate),
-    roomName: booking.rooms?.[0]?.roomName,
-    boardName: booking.rooms?.[0]?.boardName,
+    roomName: bookingRooms?.[0]?.roomName,
+    boardName: bookingRooms?.[0]?.boardName,
     holderName: booking.leadGuest,
     customerEmail: booking.contactEmail,
     customerPhone: booking.contactPhone,
-    status: formatVoucherStatus(booking.status),
+    status: formatVoucherStatus(booking.status || booking.bookingStatus || booking.supplierStatus),
     cancellationStatus: booking.cancellationStatus,
-    rooms: booking.rooms?.map((room, index) => ({
+    rooms: bookingRooms?.map((room, index) => {
+      const roomTravelers = booking.travelers?.filter((traveler) => {
+        const travelerRecord = traveler as typeof traveler & { roomIndex?: number };
+        return typeof travelerRecord.roomIndex === "number"
+          ? travelerRecord.roomIndex === index
+          : index === 0;
+      }) || [];
+
+      return {
       name: room.roomName,
       board: room.boardName,
       adults: room.adults,
       children: room.children,
       childAges: room.childAges,
-      guestNames: booking.travelers
-        ?.filter((traveler) => {
-          const travelerRecord = traveler as typeof traveler & { roomIndex?: number };
-          return typeof travelerRecord.roomIndex === "number"
-            ? travelerRecord.roomIndex === index
-            : index === 0;
-        })
+      guests: roomTravelers
+        .map((traveler) => ({
+          name: [traveler.firstName, traveler.lastName].filter(Boolean).join(" "),
+          type: traveler.travelerType === "child" ? ("CH" as const) : ("AD" as const),
+          age: traveler.age,
+        }))
+        .filter((traveler) => traveler.name),
+      guestNames: roomTravelers
         .map((traveler) => [traveler.firstName, traveler.lastName].filter(Boolean).join(" "))
         .filter(Boolean),
-    })),
+      };
+    }),
     guestNames: booking.travelers
       ?.map((traveler) => [traveler.firstName, traveler.lastName].filter(Boolean).join(" "))
       .filter(Boolean),
-    cancellationPolicies: booking.cancellationPolicies,
-    remarks: booking.restrictions
-      ?.map((item) => item.Description || item.description)
-      .filter((item): item is string => Boolean(item)),
+    cancellationPolicies,
+    remarks,
   };
 }
 

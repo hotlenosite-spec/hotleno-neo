@@ -241,6 +241,7 @@ const normalizeSelectedRoomForReview = useCallback((
       searchData.currency ||
       "USD",
   );
+  const packageCurrency = supplier === "hotelbeds" ? hotelbedsPackage?.currency || currency : currency;
   const hotelbedsSelectedRooms = Array.isArray(selectedRoom.hotelbedsSelectedRooms)
     ? selectedRoom.hotelbedsSelectedRooms
         .map((room) => {
@@ -258,7 +259,7 @@ const normalizeSelectedRoomForReview = useCallback((
             boardName: String(record.boardName || ""),
             rateKey: String(record.rateKey || ""),
             price: toNumber(record.price),
-            currency: String(record.currency || hotelbedsPackage?.currency || currency),
+            currency: String(packageCurrency || record.currency || currency),
             rateType: String(record.rateType || ""),
             rateClass: String(record.rateClass || ""),
             allotment: Number.isFinite(Number(record.allotment))
@@ -288,9 +289,19 @@ const normalizeSelectedRoomForReview = useCallback((
     (sum, room) => sum + toNumber(room.price),
     0,
   );
+  const normalizedHotelbedsPackage = hotelbedsPackage
+    ? {
+        ...hotelbedsPackage,
+        currency: packageCurrency,
+        roomPriceBreakdown: (hotelbedsPackage.roomPriceBreakdown || []).map((room) => ({
+          ...room,
+          currency: packageCurrency,
+        })),
+      }
+    : undefined;
   const isHotelbedsPackage =
-    supplier === "hotelbeds" && (hotelbedsPackage || hotelbedsSelectedRooms.length > 1);
-  const packageTotal = toNumber(hotelbedsPackage?.totalPrice) || hotelbedsRoomsTotal;
+    supplier === "hotelbeds" && (normalizedHotelbedsPackage || hotelbedsSelectedRooms.length > 1);
+  const packageTotal = toNumber(normalizedHotelbedsPackage?.totalPrice) || hotelbedsRoomsTotal;
   const price = isHotelbedsPackage
     ? packageTotal || rawPrice || rawTotalPrice
     : rawPrice || (rawTotalPrice > 0 ? rawTotalPrice / nights - taxes : 0);
@@ -307,14 +318,14 @@ const normalizeSelectedRoomForReview = useCallback((
         "",
     ),
     RoomType: String(
-      hotelbedsPackage?.displayRoomName ||
+      normalizedHotelbedsPackage?.displayRoomName ||
         selectedRoom.displayRoomName ||
         selectedRoom.RoomType ||
         selectedRoom.roomName ||
         "",
     ),
     BoardType: String(selectedRoom.BoardType || selectedRoom.boardName || selectedRoom.mealType || ""),
-    Currency: currency,
+    Currency: packageCurrency,
     Price: price,
     TotalPrice: rawTotalPrice,
     totalPrice,
@@ -358,9 +369,9 @@ const normalizeSelectedRoomForReview = useCallback((
       ? totalPrice
       : toNumber(selectedRoom.supplierTotalFare || rawTotalPrice || rawPrice),
     hotelbedsSelectedRooms,
-    hotelbedsPackage,
+    hotelbedsPackage: normalizedHotelbedsPackage,
     displayRoomName: String(
-      hotelbedsPackage?.displayRoomName ||
+      normalizedHotelbedsPackage?.displayRoomName ||
         selectedRoom.displayRoomName ||
         selectedRoom.roomName ||
         selectedRoom.RoomName ||
@@ -369,14 +380,14 @@ const normalizeSelectedRoomForReview = useCallback((
     ),
     roomsCount: toNumber(selectedRoom.roomsCount) || hotelbedsSelectedRooms.length || 1,
     roomName: String(
-      hotelbedsPackage?.displayRoomName ||
+      normalizedHotelbedsPackage?.displayRoomName ||
         selectedRoom.roomName ||
         selectedRoom.RoomName ||
         selectedRoom.RoomType ||
         "",
     ),
     price,
-    currency,
+    currency: packageCurrency,
     refundable:
       typeof selectedRoom.refundable === "boolean"
         ? selectedRoom.refundable
@@ -839,6 +850,17 @@ const DOCUMENT_TYPES = [
             hotelbedsSelectedRooms: hotel.hotelbedsSelectedRooms || [],
             hotelbedsPackage: hotel.hotelbedsPackage || null,
             roomPriceBreakdown,
+            packageCurrency: hotel.supplier === "hotelbeds" ? hotel.hotelbedsPackage?.currency || hotel.Currency : undefined,
+            roomBreakdownCurrencies: roomPriceBreakdown
+              .map((room) => room.currency)
+              .filter(Boolean),
+            currencyMismatch:
+              hotel.supplier === "hotelbeds" &&
+              Boolean(hotel.hotelbedsPackage?.currency || hotel.Currency) &&
+              roomPriceBreakdown.some(
+                (room) => room.currency !== (hotel.hotelbedsPackage?.currency || hotel.Currency),
+              ),
+            currencyMismatchFixed: hotel.supplier === "hotelbeds",
             expectedTotalPrice: isHotelbedsPackage ? packageTotal : totalPrice,
             actualReviewPrice: totalPrice,
             priceMismatch: isHotelbedsPackage
@@ -944,7 +966,9 @@ const DOCUMENT_TYPES = [
   const totalPrice = isHotelbedsPackage
     ? packageTotal
     : hotel?.totalPrice || (nightlyPrice + taxes) * nights;
-  const roomPriceBreakdown =
+  const hotelbedsPackageCurrency =
+    hotel?.supplier === "hotelbeds" ? hotel?.hotelbedsPackage?.currency || hotel?.Currency : hotel?.Currency;
+  const rawRoomPriceBreakdown =
     hotel?.hotelbedsPackage?.roomPriceBreakdown?.length
       ? hotel.hotelbedsPackage.roomPriceBreakdown
       : hotel?.hotelbedsSelectedRooms?.map((room) => ({
@@ -954,6 +978,13 @@ const DOCUMENT_TYPES = [
           price: toNumber(room.price),
           currency: room.currency || hotel.Currency,
         })) || [];
+  const roomPriceBreakdown = rawRoomPriceBreakdown.map((room) => ({
+    ...room,
+    currency:
+      hotel?.supplier === "hotelbeds"
+        ? hotelbedsPackageCurrency || room.currency || hotel?.Currency
+        : room.currency || hotel?.Currency,
+  }));
   const roomOccupancies = getRoomOccupancies(searchParams);
   const guestRooms = roomOccupancies.length;
   const totalAdults = roomOccupancies.reduce((sum, room) => sum + room.adults, 0);
