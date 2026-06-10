@@ -141,6 +141,8 @@ export function AdminSidebar() {
   const locale = useLocale();
   const pathname = usePathname();
   const { user } = useAuth();
+  const isArabic = locale === "ar";
+
   const adminPath = (path: string) => `/${locale}${path}`;
   const can = (permission: StaffPermission) =>
     !user?.permissions ||
@@ -161,7 +163,38 @@ export function AdminSidebar() {
     { title: t("notifications"), href: adminPath("/admin/notifications"), icon: NotificationIcon, permission: "dashboard.view" },
     { title: t("support"), href: adminPath("/admin/support"), icon: HandshakeIcon, permission: "support.view" },
     { title: t("suppliersControl"), href: adminPath("/admin/suppliers"), icon: SettingsIcon, permission: "suppliers.view" },
-    { title: "Hotelbeds", href: adminPath("/admin/hotelbeds/certification"), icon: BuildingIcon, permission: "suppliers.view" },
+
+    {
+      title: isArabic ? "اعتماد Hotelbeds" : "Hotelbeds Certification",
+      href: adminPath("/admin/hotelbeds/certification"),
+      icon: BuildingIcon,
+      permission: "suppliers.view",
+    },
+    {
+      title: isArabic ? "اختبار فنادق Hotelbeds" : "Hotelbeds Hotel Test",
+      href: adminPath("/admin/hotelbeds/hotels/certification-run"),
+      icon: BuildingIcon,
+      permission: "suppliers.view",
+    },
+    {
+      title: isArabic ? "قسيمة فنادق Hotelbeds" : "Hotelbeds Hotel Voucher",
+      href: adminPath("/admin/hotelbeds/hotels/voucher-sample"),
+      icon: BuildingIcon,
+      permission: "suppliers.view",
+    },
+    {
+      title: isArabic ? "قسيمة نقل Hotelbeds" : "Hotelbeds Transfer Voucher",
+      href: adminPath("/admin/hotelbeds/transfers/voucher-sample"),
+      icon: CalendarIcon,
+      permission: "suppliers.view",
+    },
+    {
+      title: isArabic ? "قسيمة أنشطة Hotelbeds" : "Hotelbeds Activity Voucher",
+      href: adminPath("/admin/hotelbeds/activities/voucher-sample"),
+      icon: CalendarIcon,
+      permission: "suppliers.view",
+    },
+
     { title: t("pricing"), href: adminPath("/admin/pricing"), icon: ChartIcon, permission: "pricing.view" },
     { title: t("logs"), href: adminPath("/admin/logs"), icon: ChartIcon, permission: "logs.view" },
     { title: t("blog"), href: adminPath("/admin/blog"), icon: ChartIcon },
