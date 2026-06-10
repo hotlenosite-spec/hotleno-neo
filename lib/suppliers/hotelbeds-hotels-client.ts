@@ -154,7 +154,7 @@ export function buildHotelbedsBookingBody(request: HotelbedsHotelBookingRequest)
       ? request.rooms.map((room, roomIndex) => ({
           rateKey: room.rateKey,
           paxes: room.guests.map((guest, guestIndex) => ({
-            roomId: guest.roomId || roomIndex + 1,
+            roomId: getBookingPaxRoomId(room.rateKey, guest.roomId || roomIndex + 1),
             type: guest.type || "AD",
             name: guest.name,
             surname: guest.surname,
@@ -177,6 +177,19 @@ export function buildHotelbedsBookingBody(request: HotelbedsHotelBookingRequest)
       })),
     ...(request.remark ? { remark: request.remark } : {}),
   };
+}
+
+function getRateKeyRoomCount(rateKey?: string) {
+  const match = String(rateKey || "").match(/\|\|(\d+)~\d+~\d+/);
+  const count = match ? Number(match[1]) : 1;
+  return Number.isFinite(count) && count > 0 ? count : 1;
+}
+
+function getBookingPaxRoomId(rateKey: string | undefined, requestedRoomId: number) {
+  const roomCount = getRateKeyRoomCount(rateKey);
+  if (roomCount <= 1) return 1;
+
+  return Math.min(Math.max(1, requestedRoomId), roomCount);
 }
 
 export function buildHotelbedsCheckRateBody(request: HotelbedsHotelCheckRateRequest) {

@@ -10,6 +10,7 @@ import {
   TboSupplierProvider,
 } from "@/lib/suppliers/tbo-provider";
 import {
+  buildHotelbedsBookingBody,
   createHotelbedsHotelsClient,
   HotelbedsHotelsClientError,
 } from "@/lib/suppliers/hotelbeds-hotels-client";
@@ -390,8 +391,110 @@ function getHotelbedsRateKeyPrefix(rateKey: string) {
   return rateKey ? rateKey.slice(0, 42) : "";
 }
 
+function getHotelbedsRateKeyOccupancyMarker(rateKey: string) {
+  const match = String(rateKey || "").match(/\|\|(\d+)~(\d+)~(\d+)/);
+  if (!match) return null;
+
+  return {
+    marker: `${match[1]}~${match[2]}~${match[3]}`,
+    rooms: toNumber(match[1], 1),
+    adults: toNumber(match[2]),
+    children: toNumber(match[3]),
+  };
+}
+
 function hasSingleRoomOccupancyMarker(rateKey: string) {
   return /\|\|1~\d+~\d+/.test(rateKey);
+}
+
+function getHotelbedsFinalBookingPayloadSafe(
+  payload: unknown,
+  selectedRooms: HotelbedsSelectedRoom[],
+) {
+  const payloadRecord = asRecord(payload);
+  const finalRooms = asArray(payloadRecord.rooms);
+  const expectedRoomOccupancies = selectedRooms.map((room) => ({
+    roomIndex: room.roomIndex,
+    adults: room.adults,
+    children: room.children,
+    childAges: room.childAges || [],
+  }));
+  const finalPayloadRoomOccupancies = finalRooms.map((room, index) => {
+    const roomRecord = asRecord(room);
+    const rateKey = asString(roomRecord.rateKey);
+    const occupancy = getHotelbedsRateKeyOccupancyMarker(rateKey);
+    const paxes = asArray(roomRecord.paxes).map(asRecord);
+    const adultPaxes = paxes.filter((pax) => asString(pax.type) !== "CH");
+    const childPaxes = paxes.filter((pax) => asString(pax.type) === "CH");
+
+    return {
+      roomIndex: index,
+      rateKeyPrefix: getHotelbedsRateKeyPrefix(rateKey),
+      occupancyMarker: occupancy?.marker || "",
+      fullRateKeyPresent: Boolean(rateKey),
+      paxesCount: paxes.length,
+      adultsCount: adultPaxes.length,
+      childrenCount: childPaxes.length,
+      childAges: childPaxes.map((pax) => toNumber(pax.age)).filter(Number.isFinite),
+      paxRoomIds: paxes.map((pax) =>
+        Number.isFinite(Number(pax.roomId)) ? Number(pax.roomId) : null,
+      ),
+      paxTypes: paxes.map((pax) => asString(pax.type) || "AD"),
+      paxNamesPresent: paxes.map((pax) => Boolean(asString(pax.name) && asString(pax.surname))),
+    };
+  });
+  const mismatchReasons: string[] = [];
+
+  if (finalRooms.length !== selectedRooms.length) {
+    mismatchReasons.push("rooms length does not match hotelbedsSelectedRooms");
+  }
+
+  finalRooms.forEach((room, index) => {
+    const roomRecord = asRecord(room);
+    const rateKey = asString(roomRecord.rateKey);
+    const occupancy = getHotelbedsRateKeyOccupancyMarker(rateKey);
+    const paxes = asArray(roomRecord.paxes).map(asRecord);
+    const adultCount = paxes.filter((pax) => asString(pax.type) !== "CH").length;
+    const childCount = paxes.filter((pax) => asString(pax.type) === "CH").length;
+
+    if (!rateKey) {
+      mismatchReasons.push(`room ${index + 1} missing full rateKey`);
+    }
+    if (!paxes.length) {
+      mismatchReasons.push(`room ${index + 1} has no paxes`);
+    }
+    if (!occupancy) {
+      mismatchReasons.push(`room ${index + 1} missing occupancy marker`);
+    } else {
+      if (adultCount !== occupancy.adults || childCount !== occupancy.children) {
+        mismatchReasons.push(`room ${index + 1} pax count does not match occupancy marker`);
+      }
+      paxes.forEach((pax, paxIndex) => {
+        const roomId = Number(pax.roomId);
+        if (!Number.isFinite(roomId)) {
+          mismatchReasons.push(`room ${index + 1} pax ${paxIndex + 1} missing roomId`);
+        } else if (roomId < 1 || roomId > occupancy.rooms) {
+          mismatchReasons.push(`room ${index + 1} pax ${paxIndex + 1} roomId out of rate occupancy range`);
+        }
+      });
+    }
+    paxes.forEach((pax, paxIndex) => {
+      if (!asString(pax.name) || !asString(pax.surname)) {
+        mismatchReasons.push(`room ${index + 1} pax ${paxIndex + 1} missing name`);
+      }
+      if (asString(pax.type) === "CH" && !Number.isFinite(Number(pax.age))) {
+        mismatchReasons.push(`room ${index + 1} child ${paxIndex + 1} missing age`);
+      }
+    });
+  });
+
+  return {
+    roomsLength: finalRooms.length,
+    expectedRoomOccupancies,
+    finalPayloadRoomOccupancies,
+    payloadMismatch: mismatchReasons.length > 0,
+    mismatchReasons,
+  };
 }
 
 function isHotelbedsBookableDirectRoom(room: HotelbedsSelectedRoom) {
@@ -1283,9 +1386,15 @@ async function submitHotelbedsTesterBooking(params: {
       booking,
       checkedRateKeys.length ? checkedRateKeys : rateKeys,
     );
+    const finalBookingPayload = buildHotelbedsBookingBody(bookingRequest);
+    const hotelbedsFinalBookingPayloadSafe = getHotelbedsFinalBookingPayloadSafe(
+      finalBookingPayload,
+      selectedRooms,
+    );
     requestSummarySafe = {
       ...selectionSummarySafe,
       ...getHotelbedsRequestSummarySafe(bookingRequest),
+      hotelbedsFinalBookingPayloadSafe,
       generatedBookingPayload: {
         rooms: (bookingRequest.rooms || []).map((room) => ({
           rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
@@ -1302,23 +1411,36 @@ async function submitHotelbedsTesterBooking(params: {
       },
     };
     const validationErrors = validateHotelbedsBookingRequest(booking, bookingRequest);
+    if (hotelbedsFinalBookingPayloadSafe.payloadMismatch) {
+      validationErrors.push(
+        "HOTELBEDS_FINAL_BOOKING_PAYLOAD_INVALID",
+        ...hotelbedsFinalBookingPayloadSafe.mismatchReasons,
+      );
+    }
 
     if (validationErrors.length > 0) {
       logHotelbedsBookingFlow({
         internalBookingId: booking._id,
         step: "failed",
-        failedAt: "validation",
+        failedAt: "local_validation",
         error: validationErrors.join("; "),
+        details: {
+          hotelbedsFinalBookingPayloadSafe,
+        },
       });
       return failHotelbedsBooking({
         bookingsCollection,
         booking,
         now,
-        message: validationErrors.some((item) => /roomId|pax|traveler|room count/i.test(item))
-          ? "HOTELBEDS_INVALID_PAX_ROOM_DISTRIBUTION"
+        message: validationErrors.includes("HOTELBEDS_FINAL_BOOKING_PAYLOAD_INVALID")
+          ? "HOTELBEDS_FINAL_BOOKING_PAYLOAD_INVALID"
+          : validationErrors.some((item) => /roomId|pax|traveler|room count/i.test(item))
+            ? "HOTELBEDS_INVALID_PAX_ROOM_DISTRIBUTION"
           : "Hotelbeds booking validation failed.",
         failedAt: "local_validation",
-        validationErrors: validationErrors.some((item) => /roomId|pax|traveler|room count/i.test(item))
+        validationErrors: validationErrors.includes("HOTELBEDS_FINAL_BOOKING_PAYLOAD_INVALID")
+          ? validationErrors
+          : validationErrors.some((item) => /roomId|pax|traveler|room count/i.test(item))
           ? ["HOTELBEDS_INVALID_PAX_ROOM_DISTRIBUTION", ...validationErrors]
           : validationErrors,
         checkRateStatus,
@@ -1340,6 +1462,7 @@ async function submitHotelbedsTesterBooking(params: {
       paxes: toNumber(requestSummarySafe.paxes),
       details: {
         generatedBookingPayload: requestSummarySafe.generatedBookingPayload,
+        hotelbedsFinalBookingPayloadSafe,
       },
     });
     const bookingResponse = await client.book(bookingRequest);
