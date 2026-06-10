@@ -37,7 +37,28 @@ export interface SupplierHotelRate {
     rateKey: string;
     price?: number;
     currency?: string;
+    rateType?: string;
+    rateClass?: string;
+    allotment?: number;
   }>;
+  hotelbedsPackage?: {
+    packageId: string;
+    packageName: string;
+    displayRoomName: string;
+    roomsCount: number;
+    totalPrice: number;
+    currency: string;
+    boardName?: string;
+    boardCode?: string;
+    roomPriceBreakdown: Array<{
+      roomIndex: number;
+      roomName: string;
+      roomCode?: string;
+      price: number;
+      currency?: string;
+    }>;
+    allRateKeyPrefixes: string[];
+  };
   cancellationPolicies?: unknown[];
   rspPrice?: number;
   roomPromotions?: unknown[];

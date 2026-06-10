@@ -217,6 +217,9 @@ function buildHotelbedsSelectedRoom(params: {
     rateKey: String(params.rate.rateKey || ""),
     price: toHotelbedsPrice(params.rate),
     currency: params.rate.currency || params.currency,
+    rateType: params.rate.rateType,
+    rateClass: params.rate.rateClass,
+    allotment: getRateAllotment(params.rate),
   };
 }
 
@@ -236,6 +239,21 @@ function getRatePackageKey(rate: {
 function getRateAllotment(rate: { allotment?: number }) {
   const allotment = Number(rate.allotment);
   return Number.isFinite(allotment) && allotment > 0 ? allotment : 1;
+}
+
+function getRateKeyPrefix(rateKey?: string) {
+  return String(rateKey || "").slice(0, 42);
+}
+
+function getPackageRoomName(selectedRooms: Array<{ roomName?: string }>) {
+  const names = selectedRooms.map((room) => room.roomName || "").filter(Boolean);
+  const uniqueNames = [...new Set(names)];
+
+  if (uniqueNames.length === 1 && names.length > 1) {
+    return `${names.length} × ${uniqueNames[0]}`;
+  }
+
+  return names.join(" + ") || "Hotelbeds room package";
 }
 
 function rateMatchesRequestedRoom(
@@ -323,21 +341,42 @@ function mapHotelbedsRatesForRequest(
           (sum, room) => sum + (room.price || 0),
           0,
         );
+        const displayRoomName = getPackageRoomName(selectedRooms);
+        const packageId = `hotelbeds-${hotel.code ?? "hotel"}-${packageIndex}-${selectedRooms
+          .map((room) => getRateKeyPrefix(room.rateKey))
+          .join("-")}`;
 
         packages.push({
           rateKey: selectedRooms[0]?.rateKey || `hotelbeds-${hotel.code}-${packageIndex}`,
-          roomName:
-            selectedRooms
-              .map((room) => room.roomName)
-              .filter(Boolean)
-              .join(" + ") || "Hotelbeds room package",
+          roomName: displayRoomName,
           boardName: firstRate?.boardName || firstRate?.boardCode || "Room Only",
           price: totalPrice,
           currency: firstRate?.currency || hotel.currency || currency,
           refundable: selectedItems.every((item) => item.rate.rateClass !== "NRF"),
           hotelbedsSelectedRooms: selectedRooms,
+          hotelbedsPackage: {
+            packageId,
+            packageName: displayRoomName,
+            displayRoomName,
+            roomsCount: selectedRooms.length,
+            totalPrice,
+            currency: firstRate?.currency || hotel.currency || currency,
+            boardName: firstRate?.boardName || firstRate?.boardCode || "Room Only",
+            boardCode: firstRate?.boardCode,
+            roomPriceBreakdown: selectedRooms.map((room) => ({
+              roomIndex: room.roomIndex,
+              roomName: room.roomName || "Hotelbeds room",
+              roomCode: room.roomCode,
+              price: room.price || 0,
+              currency: room.currency,
+            })),
+            allRateKeyPrefixes: selectedRooms.map((room) =>
+              getRateKeyPrefix(room.rateKey),
+            ),
+          },
           cancellationPolicies: firstRate?.cancellationPolicies,
           metadata: {
+            packageId,
             rateType: firstRate?.rateType,
             rateClass: firstRate?.rateClass,
             boardCode: firstRate?.boardCode,
@@ -374,6 +413,26 @@ function mapHotelbedsRatesForRequest(
       currency: rate.currency || hotel.currency || currency,
       refundable: rate.rateClass !== "NRF",
       hotelbedsSelectedRooms: [selectedRoom],
+      hotelbedsPackage: {
+        packageId: `hotelbeds-${hotel.code ?? "hotel"}-${index}`,
+        packageName: selectedRoom.roomName || room.name || room.code || "Hotelbeds room",
+        displayRoomName: selectedRoom.roomName || room.name || room.code || "Hotelbeds room",
+        roomsCount: 1,
+        totalPrice: toHotelbedsPrice(rate),
+        currency: rate.currency || hotel.currency || currency,
+        boardName: rate.boardName || rate.boardCode || "Room Only",
+        boardCode: rate.boardCode,
+        roomPriceBreakdown: [
+          {
+            roomIndex: 0,
+            roomName: selectedRoom.roomName || room.name || room.code || "Hotelbeds room",
+            roomCode: selectedRoom.roomCode,
+            price: selectedRoom.price || 0,
+            currency: selectedRoom.currency,
+          },
+        ],
+        allRateKeyPrefixes: [getRateKeyPrefix(selectedRoom.rateKey)],
+      },
       cancellationPolicies: rate.cancellationPolicies,
       metadata: {
         rateType: rate.rateType,

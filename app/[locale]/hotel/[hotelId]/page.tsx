@@ -99,20 +99,32 @@ function getSelectedRoomSnapshot(
   const taxes = toNumber(option.Taxes);
   const nights = searchParams.guests.nights || 1;
   const currency = option.Currency || searchParams.currency || "USD";
+  const isHotelbedsPackage = supplier === "hotelbeds";
+  const packageTotal = toNumber(option.hotelbedsPackage?.totalPrice) || price + taxes;
+  const displayRoomName =
+    option.hotelbedsPackage?.displayRoomName ||
+    option.displayRoomName ||
+    option.RoomName ||
+    option.RoomType;
 
   return {
     ...option,
     HotelId: Number.parseInt(hotelId, 10),
-    roomName: option.RoomName || option.RoomType,
+    roomName: displayRoomName,
+    displayRoomName,
+    roomsCount: option.roomsCount || option.hotelbedsSelectedRooms?.length || 1,
+    hotelbedsPackage: option.hotelbedsPackage,
+    hotelbedsSelectedRooms: option.hotelbedsSelectedRooms || [],
     rateKey: option.rateKey || option.supplierRateKey || option.BookingCode || String(option.OptionId),
     supplierRateKey: option.supplierRateKey || option.rateKey || option.BookingCode || String(option.OptionId),
-    hotelbedsSelectedRooms: option.hotelbedsSelectedRooms || [],
     BookingCode: option.BookingCode || option.supplierRateKey || option.rateKey,
     supplierHotelId: option.supplierHotelId || option.HotelCode || hotelId,
     HotelCode: option.HotelCode || option.supplierHotelId || hotelId,
-    supplierTotalFare: option.supplierTotalFare ?? option.TotalPrice ?? price,
+    supplierTotalFare: isHotelbedsPackage
+      ? packageTotal
+      : option.supplierTotalFare ?? option.TotalPrice ?? price,
     price,
-    totalPrice: (price + taxes) * nights,
+    totalPrice: isHotelbedsPackage ? packageTotal : (price + taxes) * nights,
     currency,
     refundable: !option.IsNonRefundable,
     boardName: option.BoardName || option.BoardType,
@@ -123,8 +135,8 @@ function getSelectedRoomSnapshot(
     checkOut: searchParams.dates.checkOut,
     guests: searchParams.guests,
     nights,
-    Price: price,
-    TotalPrice: option.TotalPrice ?? price,
+    Price: isHotelbedsPackage ? packageTotal : price,
+    TotalPrice: isHotelbedsPackage ? packageTotal : option.TotalPrice ?? price,
     Taxes: taxes,
     Currency: currency,
     rspPrice: option.rspPrice,

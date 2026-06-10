@@ -800,6 +800,19 @@ export default function AdminBookingsPage() {
     </div>
   );
 
+  const getBookingRoomSummary = (booking?: Booking | null) => {
+    const roomNames = (booking?.rooms || [])
+      .map((room) => room.roomName)
+      .filter(Boolean);
+    const uniqueNames = [...new Set(roomNames)];
+
+    if (uniqueNames.length === 1 && roomNames.length > 1) {
+      return `${roomNames.length} × ${uniqueNames[0]}`;
+    }
+
+    return roomNames.join(" + ") || "-";
+  };
+
   const formatAdminValue = (value?: string | number | null) => {
     if (value === undefined || value === null || value === "") return "-";
     if (typeof value === "number") return value;
@@ -901,6 +914,10 @@ export default function AdminBookingsPage() {
     selectedBooking?.metadata?.hotelbedsFlow &&
     typeof selectedBooking.metadata.hotelbedsFlow === "object"
       ? (selectedBooking.metadata.hotelbedsFlow as Record<string, unknown>)
+      : null;
+  const hotelbedsRequestSummarySafe =
+    hotelbedsFlow?.requestSummarySafe && typeof hotelbedsFlow.requestSummarySafe === "object"
+      ? (hotelbedsFlow.requestSummarySafe as Record<string, unknown>)
       : null;
   const hotelbedsValidationErrors = Array.isArray(hotelbedsFlow?.validationErrors)
     ? hotelbedsFlow.validationErrors.map(String).filter(Boolean)
@@ -1225,11 +1242,11 @@ export default function AdminBookingsPage() {
                       {t("ref")}: {joinPresent(booking.bookingReference, booking.location)}
                     </p>
 
-                    {booking.rooms?.[0]?.roomName && (
+                    {booking.rooms?.length ? (
                       <p className="text-sm font-medium text-slate-500">
-                        {t("room")}: {booking.rooms[0].roomName}
+                        {t("room")}: {getBookingRoomSummary(booking)}
                       </p>
-                    )}
+                    ) : null}
 
                     <p className="text-sm font-medium text-slate-500">
                       {t("guest")}: {booking.leadGuest} |{" "}
@@ -1324,7 +1341,7 @@ export default function AdminBookingsPage() {
               <h3 className="text-lg font-black text-slate-950">الفندق والسعر</h3>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {renderDetail("الفندق", selectedBooking?.hotelName)}
-                {renderDetail("الغرفة", selectedBooking?.rooms?.[0]?.roomName)}
+                {renderDetail("الغرفة", getBookingRoomSummary(selectedBooking))}
                 {renderDetail("الموقع", selectedBooking?.location)}
                 {renderDetail("معرف الفندق", selectedBooking?.hotelId)}
                 {renderDetail("السعر النهائي", selectedBooking ? formatCurrency(selectedBooking.totalPrice, selectedBooking.currency) : "-")}
@@ -1580,6 +1597,7 @@ export default function AdminBookingsPage() {
                   {renderDetail("Status", selectedBooking?.status || selectedBooking?.bookingStatus)}
                   {renderDetail("Failed step", String(hotelbedsFlow.failedAt || ""))}
                   {renderDetail("Error message", String(hotelbedsFlow.errorMessage || selectedBooking?.failureReason || ""))}
+                  {renderDetail("CheckRate strategy", String(hotelbedsRequestSummarySafe?.checkRateStrategy || ""))}
                   {renderDetail("CheckRate status", String(hotelbedsFlow.checkRateStatus || ""))}
                   {renderDetail("CheckRate bookable", String(hotelbedsFlow.checkRateBookable ?? ""))}
                   {renderDetail("Booking status", String(hotelbedsFlow.bookingStatus || ""))}

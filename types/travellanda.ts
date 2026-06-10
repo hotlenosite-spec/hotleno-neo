@@ -108,7 +108,30 @@ export interface HotelOption {
     rateKey: string;
     price?: number;
     currency?: string;
+    rateType?: string;
+    rateClass?: string;
+    allotment?: number;
   }>;
+  hotelbedsPackage?: {
+    packageId: string;
+    packageName: string;
+    displayRoomName: string;
+    roomsCount: number;
+    totalPrice: number;
+    currency: string;
+    boardName?: string;
+    boardCode?: string;
+    roomPriceBreakdown: Array<{
+      roomIndex: number;
+      roomName: string;
+      roomCode?: string;
+      price: number;
+      currency?: string;
+    }>;
+    allRateKeyPrefixes: string[];
+  };
+  displayRoomName?: string;
+  roomsCount?: number;
   BookingCode?: string;
   HotelCode?: string;
   supplierTotalFare?: number;

@@ -152,21 +152,28 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
       ? hotel.metadata.legacyHotelId
       : stableNumericId(`${hotel.supplier}:${hotel.supplierHotelId}`);
 
-  const options: HotelOption[] = hotel.rates.map((rate, index) => ({
+  const options: HotelOption[] = hotel.rates.map((rate, index) => {
+    const displayRoomName = rate.hotelbedsPackage?.displayRoomName || rate.roomName;
+    const totalPrice = rate.hotelbedsPackage?.totalPrice ?? rate.price;
+
+    return {
     OptionId: stableNumericId(`${hotel.supplier}:${rate.rateKey}:${index}`),
     rateKey: rate.rateKey,
     supplier: hotel.supplier,
     supplierHotelId: hotel.supplierHotelId,
     supplierRateKey: rate.rateKey,
     hotelbedsSelectedRooms: rate.hotelbedsSelectedRooms,
+    hotelbedsPackage: rate.hotelbedsPackage,
+    displayRoomName,
+    roomsCount: rate.hotelbedsPackage?.roomsCount || rate.hotelbedsSelectedRooms?.length || 1,
     BookingCode: rate.rateKey,
     HotelCode: hotel.supplierHotelId,
-    supplierTotalFare: rate.price,
+    supplierTotalFare: totalPrice,
     OnRequest: 0,
     BoardType: rate.boardName || "Room Only",
     BoardName: rate.boardName,
-    RoomType: rate.roomName,
-    RoomName: rate.roomName,
+    RoomType: displayRoomName,
+    RoomName: displayRoomName,
     Rooms: rate.hotelbedsSelectedRooms?.length
       ? rate.hotelbedsSelectedRooms.map((room) => ({
           RoomId: room.roomIndex + 1,
@@ -190,8 +197,8 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
     Children: rate.hotelbedsSelectedRooms?.length
       ? rate.hotelbedsSelectedRooms.reduce((sum, room) => sum + room.children, 0)
       : 0,
-    Price: rate.price,
-    TotalPrice: rate.price,
+    Price: totalPrice,
+    TotalPrice: totalPrice,
     Taxes: 0,
     Currency: rate.currency || hotel.currency,
     IsNonRefundable: !rate.refundable,
@@ -202,7 +209,8 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
     cancellationPolicies: rate.cancellationPolicies,
     rateConditions: rate.rateConditions,
     amenities: rate.amenities,
-  }));
+    };
+  });
 
   return {
     HotelId: hotelId,

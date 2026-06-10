@@ -284,7 +284,16 @@ type HotelbedsSelectedRoom = {
   rateKey: string;
   price?: number;
   currency?: string;
+  rateType?: string;
+  rateClass?: string;
+  allotment?: number;
 };
+
+type HotelbedsCheckRateStrategy =
+  | "BOOKABLE_DIRECT"
+  | "CHECKRATE_REQUIRED"
+  | "CHECKRATE_ONE_RATE_KEY"
+  | "CHECKRATE_MULTI_RATE_KEYS";
 
 function getHotelbedsSelectedRooms(booking: BookingDocument): HotelbedsSelectedRoom[] {
   const metadata = asRecord(booking.metadata);
@@ -313,6 +322,11 @@ function getHotelbedsSelectedRooms(booking: BookingDocument): HotelbedsSelectedR
         rateKey: asString(record.rateKey),
         price: Number.isFinite(Number(record.price)) ? Number(record.price) : undefined,
         currency: asString(record.currency),
+        rateType: asString(record.rateType),
+        rateClass: asString(record.rateClass),
+        allotment: Number.isFinite(Number(record.allotment))
+          ? Number(record.allotment)
+          : undefined,
       };
     })
     .filter((room) => room.rateKey)
@@ -347,16 +361,65 @@ function hasSingleRoomOccupancyMarker(rateKey: string) {
   return /\|\|1~\d+~\d+/.test(rateKey);
 }
 
+function isHotelbedsBookableDirectRoom(room: HotelbedsSelectedRoom) {
+  return String(room.rateType || "").toUpperCase() === "BOOKABLE";
+}
+
+function getHotelbedsCheckRateStrategy(params: {
+  selectedRooms: HotelbedsSelectedRoom[];
+  rateKeys: string[];
+}): HotelbedsCheckRateStrategy {
+  if (
+    params.selectedRooms.length > 0 &&
+    params.selectedRooms.every(isHotelbedsBookableDirectRoom)
+  ) {
+    return "BOOKABLE_DIRECT";
+  }
+
+  if (params.rateKeys.length <= 1) {
+    return "CHECKRATE_REQUIRED";
+  }
+
+  return "CHECKRATE_ONE_RATE_KEY";
+}
+
 function getHotelbedsSelectionSummarySafe(params: {
   booking: BookingDocument;
   selectedRooms: HotelbedsSelectedRoom[];
   rateKeys: string[];
 }) {
   const requestedOccupancies = getRequestedOccupancies(params.booking);
+  const metadata = asRecord(params.booking.metadata);
+  const hotelbedsPackage = asRecord(params.booking.hotelbedsPackage || metadata.hotelbedsPackage);
+  const expectedTotalPrice =
+    toNumber(hotelbedsPackage.totalPrice) ||
+    params.selectedRooms.reduce((sum, room) => sum + toNumber(room.price), 0);
+  const actualReviewPrice =
+    toNumber(metadata.actualReviewPrice) ||
+    toNumber(metadata.supplierTotalFare) ||
+    toNumber(params.booking.totalPrice);
+  const roomPriceBreakdown = asArray(metadata.roomPriceBreakdown).length
+    ? asArray(metadata.roomPriceBreakdown)
+    : params.selectedRooms.map((room) => ({
+        roomIndex: room.roomIndex,
+        roomName: room.roomName || "",
+        roomCode: room.roomCode || "",
+        price: room.price || 0,
+        currency: room.currency || params.booking.currency,
+      }));
 
   return {
     requestedRoomsCount: requestedOccupancies.length || 1,
     selectedRateRoomsCount: params.selectedRooms.length || (params.rateKeys.length ? 1 : 0),
+    selectedRoomNames: params.selectedRooms.map((room) => room.roomName || ""),
+    roomPriceBreakdown,
+    expectedTotalPrice,
+    actualReviewPrice,
+    priceMismatch:
+      expectedTotalPrice > 0 && Math.abs(expectedTotalPrice - actualReviewPrice) > 0.01,
+    summaryUsesFirstRoomOnly:
+      params.selectedRooms.length > 1 &&
+      actualReviewPrice <= toNumber(params.selectedRooms[0]?.price),
     requestedOccupancies,
     selectedRateOccupancySummary: params.selectedRooms.map((room) => ({
       roomIndex: room.roomIndex,
@@ -365,6 +428,9 @@ function getHotelbedsSelectionSummarySafe(params: {
       childAges: room.childAges,
       roomCode: room.roomCode || "",
       boardCode: room.boardCode || "",
+      rateType: room.rateType || "",
+      rateClass: room.rateClass || "",
+      allotment: room.allotment ?? null,
       rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
       hasSingleRoomOccupancyMarker: hasSingleRoomOccupancyMarker(room.rateKey),
     })),
@@ -377,6 +443,9 @@ function getHotelbedsSelectionSummarySafe(params: {
       adults: room.adults,
       children: room.children,
       childAges: room.childAges,
+      rateType: room.rateType || "",
+      rateClass: room.rateClass || "",
+      allotment: room.allotment ?? null,
       rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
     })),
     generatedCheckRatePayload: {
@@ -384,6 +453,7 @@ function getHotelbedsSelectionSummarySafe(params: {
         rateKeyPrefix: getHotelbedsRateKeyPrefix(key),
       })),
       roomsCount: params.rateKeys.length,
+      usesMultipleRateKeys: params.rateKeys.length > 1,
     },
     supplierRateKeyPrefix: getHotelbedsRateKeyPrefix(String(params.booking.supplierRateKey || "")),
     hasSingleRoomOccupancyMarker: hasSingleRoomOccupancyMarker(
@@ -811,11 +881,27 @@ async function submitHotelbedsTesterBooking(params: {
   const selectedRooms = getHotelbedsSelectedRooms(booking);
   const selectedRateKeys = selectedRooms.map((room) => room.rateKey).filter(Boolean);
   const rateKeys = selectedRateKeys.length ? selectedRateKeys : rateKey ? [rateKey] : [];
-  const selectionSummarySafe = getHotelbedsSelectionSummarySafe({
+  const selectionSummaryBase = getHotelbedsSelectionSummarySafe({
     booking,
     selectedRooms,
     rateKeys,
   });
+  const checkRateStrategy = getHotelbedsCheckRateStrategy({
+    selectedRooms,
+    rateKeys,
+  });
+  const selectionSummarySafe = {
+    ...selectionSummaryBase,
+    checkRateStrategy,
+    generatedCheckRatePayload: {
+      ...asRecord(selectionSummaryBase.generatedCheckRatePayload),
+      strategy: checkRateStrategy,
+      oneRateKeyPerRequest:
+        checkRateStrategy === "CHECKRATE_REQUIRED" ||
+        checkRateStrategy === "CHECKRATE_ONE_RATE_KEY",
+      bookableDirect: checkRateStrategy === "BOOKABLE_DIRECT",
+    },
+  };
   const requestedRoomsCount = Number(selectionSummarySafe.requestedRoomsCount || 1);
   const selectedRateRoomsCount = Number(selectionSummarySafe.selectedRateRoomsCount || 0);
   const hasExplicitRoomSelection = Array.from({ length: requestedRoomsCount }).every(
@@ -881,88 +967,186 @@ async function submitHotelbedsTesterBooking(params: {
   });
   logHotelbedsBookingFlow({
     internalBookingId: booking._id,
+    step: "checkrate_strategy",
+    status: checkRateStrategy,
+    details: {
+      selectedRooms: selectionSummarySafe.selectedRooms,
+      generatedCheckRatePayload: selectionSummarySafe.generatedCheckRatePayload,
+    },
+  });
+  logHotelbedsBookingFlow({
+    internalBookingId: booking._id,
     step: "validated",
     status: "precheck_ok",
   });
 
-  try {
+  if (checkRateStrategy === "BOOKABLE_DIRECT") {
+    checkRateStatus = "bookable_direct_skipped";
+    checkRateBookable = true;
+    checkRateResponseSafe = {
+      status: checkRateStatus,
+      rateKeysReturned: rateKeys.length,
+      hasRateKey: rateKeys.length > 0,
+    };
+    requestSummarySafe = {
+      ...selectionSummarySafe,
+      checkRateSkipped: true,
+      checkedRateKeyPrefixes: rateKeys.map(getHotelbedsRateKeyPrefix),
+    };
     logHotelbedsBookingFlow({
       internalBookingId: booking._id,
-      step: "before_checkrate",
-      rateKeyPresent: rateKeys.length > 0,
-      rooms: rateKeys.length,
+      step: "checkrate_skipped",
+      status: checkRateStatus,
       details: {
+        reason: "all_selected_rates_bookable_direct",
         selectedRooms: selectionSummarySafe.selectedRooms,
-        requestedOccupancies: selectionSummarySafe.requestedOccupancies,
-        generatedCheckRatePayload: selectionSummarySafe.generatedCheckRatePayload,
       },
     });
-    const checkRateResponse = await client.checkRate({
-      rateKey: rateKeys[0],
-      rateKeys,
-      language: "en",
-    });
-    checkedRateKeys = extractHotelbedsRateKeys(checkRateResponse);
-    if (checkedRateKeys.length < requestedRoomsCount) {
-      checkedRateKeys = rateKeys;
-    }
-    checkRateStatus = getHotelbedsStatus(checkRateResponse);
-    checkRateResponseSafe = getHotelbedsFlowSafeResponse(checkRateResponse);
-    checkRateBookable = isHotelbedsCheckRateBookable(checkRateResponse);
-    logHotelbedsBookingFlow({
-      internalBookingId: booking._id,
-      step: "checkrate_response",
-      status: checkRateStatus,
-      bookable: checkRateBookable,
-    });
+  } else {
+    try {
+      const checkedRateKeyList: string[] = [];
+      const checkRateResponsesSafe: Array<Record<string, unknown>> = [];
 
-    if (!checkRateBookable) {
-      return failHotelbedsBooking({
+      for (const [index, currentRateKey] of rateKeys.entries()) {
+        const selectedRoom = selectedRooms[index];
+        logHotelbedsBookingFlow({
+          internalBookingId: booking._id,
+          step: "before_checkrate",
+          rateKeyPresent: Boolean(currentRateKey),
+          rooms: 1,
+          details: {
+            strategy: checkRateStrategy,
+            roomIndex: selectedRoom?.roomIndex ?? index,
+            selectedRoom: selectionSummarySafe.selectedRooms[index],
+            requestedOccupancy: selectionSummarySafe.requestedOccupancies[index],
+            generatedCheckRatePayload: {
+              rooms: [
+                {
+                  rateKeyPrefix: getHotelbedsRateKeyPrefix(currentRateKey),
+                },
+              ],
+              roomsCount: 1,
+              usesMultipleRateKeys: false,
+            },
+          },
+        });
+
+        const checkRateResponse = await client.checkRate({
+          rateKey: currentRateKey,
+          rateKeys: [currentRateKey],
+          language: "en",
+        });
+        const returnedRateKeys = extractHotelbedsRateKeys(checkRateResponse);
+        const finalRateKey = returnedRateKeys[0] || currentRateKey;
+        const roomCheckRateStatus = getHotelbedsStatus(checkRateResponse);
+        const roomCheckRateBookable = isHotelbedsCheckRateBookable(checkRateResponse);
+        const roomCheckRateResponseSafe = getHotelbedsFlowSafeResponse(checkRateResponse);
+
+        checkedRateKeyList.push(finalRateKey);
+        checkRateResponsesSafe.push({
+          roomIndex: selectedRoom?.roomIndex ?? index,
+          ...roomCheckRateResponseSafe,
+        });
+
+        logHotelbedsBookingFlow({
+          internalBookingId: booking._id,
+          step: "checkrate_response",
+          status: roomCheckRateStatus,
+          bookable: roomCheckRateBookable,
+          details: {
+            strategy: checkRateStrategy,
+            roomIndex: selectedRoom?.roomIndex ?? index,
+            rateKeyReturned: returnedRateKeys.length > 0,
+          },
+        });
+
+        if (!roomCheckRateBookable) {
+          checkRateStatus = roomCheckRateStatus;
+          checkRateBookable = false;
+          checkRateResponseSafe = {
+            status: roomCheckRateStatus,
+            roomIndex: selectedRoom?.roomIndex ?? index,
+            responses: checkRateResponsesSafe,
+          };
+          return failHotelbedsBooking({
+            bookingsCollection,
+            booking,
+            now,
+            message: "CheckRate returned not bookable.",
+            failedAt: "hotelbeds_checkrate",
+            checkRateStatus,
+            checkRateBookable,
+            checkRateResponseSafe,
+            requestSummarySafe: {
+              ...requestSummarySafe,
+              checkRateStrategy,
+              checkRateResponsesSafe,
+            },
+          });
+        }
+      }
+
+      checkedRateKeys = checkedRateKeyList.length ? checkedRateKeyList : rateKeys;
+      checkRateStatus = "all_rooms_bookable";
+      checkRateBookable = true;
+      checkRateResponseSafe = {
+        status: checkRateStatus,
+        roomsChecked: checkRateResponsesSafe.length,
+        responses: checkRateResponsesSafe,
+      };
+      requestSummarySafe = {
+        ...selectionSummarySafe,
+        checkRateStrategy,
+        checkRateResponsesSafe,
+        checkedRateKeyPrefixes: checkedRateKeys.map(getHotelbedsRateKeyPrefix),
+      };
+    } catch (error) {
+      const message =
+        error instanceof HotelbedsHotelsClientError
+          ? `${error.code}: ${error.message}`
+          : safeErrorMessage(error);
+      checkRateResponseSafe = getHotelbedsClientErrorSafeResponse(error);
+      logHotelbedsBookingFlow({
+        internalBookingId: booking._id,
+        step: "failed",
+        failedAt: "hotelbeds_checkrate",
+        error: message,
+        details: {
+          strategy: checkRateStrategy,
+        },
+      });
+      const updatedBooking = await failHotelbedsBooking({
         bookingsCollection,
         booking,
         now,
-        message: "CheckRate returned not bookable.",
+        message,
         failedAt: "hotelbeds_checkrate",
         checkRateStatus,
         checkRateBookable,
         checkRateResponseSafe,
-        requestSummarySafe,
+        requestSummarySafe: {
+          ...requestSummarySafe,
+          checkRateStrategy,
+        },
       });
-    }
-  } catch (error) {
-    const message =
-      error instanceof HotelbedsHotelsClientError
-        ? `${error.code}: ${error.message}`
-        : safeErrorMessage(error);
-    checkRateResponseSafe = getHotelbedsClientErrorSafeResponse(error);
-    const updatedBooking = await failHotelbedsBooking({
-      bookingsCollection,
-      booking,
-      now,
-      message,
-      failedAt: "hotelbeds_checkrate",
-      checkRateStatus,
-      checkRateBookable,
-      checkRateResponseSafe,
-      requestSummarySafe,
-    });
-    await createLog({
-      type: "supplier_booking_failed",
-      status: "failed",
-      message: "Hotelbeds Accommodation check-rate failed",
-      request: {
-        bookingId: booking._id,
-        supplier: "hotelbeds",
-        hasRateKey: rateKeys.length > 0,
-      },
-      response: {
-        bookingId: booking._id,
-        supplierStatus: "failed",
-      },
-      error: message,
-    });
+      await createLog({
+        type: "supplier_booking_failed",
+        status: "failed",
+        message: "Hotelbeds Accommodation check-rate failed",
+        request: {
+          bookingId: booking._id,
+          supplier: "hotelbeds",
+          hasRateKey: rateKeys.length > 0,
+        },
+        response: {
+          bookingId: booking._id,
+          supplierStatus: "failed",
+        },
+        error: message,
+      });
 
-    return updatedBooking;
+      return updatedBooking;
+    }
   }
 
   try {
@@ -1704,6 +1888,10 @@ export async function POST(req: NextRequest) {
       hotelbedsSelectedRooms: Array.isArray(body.hotelbedsSelectedRooms)
         ? body.hotelbedsSelectedRooms
         : [],
+      hotelbedsPackage:
+        body.hotelbedsPackage && typeof body.hotelbedsPackage === "object"
+          ? body.hotelbedsPackage
+          : null,
       supplierBookingReference: body.supplierBookingReference || "",
       hotelId: toNumber(body.hotelId),
       hotelName: body.hotelName || "",

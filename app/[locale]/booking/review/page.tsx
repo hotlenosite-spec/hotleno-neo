@@ -63,6 +63,26 @@ interface HotelData {
     price?: number;
     currency?: string;
   }>;
+  hotelbedsPackage?: {
+    packageId: string;
+    packageName: string;
+    displayRoomName: string;
+    roomsCount: number;
+    totalPrice: number;
+    currency: string;
+    boardName?: string;
+    boardCode?: string;
+    roomPriceBreakdown: Array<{
+      roomIndex: number;
+      roomName: string;
+      roomCode?: string;
+      price: number;
+      currency?: string;
+    }>;
+    allRateKeyPrefixes: string[];
+  };
+  displayRoomName?: string;
+  roomsCount?: number;
   roomName?: string;
   price?: number;
   totalPrice?: number;
@@ -198,12 +218,48 @@ const normalizeSelectedRoomForReview = useCallback((
   const taxes = toNumber(selectedRoom.Taxes);
   const rawPrice = toNumber(selectedRoom.Price || selectedRoom.price);
   const rawTotalPrice = toNumber(selectedRoom.totalPrice || selectedRoom.TotalPrice);
-  const price = rawPrice || (rawTotalPrice > 0 ? rawTotalPrice / nights - taxes : 0);
-  const totalPrice = rawTotalPrice || (price + taxes) * nights;
   const currency =
     String(selectedRoom.Currency || selectedRoom.currency || searchData.currency || "USD");
   const supplier = String(selectedRoom.supplier || "").toLowerCase();
-
+  const hotelbedsPackage =
+    selectedRoom.hotelbedsPackage && typeof selectedRoom.hotelbedsPackage === "object"
+      ? (selectedRoom.hotelbedsPackage as HotelData["hotelbedsPackage"])
+      : undefined;
+  const hotelbedsSelectedRooms = Array.isArray(selectedRoom.hotelbedsSelectedRooms)
+    ? selectedRoom.hotelbedsSelectedRooms
+        .map((room) => {
+          const record = room as Record<string, unknown>;
+          return {
+            roomIndex: toNumber(record.roomIndex),
+            adults: toNumber(record.adults, 1),
+            children: toNumber(record.children),
+            childAges: Array.isArray(record.childAges)
+              ? record.childAges.map((age) => toNumber(age)).filter(Number.isFinite)
+              : [],
+            roomCode: String(record.roomCode || ""),
+            roomName: String(record.roomName || ""),
+            boardCode: String(record.boardCode || ""),
+            boardName: String(record.boardName || ""),
+            rateKey: String(record.rateKey || ""),
+            price: toNumber(record.price),
+            currency: String(record.currency || currency),
+          };
+        })
+        .filter((room) => room.rateKey)
+    : [];
+  const hotelbedsRoomsTotal = hotelbedsSelectedRooms.reduce(
+    (sum, room) => sum + toNumber(room.price),
+    0,
+  );
+  const isHotelbedsPackage =
+    supplier === "hotelbeds" && (hotelbedsPackage || hotelbedsSelectedRooms.length > 1);
+  const packageTotal = toNumber(hotelbedsPackage?.totalPrice) || hotelbedsRoomsTotal;
+  const price = isHotelbedsPackage
+    ? packageTotal || rawPrice || rawTotalPrice
+    : rawPrice || (rawTotalPrice > 0 ? rawTotalPrice / nights - taxes : 0);
+  const totalPrice = isHotelbedsPackage
+    ? packageTotal || rawTotalPrice || rawPrice
+    : rawTotalPrice || (price + taxes) * nights;
   return {
     ...(optionData as HotelData),
     ...(selectedRoom as Partial<HotelData>),
@@ -213,7 +269,13 @@ const normalizeSelectedRoomForReview = useCallback((
         selectedRoom.HotelName ||
         "",
     ),
-    RoomType: String(selectedRoom.RoomType || selectedRoom.roomName || ""),
+    RoomType: String(
+      hotelbedsPackage?.displayRoomName ||
+        selectedRoom.displayRoomName ||
+        selectedRoom.RoomType ||
+        selectedRoom.roomName ||
+        "",
+    ),
     BoardType: String(selectedRoom.BoardType || selectedRoom.boardName || selectedRoom.mealType || ""),
     Currency: currency,
     Price: price,
@@ -255,30 +317,27 @@ const normalizeSelectedRoomForReview = useCallback((
         selectedRoom.HotelId ||
         "",
     ),
-    supplierTotalFare: toNumber(selectedRoom.supplierTotalFare || rawTotalPrice || rawPrice),
-    hotelbedsSelectedRooms: Array.isArray(selectedRoom.hotelbedsSelectedRooms)
-      ? selectedRoom.hotelbedsSelectedRooms
-          .map((room) => {
-            const record = room as Record<string, unknown>;
-            return {
-              roomIndex: toNumber(record.roomIndex),
-              adults: toNumber(record.adults, 1),
-              children: toNumber(record.children),
-              childAges: Array.isArray(record.childAges)
-                ? record.childAges.map((age) => toNumber(age)).filter(Number.isFinite)
-                : [],
-              roomCode: String(record.roomCode || ""),
-              roomName: String(record.roomName || ""),
-              boardCode: String(record.boardCode || ""),
-              boardName: String(record.boardName || ""),
-              rateKey: String(record.rateKey || ""),
-              price: toNumber(record.price),
-              currency: String(record.currency || currency),
-            };
-          })
-          .filter((room) => room.rateKey)
-      : [],
-    roomName: String(selectedRoom.roomName || selectedRoom.RoomName || selectedRoom.RoomType || ""),
+    supplierTotalFare: isHotelbedsPackage
+      ? totalPrice
+      : toNumber(selectedRoom.supplierTotalFare || rawTotalPrice || rawPrice),
+    hotelbedsSelectedRooms,
+    hotelbedsPackage,
+    displayRoomName: String(
+      hotelbedsPackage?.displayRoomName ||
+        selectedRoom.displayRoomName ||
+        selectedRoom.roomName ||
+        selectedRoom.RoomName ||
+        selectedRoom.RoomType ||
+        "",
+    ),
+    roomsCount: toNumber(selectedRoom.roomsCount) || hotelbedsSelectedRooms.length || 1,
+    roomName: String(
+      hotelbedsPackage?.displayRoomName ||
+        selectedRoom.roomName ||
+        selectedRoom.RoomName ||
+        selectedRoom.RoomType ||
+        "",
+    ),
     price,
     currency,
     refundable:
@@ -636,6 +695,9 @@ const DOCUMENT_TYPES = [
         const roomTravelers = travelers.filter(
           (traveler) => traveler.roomIndex === roomIndex,
         );
+        const selectedHotelbedsRoom = hotel.hotelbedsSelectedRooms?.find(
+          (room) => room.roomIndex === roomIndex,
+        );
         const childrenAges = roomTravelers
           .filter(
             (traveler) =>
@@ -645,7 +707,16 @@ const DOCUMENT_TYPES = [
 
         return {
           roomId: roomIndex + 1,
-          roomName: hotel.roomName || hotel.RoomType || `Room ${roomIndex + 1}`,
+          roomName:
+            selectedHotelbedsRoom?.roomName ||
+            hotel.roomName ||
+            hotel.RoomType ||
+            `Room ${roomIndex + 1}`,
+          roomCode: selectedHotelbedsRoom?.roomCode || "",
+          boardCode: selectedHotelbedsRoom?.boardCode || "",
+          boardName: selectedHotelbedsRoom?.boardName || hotel.boardName || hotel.BoardType || "",
+          rateKey: selectedHotelbedsRoom?.rateKey || "",
+          price: selectedHotelbedsRoom?.price || 0,
           adults: roomTravelers.filter((traveler) => traveler.travelerType === "adult").length,
           children: roomTravelers.filter((traveler) => traveler.travelerType === "child").length,
           childrenAges,
@@ -699,6 +770,7 @@ const DOCUMENT_TYPES = [
           supplierRateKey:
             hotel.supplierRateKey || hotel.rateKey || hotel.BookingCode || "",
           hotelbedsSelectedRooms: hotel.hotelbedsSelectedRooms || [],
+          hotelbedsPackage: hotel.hotelbedsPackage || null,
           supplierBookingReference: "",
           hotelId: hotel.hotelId || 0,
           hotelName: hotel.HotelName,
@@ -728,6 +800,16 @@ const DOCUMENT_TYPES = [
             checkoutFlow: "review_traveler_details_before_booking",
             supplierTotalFare: hotel.supplierTotalFare || totalPrice,
             hotelbedsSelectedRooms: hotel.hotelbedsSelectedRooms || [],
+            hotelbedsPackage: hotel.hotelbedsPackage || null,
+            roomPriceBreakdown,
+            expectedTotalPrice: isHotelbedsPackage ? packageTotal : totalPrice,
+            actualReviewPrice: totalPrice,
+            priceMismatch: isHotelbedsPackage
+              ? Math.abs((packageTotal || 0) - totalPrice) > 0.01
+              : false,
+            summaryUsesFirstRoomOnly: isHotelbedsPackage
+              ? roomPriceBreakdown.length > 1 && totalPrice <= roomPriceBreakdown[0]?.price
+              : false,
             rspPrice: hotel.rspPrice || null,
             roomPromotions: hotel.roomPromotions || [],
             supplements: hotel.supplements || [],
@@ -815,9 +897,26 @@ const DOCUMENT_TYPES = [
     hotel?.nights ||
     searchParams?.guests.nights ||
     calculateNights(searchParams?.dates.checkIn, searchParams?.dates.checkOut);
-  const nightlyPrice = hotel?.Price || 0;
+  const isHotelbedsPackage = hotel?.supplier === "hotelbeds" && Boolean(hotel.hotelbedsSelectedRooms?.length);
+  const hotelbedsRoomsTotal =
+    hotel?.hotelbedsSelectedRooms?.reduce((sum, room) => sum + toNumber(room.price), 0) || 0;
+  const packageTotal =
+    toNumber(hotel?.hotelbedsPackage?.totalPrice) || hotelbedsRoomsTotal || hotel?.totalPrice || 0;
+  const nightlyPrice = isHotelbedsPackage ? packageTotal : hotel?.Price || 0;
   const taxes = hotel?.Taxes || 0;
-  const totalPrice = hotel?.totalPrice || (nightlyPrice + taxes) * nights;
+  const totalPrice = isHotelbedsPackage
+    ? packageTotal
+    : hotel?.totalPrice || (nightlyPrice + taxes) * nights;
+  const roomPriceBreakdown =
+    hotel?.hotelbedsPackage?.roomPriceBreakdown?.length
+      ? hotel.hotelbedsPackage.roomPriceBreakdown
+      : hotel?.hotelbedsSelectedRooms?.map((room) => ({
+          roomIndex: room.roomIndex,
+          roomName: room.roomName || `${t("booking.room")} ${room.roomIndex + 1}`,
+          roomCode: room.roomCode,
+          price: toNumber(room.price),
+          currency: room.currency || hotel.Currency,
+        })) || [];
   const roomOccupancies = getRoomOccupancies(searchParams);
   const guestRooms = roomOccupancies.length;
   const totalAdults = roomOccupancies.reduce((sum, room) => sum + room.adults, 0);
@@ -875,7 +974,7 @@ const DOCUMENT_TYPES = [
                 <div className="min-w-0">
                   <h3 className="text-xl font-black text-[#0F172A]">{hotel?.HotelName}</h3>
                   <p className="mt-1 font-bold text-slate-700">
-                    {hotel?.RoomType || hotel?.roomName || t("hotels.standardRoom")}
+                    {hotel?.displayRoomName || hotel?.RoomType || hotel?.roomName || t("hotels.standardRoom")}
                   </p>
                   {hotel?.BoardType && (
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -885,11 +984,34 @@ const DOCUMENT_TYPES = [
                 </div>
                 <div className="shrink-0 rounded-xl bg-orange-50 px-4 py-3 text-end">
                   <p className="text-2xl font-black text-[#F97316]">
-                    {hotel?.Currency} {hotel?.Price}
+                    {hotel?.Currency} {totalPrice}
                   </p>
-                  <p className="text-xs font-bold text-slate-600">{t('hotels.perNight')}</p>
+                  <p className="text-xs font-bold text-slate-600">
+                    {isHotelbedsPackage ? t("booking.total") : t('hotels.perNight')}
+                  </p>
                 </div>
               </div>
+
+              {roomPriceBreakdown.length > 0 ? (
+                <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="mb-3 font-black text-[#0F172A]">{t("booking.roomDetails")}</p>
+                  <div className="space-y-2 text-sm">
+                    {roomPriceBreakdown.map((room) => (
+                      <div
+                        key={`${room.roomIndex}-${room.roomCode || room.roomName}`}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2"
+                      >
+                        <span className="font-bold text-slate-700">
+                          {t("booking.room")} {room.roomIndex + 1}: {room.roomName}
+                        </span>
+                        <span className="font-black text-[#F97316]">
+                          {room.currency || hotel?.Currency} {room.price}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <Separator className="my-4" />
 
@@ -919,7 +1041,7 @@ const DOCUMENT_TYPES = [
                   <div>
                     <p className="font-black text-[#0F172A]">{t("booking.roomPrice")}</p>
                     <p className="mt-1 font-bold text-slate-700">
-                      {hotel?.Currency} {nightlyPrice * nights}
+                      {hotel?.Currency} {isHotelbedsPackage ? totalPrice : nightlyPrice * nights}
                     </p>
                   </div>
                   <div>

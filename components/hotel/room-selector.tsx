@@ -90,8 +90,9 @@ function RoomOptionCard({
     ? option.Taxes 
     : parseFloat(option.Taxes as unknown as string) || 0;
   const safeCurrency = currency || 'USD';
+  const isHotelbedsPackage = option.supplier === "hotelbeds";
   
-  const totalPrice = (price + taxes) * nights;
+  const totalPrice = isHotelbedsPackage ? price + taxes : (price + taxes) * nights;
   const pricePerNight = price + taxes;
   const tboDetailGroups = [
     { title: t("booking.tbo.inclusions"), items: asCleanTextArray(option.inclusions) },
@@ -138,7 +139,9 @@ function RoomOptionCard({
                   {formatCurrency(totalPrice, safeCurrency)}
                 </div>
                 <p className="text-xs font-medium text-muted-foreground">
-                  {formatCurrency(pricePerNight, safeCurrency)} {t('hotels.perNight')}
+                  {isHotelbedsPackage
+                    ? t("booking.total")
+                    : `${formatCurrency(pricePerNight, safeCurrency)} ${t('hotels.perNight')}`}
                 </p>
               </div>
             </div>
