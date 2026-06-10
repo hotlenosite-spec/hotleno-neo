@@ -711,7 +711,11 @@ const DOCUMENT_TYPES = [
       if (bookingStatus === "supplier_booking_confirmed") {
         setNotice(t("checkout.notices.confirmed", { bookingId: bookingReference }));
       } else if (bookingStatus === "supplier_booking_failed") {
-        setNotice(t("checkout.notices.failed", { bookingId: bookingReference }));
+        setNotice(
+          bookingSupplier === "hotelbeds" && typeof result?.message === "string"
+            ? result.message
+            : t("checkout.notices.failed", { bookingId: bookingReference }),
+        );
       } else {
         setNotice(t("booking.requestCreated", { bookingId: bookingReference }));
       }

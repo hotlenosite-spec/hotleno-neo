@@ -9,6 +9,11 @@ import {
   logTboCertificationBookingDiagnostics,
   TboSupplierProvider,
 } from "@/lib/suppliers/tbo-provider";
+import {
+  createHotelbedsHotelsClient,
+  HotelbedsHotelsClientError,
+} from "@/lib/suppliers/hotelbeds-hotels-client";
+import { getHotelbedsBaseUrls } from "@/lib/suppliers/hotelbeds-auth";
 import type {
   SupplierBookingDetailsResponse,
   SupplierBookRequest,
@@ -16,6 +21,10 @@ import type {
   SupplierGuestOccupancy,
   SupplierPreBookResponse,
 } from "@/lib/suppliers/types";
+import type {
+  HotelbedsHotelBookingRequest,
+  HotelbedsHotelGuest,
+} from "@/types/hotelbeds-hotels-certification";
 import { createAdminNotificationSafely } from "@/lib/admin-notifications";
 
 type BookingDocument = Document & {
@@ -137,6 +146,89 @@ function validateBookingTravelers(travelers: unknown[]) {
 
 function normalizeSupplier(value: unknown) {
   return String(value || "none").trim().toLowerCase();
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function asString(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function getHotelbedsStatus(payload: unknown) {
+  const record = asRecord(payload);
+  const booking = asRecord(record.booking);
+  return (
+    asString(record.status) ||
+    asString(booking.status) ||
+    asString(asRecord(record.error).code) ||
+    asString(record.code) ||
+    "unknown"
+  );
+}
+
+function extractHotelbedsRateKeys(payload: unknown) {
+  const keys: string[] = [];
+
+  function visit(value: unknown, depth = 0) {
+    if (depth > 8 || keys.length >= 8) return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => visit(item, depth + 1));
+      return;
+    }
+
+    const record = asRecord(value);
+    if (!Object.keys(record).length) return;
+    const rateKey = asString(record.rateKey);
+    if (rateKey && !keys.includes(rateKey)) keys.push(rateKey);
+    Object.values(record).forEach((item) => visit(item, depth + 1));
+  }
+
+  visit(payload);
+  return keys;
+}
+
+function extractHotelbedsBookingReference(payload: unknown) {
+  const record = asRecord(payload);
+  const booking = asRecord(record.booking || asArray(record.bookings)[0]);
+  return (
+    asString(record.reference) ||
+    asString(record.bookingReference) ||
+    asString(booking.reference) ||
+    asString(booking.bookingReference)
+  );
+}
+
+function logHotelbedsBookingFlow(params: {
+  internalBookingId: string;
+  step: string;
+  supplier?: string;
+  provider?: string;
+  supplierTester?: boolean;
+  status?: string;
+  hotelbedsReference?: string;
+  error?: string;
+}) {
+  console.info(
+    "[Hotelbeds Booking Flow]",
+    JSON.stringify({
+      internalBookingId: params.internalBookingId,
+      step: params.step,
+      supplier: params.supplier || "hotelbeds",
+      provider: params.provider || "hotelbeds",
+      supplierTester: params.supplierTester ?? true,
+      status: params.status,
+      hotelbedsReference: params.hotelbedsReference,
+      error: params.error,
+    }),
+  );
 }
 
 function getRawSupplierObject(response: SupplierBookResponse) {
@@ -297,6 +389,230 @@ function buildTboBookRequest(booking: BookingDocument): SupplierBookRequest {
       source: "user_bookings_certification_flow",
     },
   };
+}
+
+function buildHotelbedsBookingRequest(
+  booking: BookingDocument,
+  finalRateKeys?: string[],
+): HotelbedsHotelBookingRequest {
+  const travelers = Array.isArray(booking.travelers)
+    ? (booking.travelers as Array<Record<string, unknown>>)
+    : [];
+  const leadTraveler =
+    travelers.find((traveler) => traveler.travelerType === "adult") ||
+    travelers[0];
+  const fallbackLeadGuest = splitName(booking.leadGuest);
+  const primaryRateKey = String(finalRateKeys?.[0] || booking.supplierRateKey || "");
+
+  const guests: HotelbedsHotelGuest[] = travelers.map((traveler) => {
+    const isChild = traveler.travelerType === "child";
+    return {
+      roomId: Math.max(1, toNumber(traveler.roomIndex) + 1),
+      type: isChild ? "CH" : "AD",
+      title: isChild ? undefined : normalizeGuestTitle(traveler.title),
+      name: String(traveler.firstName || "Guest").trim() || "Guest",
+      surname: String(traveler.lastName || "Hotleno").trim() || "Hotleno",
+      age: isChild ? toNumber(traveler.age) : undefined,
+    };
+  });
+  const roomIds = [...new Set(guests.map((guest) => guest.roomId || 1))].sort(
+    (left, right) => left - right,
+  );
+
+  return {
+    clientReference: String(booking.bookingReference || booking._id),
+    holder: {
+      name:
+        typeof leadTraveler?.firstName === "string" && leadTraveler.firstName
+          ? leadTraveler.firstName
+          : fallbackLeadGuest.firstName,
+      surname:
+        typeof leadTraveler?.lastName === "string" && leadTraveler.lastName
+          ? leadTraveler.lastName
+          : fallbackLeadGuest.lastName,
+    },
+    rateKey: primaryRateKey,
+    rooms: roomIds.map((roomId, index) => ({
+      rateKey: String(finalRateKeys?.[index] || primaryRateKey),
+      guests: guests.filter((guest) => (guest.roomId || 1) === roomId),
+    })),
+    guests,
+    remark: "Hotelbeds Accommodation supplier tester booking.",
+    language: "en",
+  };
+}
+
+async function submitHotelbedsTesterBooking(params: {
+  bookingsCollection: Collection<BookingDocument>;
+  booking: BookingDocument;
+}) {
+  const { bookingsCollection, booking } = params;
+  const now = new Date();
+  const rateKey = String(booking.supplierRateKey || "");
+  const bookingBaseUrl = getHotelbedsBaseUrls().bookingBaseUrl;
+
+  logHotelbedsBookingFlow({
+    internalBookingId: booking._id,
+    step: "received",
+    status: rateKey ? "rate_key_present" : "missing_rate_key",
+  });
+
+  if (!bookingBaseUrl.includes("api.test.hotelbeds.com")) {
+    const message = "Hotelbeds tester booking requires Hotelbeds test environment.";
+    const updates: Partial<BookingDocument> & Record<string, unknown> = {
+      bookingStatus: "supplier_booking_failed",
+      status: "supplier_booking_failed",
+      supplierStatus: "failed",
+      failureReason: message,
+      "metadata.supplierSubmission": "failed",
+      "metadata.supplierFailureStage": "environment",
+      "metadata.supplierError": message,
+      updatedAt: now,
+    };
+    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+    logHotelbedsBookingFlow({
+      internalBookingId: booking._id,
+      step: "failed",
+      error: message,
+    });
+    return { ...booking, ...updates } as BookingDocument;
+  }
+
+  if (!rateKey) {
+    const message = "Missing Hotelbeds rateKey; booking was not sent to supplier.";
+    const updates: Partial<BookingDocument> & Record<string, unknown> = {
+      bookingStatus: "supplier_booking_failed",
+      status: "supplier_booking_failed",
+      supplierStatus: "failed",
+      failureReason: message,
+      "metadata.supplierSubmission": "failed",
+      "metadata.supplierFailureStage": "checkrate",
+      "metadata.supplierError": message,
+      updatedAt: now,
+    };
+    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+    logHotelbedsBookingFlow({
+      internalBookingId: booking._id,
+      step: "failed",
+      error: message,
+    });
+    return { ...booking, ...updates } as BookingDocument;
+  }
+
+  const client = createHotelbedsHotelsClient();
+
+  try {
+    logHotelbedsBookingFlow({
+      internalBookingId: booking._id,
+      step: "before_checkrate",
+    });
+    const checkRateResponse = await client.checkRate({
+      rateKey,
+      rateKeys: [rateKey],
+      language: "en",
+    });
+    const checkedRateKeys = extractHotelbedsRateKeys(checkRateResponse);
+    logHotelbedsBookingFlow({
+      internalBookingId: booking._id,
+      step: "checkrate_response",
+      status: getHotelbedsStatus(checkRateResponse),
+    });
+
+    const bookingRequest = buildHotelbedsBookingRequest(
+      booking,
+      checkedRateKeys.length ? checkedRateKeys : [rateKey],
+    );
+    logHotelbedsBookingFlow({
+      internalBookingId: booking._id,
+      step: "before_booking",
+    });
+    const bookingResponse = await client.book(bookingRequest);
+    const hotelbedsReference = extractHotelbedsBookingReference(bookingResponse);
+    const status = getHotelbedsStatus(bookingResponse);
+    const updates: Partial<BookingDocument> & Record<string, unknown> = {
+      bookingStatus: "supplier_booking_confirmed",
+      status: "supplier_booking_confirmed",
+      supplierStatus: "confirmed",
+      supplierBookingReference: hotelbedsReference,
+      supplierReference: hotelbedsReference,
+      supplierResponseStatus: status,
+      rawSupplierResponse: bookingResponse,
+      "metadata.supplierSubmission": "sent_to_supplier",
+      "metadata.supplierSubmittedAt": now.toISOString(),
+      "metadata.hotelbedsCheckRateStatus": getHotelbedsStatus(checkRateResponse),
+      "metadata.hotelbedsBookingStatus": status,
+      "metadata.hotelbedsBookingReference": hotelbedsReference,
+      "metadata.hotelbedsBookingResponse": {
+        status,
+        reference: hotelbedsReference,
+      },
+      updatedAt: now,
+    };
+
+    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+    logHotelbedsBookingFlow({
+      internalBookingId: booking._id,
+      step: "booking_response",
+      status,
+      hotelbedsReference,
+    });
+    await createLog({
+      type: "supplier_booking_confirmed",
+      status: "success",
+      message: "Hotelbeds Accommodation booking was submitted to supplier",
+      request: {
+        bookingId: booking._id,
+        supplier: "hotelbeds",
+        hasRateKey: Boolean(rateKey),
+      },
+      response: {
+        bookingId: booking._id,
+        supplierStatus: "confirmed",
+        supplierBookingReferencePresent: Boolean(hotelbedsReference),
+      },
+    });
+
+    return { ...booking, ...updates } as BookingDocument;
+  } catch (error) {
+    const message =
+      error instanceof HotelbedsHotelsClientError
+        ? `${error.code}: ${error.message}`
+        : safeErrorMessage(error);
+    const updates: Partial<BookingDocument> & Record<string, unknown> = {
+      bookingStatus: "supplier_booking_failed",
+      status: "supplier_booking_failed",
+      supplierStatus: "failed",
+      failureReason: message,
+      "metadata.supplierSubmission": "failed",
+      "metadata.supplierFailureStage": "hotelbeds_booking",
+      "metadata.supplierError": message,
+      updatedAt: now,
+    };
+
+    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+    logHotelbedsBookingFlow({
+      internalBookingId: booking._id,
+      step: "failed",
+      error: message,
+    });
+    await createLog({
+      type: "supplier_booking_failed",
+      status: "failed",
+      message: "Hotelbeds Accommodation booking failed",
+      request: {
+        bookingId: booking._id,
+        supplier: "hotelbeds",
+        hasRateKey: Boolean(rateKey),
+      },
+      response: {
+        bookingId: booking._id,
+        supplierStatus: "failed",
+      },
+      error: message,
+    });
+
+    return { ...booking, ...updates } as BookingDocument;
+  }
 }
 
 async function runTboBookingDetailFallback(params: {
@@ -835,6 +1151,8 @@ export async function POST(req: NextRequest) {
     }
     const shouldSubmitTboCertificationBooking =
       supplier === "tbo" && tboCertificationMode && tboBookingEnabled;
+    const shouldSubmitHotelbedsTesterBooking =
+      isHotelbedsSupplierTester && supplier === "hotelbeds";
     const travelerValidationError = Array.isArray(body.travelers)
       ? validateBookingTravelers(body.travelers)
       : "Traveler details are required.";
@@ -845,10 +1163,12 @@ export async function POST(req: NextRequest) {
       );
     }
     const internalOnlyBooking =
-      !stripeCheckoutEnabled && !shouldSubmitTboCertificationBooking;
+      !stripeCheckoutEnabled &&
+      !shouldSubmitTboCertificationBooking &&
+      !shouldSubmitHotelbedsTesterBooking;
     const bookingStatus = internalOnlyBooking
       ? "supplier_booking_not_started"
-      : shouldSubmitTboCertificationBooking
+      : shouldSubmitTboCertificationBooking || shouldSubmitHotelbedsTesterBooking
         ? "supplier_booking_processing"
         : isBookingStatus(body.status)
           ? body.status
@@ -914,7 +1234,7 @@ export async function POST(req: NextRequest) {
       paymentStatus: !stripeCheckoutEnabled
         ? "not_required_for_test"
         : body.paymentStatus || "pending",
-      supplierStatus: shouldSubmitTboCertificationBooking
+      supplierStatus: shouldSubmitTboCertificationBooking || shouldSubmitHotelbedsTesterBooking
         ? "pending"
         : internalOnlyBooking
         ? "not_started"
@@ -942,7 +1262,7 @@ export async function POST(req: NextRequest) {
         stripeBypassedForCertification:
           shouldSubmitTboCertificationBooking && !stripeCheckoutEnabled,
         stripeCheckoutEnabled,
-        supplierSubmission: shouldSubmitTboCertificationBooking
+        supplierSubmission: shouldSubmitTboCertificationBooking || shouldSubmitHotelbedsTesterBooking
           ? "pending_supplier_submission"
           : "not_sent_to_supplier",
       },
@@ -1002,19 +1322,29 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const responseBooking = shouldSubmitTboCertificationBooking
-      ? await submitTboCertificationBooking({
-          bookingsCollection,
-          booking,
-          stripeCheckoutEnabled,
-          tboBookingEnabled,
-        })
-      : booking;
+    let responseBooking = booking;
+    if (shouldSubmitTboCertificationBooking) {
+      responseBooking = await submitTboCertificationBooking({
+        bookingsCollection,
+        booking,
+        stripeCheckoutEnabled,
+        tboBookingEnabled,
+      });
+    } else if (shouldSubmitHotelbedsTesterBooking) {
+      responseBooking = await submitHotelbedsTesterBooking({
+        bookingsCollection,
+        booking,
+      });
+    }
 
     return NextResponse.json(
       {
         success: true,
-        message: "Booking created successfully",
+        message:
+          responseBooking.bookingStatus === "supplier_booking_failed" &&
+          responseBooking.supplier === "hotelbeds"
+            ? "تعذر تأكيد الحجز من Hotelbeds، وتم حفظ الطلب للمراجعة."
+            : "Booking created successfully",
         booking: responseBooking,
       },
       { status: 201 },
