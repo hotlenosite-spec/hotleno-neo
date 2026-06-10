@@ -257,10 +257,12 @@ function mapVoucher(payload: unknown): HotelbedsHotelVoucher {
 export class HotelbedsHotelsClient {
   private readonly bookingBaseUrl: string;
   private readonly timeoutMs: number;
+  private readonly allowTesterBookingOverride: boolean;
 
-  constructor(options: { timeoutMs?: number } = {}) {
+  constructor(options: { timeoutMs?: number; allowTesterBookingOverride?: boolean } = {}) {
     this.bookingBaseUrl = getHotelbedsBaseUrls().bookingBaseUrl;
     this.timeoutMs = options.timeoutMs || DEFAULT_TIMEOUT_MS;
+    this.allowTesterBookingOverride = options.allowTesterBookingOverride === true;
   }
 
   static getRequestUsage() {
@@ -328,7 +330,7 @@ export class HotelbedsHotelsClient {
   }
 
   async availability(request: HotelbedsHotelAvailabilityRequest) {
-    if (!isHotelbedsHotelsSearchEnabled()) {
+    if (!isHotelbedsHotelsSearchEnabled() && !this.allowTesterBookingOverride) {
       throw new HotelbedsHotelsClientError(
         "Hotelbeds Accommodation search is disabled in this environment.",
         "HOTELBEDS_HOTELS_SEARCH_DISABLED",
@@ -343,9 +345,9 @@ export class HotelbedsHotelsClient {
   }
 
   async checkRate(request: HotelbedsHotelCheckRateRequest) {
-    if (!isHotelbedsHotelsSearchEnabled()) {
+    if (!isHotelbedsHotelsSearchEnabled() && !this.allowTesterBookingOverride) {
       throw new HotelbedsHotelsClientError(
-        "Hotelbeds Accommodation check-rate is disabled in this environment.",
+        "Hotelbeds Accommodation CheckRate is disabled for this environment.",
         "HOTELBEDS_HOTELS_SEARCH_DISABLED",
         403,
       );
@@ -358,7 +360,7 @@ export class HotelbedsHotelsClient {
   }
 
   async book(request: HotelbedsHotelBookingRequest) {
-    if (!isHotelbedsHotelsBookingEnabled()) {
+    if (!isHotelbedsHotelsBookingEnabled() && !this.allowTesterBookingOverride) {
       throw new HotelbedsHotelsClientError(
         "Hotelbeds Accommodation booking is disabled in this environment.",
         "HOTELBEDS_HOTELS_BOOKING_DISABLED",
@@ -412,6 +414,8 @@ export class HotelbedsHotelsClient {
   }
 }
 
-export function createHotelbedsHotelsClient() {
-  return new HotelbedsHotelsClient();
+export function createHotelbedsHotelsClient(
+  options: { timeoutMs?: number; allowTesterBookingOverride?: boolean } = {},
+) {
+  return new HotelbedsHotelsClient(options);
 }

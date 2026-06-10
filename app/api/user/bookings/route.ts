@@ -696,7 +696,12 @@ async function submitHotelbedsTesterBooking(params: {
     });
   }
 
-  const client = createHotelbedsHotelsClient();
+  const client = createHotelbedsHotelsClient({ allowTesterBookingOverride: true });
+  logHotelbedsBookingFlow({
+    internalBookingId: booking._id,
+    step: "checkrate_enabled_for_tester",
+    status: "enabled",
+  });
   logHotelbedsBookingFlow({
     internalBookingId: booking._id,
     step: "validated",
@@ -1426,6 +1431,15 @@ export async function POST(req: NextRequest) {
     const finalSellingPrice = toNumber(body.finalSellingPrice, totalPrice);
     const now = new Date();
     const bookingId = getBookingId(body.bookingReference);
+    const supplierMetadata =
+      supplier === "hotelbeds"
+        ? {}
+        : {
+            tboBookingEnabled,
+            tboCertificationMode,
+            stripeBypassedForCertification:
+              shouldSubmitTboCertificationBooking && !stripeCheckoutEnabled,
+          };
     const booking: BookingDocument = {
       _id: bookingId,
       userId: decoded.userId,
@@ -1504,10 +1518,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         ...(body.metadata || {}),
         bookingMode: internalOnlyBooking ? "internal_only" : "payment_or_supplier_flow",
-        tboBookingEnabled,
-        tboCertificationMode,
-        stripeBypassedForCertification:
-          shouldSubmitTboCertificationBooking && !stripeCheckoutEnabled,
+        ...supplierMetadata,
         stripeCheckoutEnabled,
         supplierSubmission: shouldSubmitTboCertificationBooking || shouldSubmitHotelbedsTesterBooking
           ? "pending_supplier_submission"
