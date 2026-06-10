@@ -206,14 +206,6 @@ function buildRoomsPayloadFromSearch(searchParams: SavedSearch) {
   }));
 }
 
-function getRoomOccupanciesFromSearch(searchParams: SavedSearch) {
-  return buildRoomsPayloadFromSearch(searchParams).map((room) => ({
-    adults: room.NumAdults,
-    children: room.Children?.length || 0,
-    childrenAges: room.Children || [],
-  }));
-}
-
 export default function HotelDetailsPage() {
   const router = useRouter();
   const params = useParams();
@@ -455,13 +447,6 @@ interface HotelDetailsData {
   };
 
   const nights = searchParams?.guests.nights || 1;
-  const roomOccupancies = searchParams
-    ? getRoomOccupanciesFromSearch(searchParams)
-    : [];
-  const selectorSupplier =
-    hotel && (isHotelbedsTesterToken() || String((hotel as { supplier?: unknown }).supplier || "").toLowerCase() === "hotelbeds")
-      ? "hotelbeds"
-      : undefined;
   const selectedInclusions = asCleanTextArray(selectedOption?.inclusions);
   const selectedAmenities = asCleanTextArray(selectedOption?.amenities);
   const selectedTboDetailGroups = selectedOption
@@ -600,8 +585,6 @@ interface HotelDetailsData {
               nights={nights}
               selectedOptionId={selectedOption?.OptionId}
               isLoadingPolicies={policiesLoading}
-              supplier={selectorSupplier}
-              roomOccupancies={roomOccupancies}
             />
           )}
 

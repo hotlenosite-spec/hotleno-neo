@@ -48,6 +48,7 @@ type HotelbedsAvailabilityHotel = {
       boardCode?: string;
       boardName?: string;
       rateClass?: string;
+      allotment?: number;
       cancellationPolicies?: unknown[];
     }>;
   }>;
@@ -219,11 +220,43 @@ function buildHotelbedsSelectedRoom(params: {
   };
 }
 
+function getRatePackageKey(rate: {
+  boardCode?: string;
+  boardName?: string;
+  rateClass?: string;
+  rateType?: string;
+}) {
+  return [
+    rate.boardCode || rate.boardName || "RO",
+    rate.rateClass || "",
+    rate.rateType || "",
+  ].join("|");
+}
+
+function getRateAllotment(rate: { allotment?: number }) {
+  const allotment = Number(rate.allotment);
+  return Number.isFinite(allotment) && allotment > 0 ? allotment : 1;
+}
+
+function rateMatchesRequestedRoom(
+  item: {
+    occupancy: ReturnType<typeof getRateOccupancy>;
+  },
+  requestedRoom: ReturnType<typeof getRequestedRoom>,
+) {
+  return (
+    item.occupancy?.rooms === 1 &&
+    item.occupancy.adults === requestedRoom.adults &&
+    item.occupancy.children === requestedRoom.children
+  );
+}
+
 function mapHotelbedsRatesForRequest(
   hotel: HotelbedsAvailabilityHotel,
   request: SupplierSearchHotelsRequest,
   currency: string,
 ): SupplierHotelRate[] {
+  const requestedRooms = request.rooms.map((_, index) => getRequestedRoom(request, index));
   const rawRates = (hotel.rooms ?? []).flatMap((room) =>
     (room.rates ?? [])
       .filter((rate) => rate.rateKey)
@@ -234,6 +267,93 @@ function mapHotelbedsRatesForRequest(
         occupancy: getRateOccupancy(rate.rateKey),
       })),
   );
+
+  if (requestedRooms.length > 1) {
+    const groupedRates = new Map<string, typeof rawRates>();
+    rawRates.forEach((item) => {
+      if (!item.occupancy) return;
+      const key = getRatePackageKey(item.rate);
+      groupedRates.set(key, [...(groupedRates.get(key) || []), item]);
+    });
+
+    const packages: SupplierHotelRate[] = [];
+
+    for (const items of groupedRates.values()) {
+      const candidatesByRoom = requestedRooms.map((requestedRoom) =>
+        items.filter((item) => rateMatchesRequestedRoom(item, requestedRoom)),
+      );
+
+      if (candidatesByRoom.some((candidates) => candidates.length === 0)) {
+        continue;
+      }
+
+      const selections: typeof rawRates[] = [];
+
+      function visit(roomIndex: number, current: typeof rawRates) {
+        if (packages.length >= 80 || selections.length >= 12) return;
+        if (roomIndex >= requestedRooms.length) {
+          selections.push(current);
+          return;
+        }
+
+        for (const candidate of candidatesByRoom[roomIndex]) {
+          const rateKey = String(candidate.rate.rateKey || "");
+          const usedCount = current.filter(
+            (item) => String(item.rate.rateKey || "") === rateKey,
+          ).length;
+          if (usedCount >= getRateAllotment(candidate.rate)) continue;
+          visit(roomIndex + 1, [...current, candidate]);
+        }
+      }
+
+      visit(0, []);
+
+      selections.forEach((selectedItems, packageIndex) => {
+        const selectedRooms = selectedItems.map((item, roomIndex) =>
+          buildHotelbedsSelectedRoom({
+            roomIndex,
+            request,
+            room: item.room,
+            rate: item.rate,
+            currency,
+          }),
+        );
+        const firstRate = selectedItems[0]?.rate;
+        const totalPrice = selectedRooms.reduce(
+          (sum, room) => sum + (room.price || 0),
+          0,
+        );
+
+        packages.push({
+          rateKey: selectedRooms[0]?.rateKey || `hotelbeds-${hotel.code}-${packageIndex}`,
+          roomName:
+            selectedRooms
+              .map((room) => room.roomName)
+              .filter(Boolean)
+              .join(" + ") || "Hotelbeds room package",
+          boardName: firstRate?.boardName || firstRate?.boardCode || "Room Only",
+          price: totalPrice,
+          currency: firstRate?.currency || hotel.currency || currency,
+          refundable: selectedItems.every((item) => item.rate.rateClass !== "NRF"),
+          hotelbedsSelectedRooms: selectedRooms,
+          cancellationPolicies: firstRate?.cancellationPolicies,
+          metadata: {
+            rateType: firstRate?.rateType,
+            rateClass: firstRate?.rateClass,
+            boardCode: firstRate?.boardCode,
+            net: totalPrice,
+            hotelbedsRoomPackage: true,
+            hotelbedsSelectedRoomsCount: selectedRooms.length,
+            hotelbedsAllotments: selectedItems.map((item) =>
+              getRateAllotment(item.rate),
+            ),
+          },
+        });
+      });
+    }
+
+    return packages.sort((left, right) => left.price - right.price);
+  }
 
   return rawRates.map(({ room, rate, index }) => {
     const selectedRoom = buildHotelbedsSelectedRoom({
