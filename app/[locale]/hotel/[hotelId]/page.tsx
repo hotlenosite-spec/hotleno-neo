@@ -106,6 +106,7 @@ function getSelectedRoomSnapshot(
     roomName: option.RoomName || option.RoomType,
     rateKey: option.rateKey || option.supplierRateKey || option.BookingCode || String(option.OptionId),
     supplierRateKey: option.supplierRateKey || option.rateKey || option.BookingCode || String(option.OptionId),
+    hotelbedsSelectedRooms: option.hotelbedsSelectedRooms || [],
     BookingCode: option.BookingCode || option.supplierRateKey || option.rateKey,
     supplierHotelId: option.supplierHotelId || option.HotelCode || hotelId,
     HotelCode: option.HotelCode || option.supplierHotelId || hotelId,

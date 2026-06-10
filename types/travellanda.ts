@@ -96,6 +96,19 @@ export interface HotelOption {
   supplier?: string;
   supplierHotelId?: string;
   supplierRateKey?: string;
+  hotelbedsSelectedRooms?: Array<{
+    roomIndex: number;
+    adults: number;
+    children: number;
+    childAges?: number[];
+    roomCode?: string;
+    roomName?: string;
+    boardCode?: string;
+    boardName?: string;
+    rateKey: string;
+    price?: number;
+    currency?: string;
+  }>;
   BookingCode?: string;
   HotelCode?: string;
   supplierTotalFare?: number;

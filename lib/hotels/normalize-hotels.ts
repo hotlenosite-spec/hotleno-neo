@@ -158,6 +158,7 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
     supplier: hotel.supplier,
     supplierHotelId: hotel.supplierHotelId,
     supplierRateKey: rate.rateKey,
+    hotelbedsSelectedRooms: rate.hotelbedsSelectedRooms,
     BookingCode: rate.rateKey,
     HotelCode: hotel.supplierHotelId,
     supplierTotalFare: rate.price,
@@ -166,17 +167,29 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
     BoardName: rate.boardName,
     RoomType: rate.roomName,
     RoomName: rate.roomName,
-    Rooms: [
-      {
-        RoomId: index + 1,
-        RoomName: rate.roomName,
-        NumAdults: 2,
-        NumChildren: 0,
-        RoomPrice: rate.price,
-      },
-    ],
-    Adults: 2,
-    Children: 0,
+    Rooms: rate.hotelbedsSelectedRooms?.length
+      ? rate.hotelbedsSelectedRooms.map((room) => ({
+          RoomId: room.roomIndex + 1,
+          RoomName: room.roomName || rate.roomName,
+          NumAdults: room.adults,
+          NumChildren: room.children,
+          RoomPrice: room.price ?? 0,
+        }))
+      : [
+          {
+            RoomId: index + 1,
+            RoomName: rate.roomName,
+            NumAdults: 2,
+            NumChildren: 0,
+            RoomPrice: rate.price,
+          },
+        ],
+    Adults: rate.hotelbedsSelectedRooms?.length
+      ? rate.hotelbedsSelectedRooms.reduce((sum, room) => sum + room.adults, 0)
+      : 2,
+    Children: rate.hotelbedsSelectedRooms?.length
+      ? rate.hotelbedsSelectedRooms.reduce((sum, room) => sum + room.children, 0)
+      : 0,
     Price: rate.price,
     TotalPrice: rate.price,
     Taxes: 0,

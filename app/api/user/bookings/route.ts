@@ -258,6 +258,109 @@ function getHotelbedsRequestSummarySafe(request: HotelbedsHotelBookingRequest) {
   };
 }
 
+type HotelbedsSelectedRoom = {
+  roomIndex: number;
+  adults: number;
+  children: number;
+  childAges: number[];
+  roomCode?: string;
+  roomName?: string;
+  boardCode?: string;
+  boardName?: string;
+  rateKey: string;
+  price?: number;
+  currency?: string;
+};
+
+function getHotelbedsSelectedRooms(booking: BookingDocument): HotelbedsSelectedRoom[] {
+  const metadata = asRecord(booking.metadata);
+  const rawRooms = Array.isArray(booking.hotelbedsSelectedRooms)
+    ? booking.hotelbedsSelectedRooms
+    : asArray(metadata.hotelbedsSelectedRooms);
+
+  return rawRooms
+    .map((room) => {
+      const record = asRecord(room);
+      const children = Math.max(0, toNumber(record.children));
+      const childAges = asArray(record.childAges)
+        .map((age) => toNumber(age))
+        .filter((age) => Number.isFinite(age) && age >= 0)
+        .slice(0, children);
+
+      return {
+        roomIndex: Math.max(0, toNumber(record.roomIndex)),
+        adults: Math.max(1, toNumber(record.adults, 1)),
+        children,
+        childAges,
+        roomCode: asString(record.roomCode),
+        roomName: asString(record.roomName),
+        boardCode: asString(record.boardCode),
+        boardName: asString(record.boardName),
+        rateKey: asString(record.rateKey),
+        price: Number.isFinite(Number(record.price)) ? Number(record.price) : undefined,
+        currency: asString(record.currency),
+      };
+    })
+    .filter((room) => room.rateKey)
+    .sort((left, right) => left.roomIndex - right.roomIndex);
+}
+
+function getRequestedOccupancies(booking: BookingDocument) {
+  return (Array.isArray(booking.rooms)
+    ? (booking.rooms as Array<Record<string, unknown>>)
+    : []
+  ).map((room, index) => {
+    const children = Math.max(0, toNumber(room.children));
+    return {
+      roomIndex: index,
+      adults: Math.max(1, toNumber(room.adults, 1)),
+      children,
+      childAges: Array.isArray(room.childrenAges)
+        ? room.childrenAges
+            .map((age) => toNumber(age))
+            .filter((age) => Number.isFinite(age) && age >= 0)
+            .slice(0, children)
+        : [],
+    };
+  });
+}
+
+function getHotelbedsRateKeyPrefix(rateKey: string) {
+  return rateKey ? rateKey.slice(0, 42) : "";
+}
+
+function hasSingleRoomOccupancyMarker(rateKey: string) {
+  return /\|\|1~\d+~\d+/.test(rateKey);
+}
+
+function getHotelbedsSelectionSummarySafe(params: {
+  booking: BookingDocument;
+  selectedRooms: HotelbedsSelectedRoom[];
+  rateKeys: string[];
+}) {
+  const requestedOccupancies = getRequestedOccupancies(params.booking);
+
+  return {
+    requestedRoomsCount: requestedOccupancies.length || 1,
+    selectedRateRoomsCount: params.selectedRooms.length || (params.rateKeys.length ? 1 : 0),
+    requestedOccupancies,
+    selectedRateOccupancySummary: params.selectedRooms.map((room) => ({
+      roomIndex: room.roomIndex,
+      adults: room.adults,
+      children: room.children,
+      childAges: room.childAges,
+      roomCode: room.roomCode || "",
+      boardCode: room.boardCode || "",
+      rateKeyPrefix: getHotelbedsRateKeyPrefix(room.rateKey),
+      hasSingleRoomOccupancyMarker: hasSingleRoomOccupancyMarker(room.rateKey),
+    })),
+    supplierRateKeyPrefix: getHotelbedsRateKeyPrefix(String(params.booking.supplierRateKey || "")),
+    hasSingleRoomOccupancyMarker: hasSingleRoomOccupancyMarker(
+      String(params.booking.supplierRateKey || ""),
+    ),
+  };
+}
+
 function buildHotelbedsFlowMetadata(params: {
   failedAt?: string;
   errorMessage?: string;
@@ -271,7 +374,7 @@ function buildHotelbedsFlowMetadata(params: {
   requestSummarySafe?: Record<string, unknown>;
 }) {
   return {
-    routeVersion: "hotelbeds-flow-v3",
+    routeVersion: "hotelbeds-flow-v4",
     failedAt: params.failedAt || "",
     errorMessage: params.errorMessage || "",
     validationErrors: params.validationErrors || [],
@@ -306,7 +409,7 @@ function logHotelbedsBookingFlow(params: {
     JSON.stringify({
       internalBookingId: params.internalBookingId,
       step: params.step,
-      routeVersion: params.routeVersion || "hotelbeds-flow-v3",
+      routeVersion: params.routeVersion || "hotelbeds-flow-v4",
       supplier: params.supplier || "hotelbeds",
       provider: params.provider || "hotelbeds",
       supplierTester: params.supplierTester ?? true,
@@ -493,7 +596,14 @@ function buildHotelbedsBookingRequest(
     travelers.find((traveler) => traveler.travelerType === "adult") ||
     travelers[0];
   const fallbackLeadGuest = splitName(booking.leadGuest);
-  const primaryRateKey = String(finalRateKeys?.[0] || booking.supplierRateKey || "");
+  const selectedRooms = getHotelbedsSelectedRooms(booking);
+  const selectedRateKeys = selectedRooms.map((room) => room.rateKey).filter(Boolean);
+  const effectiveRateKeys = finalRateKeys?.length
+    ? finalRateKeys
+    : selectedRateKeys.length
+      ? selectedRateKeys
+      : [String(booking.supplierRateKey || "")];
+  const primaryRateKey = String(effectiveRateKeys[0] || booking.supplierRateKey || "");
 
   const guests: HotelbedsHotelGuest[] = travelers.map((traveler) => {
     const isChild = traveler.travelerType === "child";
@@ -525,7 +635,7 @@ function buildHotelbedsBookingRequest(
     },
     rateKey: primaryRateKey,
     rooms: roomIds.map((roomId, index) => ({
-      rateKey: String(finalRateKeys?.[index] || primaryRateKey),
+      rateKey: String(effectiveRateKeys[index] || primaryRateKey),
       guests: guests.filter((guest) => (guest.roomId || 1) === roomId),
     })),
     guests,
@@ -665,12 +775,22 @@ async function submitHotelbedsTesterBooking(params: {
   const { bookingsCollection, booking } = params;
   const now = new Date();
   const rateKey = String(booking.supplierRateKey || "");
+  const selectedRooms = getHotelbedsSelectedRooms(booking);
+  const selectedRateKeys = selectedRooms.map((room) => room.rateKey).filter(Boolean);
+  const rateKeys = selectedRateKeys.length ? selectedRateKeys : rateKey ? [rateKey] : [];
+  const selectionSummarySafe = getHotelbedsSelectionSummarySafe({
+    booking,
+    selectedRooms,
+    rateKeys,
+  });
+  const requestedRoomsCount = Number(selectionSummarySafe.requestedRoomsCount || 1);
+  const selectedRateRoomsCount = Number(selectionSummarySafe.selectedRateRoomsCount || 0);
   const bookingBaseUrl = getHotelbedsBaseUrls().bookingBaseUrl;
 
   logHotelbedsBookingFlow({
     internalBookingId: booking._id,
     step: "received",
-    status: rateKey ? "rate_key_present" : "missing_rate_key",
+    status: rateKeys.length ? "rate_key_present" : "missing_rate_key",
   });
 
   if (!bookingBaseUrl.includes("api.test.hotelbeds.com")) {
@@ -684,15 +804,30 @@ async function submitHotelbedsTesterBooking(params: {
     });
   }
 
-  if (!rateKey) {
+  if (!rateKeys.length) {
     const message = "Missing Hotelbeds rateKey; booking was not sent to supplier.";
     return failHotelbedsBooking({
       bookingsCollection,
       booking,
       now,
       message,
-      failedAt: "checkrate",
+      failedAt: "local_validation",
       validationErrors: ["rateKey is required"],
+      requestSummarySafe: selectionSummarySafe,
+    });
+  }
+
+  if (selectedRateRoomsCount < requestedRoomsCount) {
+    const message =
+      "SELECTED_RATE_DOES_NOT_COVER_ALL_ROOMS: السعر المختار لا يغطي جميع الغرف المطلوبة، يرجى اختيار عرض آخر.";
+    return failHotelbedsBooking({
+      bookingsCollection,
+      booking,
+      now,
+      message,
+      failedAt: "local_validation",
+      validationErrors: ["SELECTED_RATE_DOES_NOT_COVER_ALL_ROOMS"],
+      requestSummarySafe: selectionSummarySafe,
     });
   }
 
@@ -700,9 +835,8 @@ async function submitHotelbedsTesterBooking(params: {
   let checkRateStatus = "";
   let checkRateBookable: boolean | undefined;
   let checkRateResponseSafe: Record<string, unknown> | undefined;
-  let requestSummarySafe:
-    | ReturnType<typeof getHotelbedsRequestSummarySafe>
-    | undefined;
+  let requestSummarySafe: Record<string, unknown> | undefined = selectionSummarySafe;
+  let checkedRateKeys = rateKeys;
   logHotelbedsBookingFlow({
     internalBookingId: booking._id,
     step: "checkrate_enabled_for_tester",
@@ -718,14 +852,18 @@ async function submitHotelbedsTesterBooking(params: {
     logHotelbedsBookingFlow({
       internalBookingId: booking._id,
       step: "before_checkrate",
-      rateKeyPresent: Boolean(rateKey),
+      rateKeyPresent: rateKeys.length > 0,
+      rooms: rateKeys.length,
     });
     const checkRateResponse = await client.checkRate({
-      rateKey,
-      rateKeys: [rateKey],
+      rateKey: rateKeys[0],
+      rateKeys,
       language: "en",
     });
-    const checkedRateKeys = extractHotelbedsRateKeys(checkRateResponse);
+    checkedRateKeys = extractHotelbedsRateKeys(checkRateResponse);
+    if (checkedRateKeys.length < requestedRoomsCount) {
+      checkedRateKeys = rateKeys;
+    }
     checkRateStatus = getHotelbedsStatus(checkRateResponse);
     checkRateResponseSafe = getHotelbedsFlowSafeResponse(checkRateResponse);
     checkRateBookable = isHotelbedsCheckRateBookable(checkRateResponse);
@@ -742,18 +880,57 @@ async function submitHotelbedsTesterBooking(params: {
         booking,
         now,
         message: "CheckRate returned not bookable.",
-        failedAt: "checkrate",
+        failedAt: "hotelbeds_checkrate",
         checkRateStatus,
         checkRateBookable,
         checkRateResponseSafe,
+        requestSummarySafe,
       });
     }
+  } catch (error) {
+    const message =
+      error instanceof HotelbedsHotelsClientError
+        ? `${error.code}: ${error.message}`
+        : safeErrorMessage(error);
+    const updatedBooking = await failHotelbedsBooking({
+      bookingsCollection,
+      booking,
+      now,
+      message,
+      failedAt: "hotelbeds_checkrate",
+      checkRateStatus,
+      checkRateBookable,
+      checkRateResponseSafe,
+      requestSummarySafe,
+    });
+    await createLog({
+      type: "supplier_booking_failed",
+      status: "failed",
+      message: "Hotelbeds Accommodation check-rate failed",
+      request: {
+        bookingId: booking._id,
+        supplier: "hotelbeds",
+        hasRateKey: rateKeys.length > 0,
+      },
+      response: {
+        bookingId: booking._id,
+        supplierStatus: "failed",
+      },
+      error: message,
+    });
 
+    return updatedBooking;
+  }
+
+  try {
     const bookingRequest = buildHotelbedsBookingRequest(
       booking,
-      checkedRateKeys.length ? checkedRateKeys : [rateKey],
+      checkedRateKeys.length ? checkedRateKeys : rateKeys,
     );
-    requestSummarySafe = getHotelbedsRequestSummarySafe(bookingRequest);
+    requestSummarySafe = {
+      ...selectionSummarySafe,
+      ...getHotelbedsRequestSummarySafe(bookingRequest),
+    };
     const validationErrors = validateHotelbedsBookingRequest(booking, bookingRequest);
 
     if (validationErrors.length > 0) {
@@ -785,8 +962,8 @@ async function submitHotelbedsTesterBooking(params: {
     logHotelbedsBookingFlow({
       internalBookingId: booking._id,
       step: "before_booking",
-      rooms: requestSummarySafe.rooms,
-      paxes: requestSummarySafe.paxes,
+      rooms: toNumber(requestSummarySafe.rooms),
+      paxes: toNumber(requestSummarySafe.paxes),
     });
     const bookingResponse = await client.book(bookingRequest);
     const hotelbedsReference = extractHotelbedsBookingReference(bookingResponse);
@@ -832,7 +1009,7 @@ async function submitHotelbedsTesterBooking(params: {
       request: {
         bookingId: booking._id,
         supplier: "hotelbeds",
-        hasRateKey: Boolean(rateKey),
+        hasRateKey: rateKeys.length > 0,
       },
       response: {
         bookingId: booking._id,
@@ -865,7 +1042,7 @@ async function submitHotelbedsTesterBooking(params: {
       request: {
         bookingId: booking._id,
         supplier: "hotelbeds",
-        hasRateKey: Boolean(rateKey),
+        hasRateKey: rateKeys.length > 0,
       },
       response: {
         bookingId: booking._id,
@@ -1469,6 +1646,9 @@ export async function POST(req: NextRequest) {
       supplier,
       supplierHotelId: body.supplierHotelId || "",
       supplierRateKey: body.supplierRateKey || "",
+      hotelbedsSelectedRooms: Array.isArray(body.hotelbedsSelectedRooms)
+        ? body.hotelbedsSelectedRooms
+        : [],
       supplierBookingReference: body.supplierBookingReference || "",
       hotelId: toNumber(body.hotelId),
       hotelName: body.hotelName || "",

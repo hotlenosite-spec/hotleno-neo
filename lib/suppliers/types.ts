@@ -25,6 +25,19 @@ export interface SupplierHotelRate {
   price: number;
   currency: string;
   refundable: boolean;
+  hotelbedsSelectedRooms?: Array<{
+    roomIndex: number;
+    adults: number;
+    children: number;
+    childAges?: number[];
+    roomCode?: string;
+    roomName?: string;
+    boardCode?: string;
+    boardName?: string;
+    rateKey: string;
+    price?: number;
+    currency?: string;
+  }>;
   cancellationPolicies?: unknown[];
   rspPrice?: number;
   roomPromotions?: unknown[];

@@ -50,6 +50,19 @@ interface HotelData {
   supplierHotelId?: string;
   HotelCode?: string;
   supplierTotalFare?: number;
+  hotelbedsSelectedRooms?: Array<{
+    roomIndex: number;
+    adults: number;
+    children: number;
+    childAges?: number[];
+    roomCode?: string;
+    roomName?: string;
+    boardCode?: string;
+    boardName?: string;
+    rateKey: string;
+    price?: number;
+    currency?: string;
+  }>;
   roomName?: string;
   price?: number;
   totalPrice?: number;
@@ -93,13 +106,13 @@ const createSupplierFallbackPolicies = useCallback((): PoliciesData => {
   };
 }, [t]);
 
-function toNumber(value: unknown) {
+function toNumber(value: unknown, fallback = 0) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
     const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) ? parsed : 0;
+    return Number.isFinite(parsed) ? parsed : fallback;
   }
-  return 0;
+  return fallback;
 }
 
 function asCleanTextArray(value: unknown): string[] {
@@ -243,6 +256,28 @@ const normalizeSelectedRoomForReview = useCallback((
         "",
     ),
     supplierTotalFare: toNumber(selectedRoom.supplierTotalFare || rawTotalPrice || rawPrice),
+    hotelbedsSelectedRooms: Array.isArray(selectedRoom.hotelbedsSelectedRooms)
+      ? selectedRoom.hotelbedsSelectedRooms
+          .map((room) => {
+            const record = room as Record<string, unknown>;
+            return {
+              roomIndex: toNumber(record.roomIndex),
+              adults: toNumber(record.adults, 1),
+              children: toNumber(record.children),
+              childAges: Array.isArray(record.childAges)
+                ? record.childAges.map((age) => toNumber(age)).filter(Number.isFinite)
+                : [],
+              roomCode: String(record.roomCode || ""),
+              roomName: String(record.roomName || ""),
+              boardCode: String(record.boardCode || ""),
+              boardName: String(record.boardName || ""),
+              rateKey: String(record.rateKey || ""),
+              price: toNumber(record.price),
+              currency: String(record.currency || currency),
+            };
+          })
+          .filter((room) => room.rateKey)
+      : [],
     roomName: String(selectedRoom.roomName || selectedRoom.RoomName || selectedRoom.RoomType || ""),
     price,
     currency,
@@ -663,6 +698,7 @@ const DOCUMENT_TYPES = [
           supplierHotelId: hotel.supplierHotelId || hotel.HotelCode || "",
           supplierRateKey:
             hotel.supplierRateKey || hotel.rateKey || hotel.BookingCode || "",
+          hotelbedsSelectedRooms: hotel.hotelbedsSelectedRooms || [],
           supplierBookingReference: "",
           hotelId: hotel.hotelId || 0,
           hotelName: hotel.HotelName,
@@ -691,6 +727,7 @@ const DOCUMENT_TYPES = [
           metadata: {
             checkoutFlow: "review_traveler_details_before_booking",
             supplierTotalFare: hotel.supplierTotalFare || totalPrice,
+            hotelbedsSelectedRooms: hotel.hotelbedsSelectedRooms || [],
             rspPrice: hotel.rspPrice || null,
             roomPromotions: hotel.roomPromotions || [],
             supplements: hotel.supplements || [],
