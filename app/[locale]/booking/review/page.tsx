@@ -148,6 +148,23 @@ function calculateNights(checkIn?: string, checkOut?: string) {
   return nights > 0 ? nights : 1;
 }
 
+function isHotelbedsTesterToken() {
+  try {
+    const token = localStorage.getItem("token") || "";
+    const [, payload] = token.split(".");
+    if (!payload) return false;
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const parsed = JSON.parse(atob(normalizedPayload)) as {
+      role?: string;
+      supplierScope?: string | null;
+    };
+
+    return parsed.role === "supplier_tester" && parsed.supplierScope === "hotelbeds";
+  } catch {
+    return false;
+  }
+}
+
 const normalizeSelectedRoomForReview = useCallback((
   optionData: Partial<HotelData> & Record<string, unknown>,
   bookingData: {
@@ -613,12 +630,19 @@ const DOCUMENT_TYPES = [
         phone: traveler.phone.trim(),
         email: traveler.email.trim(),
       }));
+      const bookingSupplier = isHotelbedsTesterToken()
+        ? "hotelbeds"
+        : hotel.supplier || "none";
       const selectedRoom = {
         hotel: {
           ...hotel,
+          supplier: bookingSupplier,
           selectedOption: hotel,
         },
-        selectedRoom: hotel,
+        selectedRoom: {
+          ...hotel,
+          supplier: bookingSupplier,
+        },
         policies,
         searchParams,
         travelers: bookingTravelers,
@@ -635,7 +659,7 @@ const DOCUMENT_TYPES = [
         body: JSON.stringify({
           bookingReference,
           yourReference: bookingReference,
-          supplier: hotel.supplier || "none",
+          supplier: bookingSupplier,
           supplierHotelId: hotel.supplierHotelId || hotel.HotelCode || "",
           supplierRateKey:
             hotel.supplierRateKey || hotel.rateKey || hotel.BookingCode || "",
@@ -750,35 +774,6 @@ const DOCUMENT_TYPES = [
   const guestRooms = roomOccupancies.length;
   const totalAdults = roomOccupancies.reduce((sum, room) => sum + room.adults, 0);
   const totalChildren = roomOccupancies.reduce((sum, room) => sum + room.children, 0);
-  const supplierName = String(hotel?.supplier || "").toLowerCase();
-  const isHotelbedsFlow = supplierName.includes("hotelbeds");
-  const isTboFlow = supplierName === "tbo";
-  const rateDetailsTitle = isHotelbedsFlow
-    ? "تفاصيل السعر من Hotelbeds"
-    : isTboFlow
-      ? t("booking.tbo.rateDetails")
-      : "تفاصيل السعر من المزود";
-  const rateDetailsDescription = isHotelbedsFlow
-    ? "راجع تفاصيل السعر والسياسات الواردة من Hotelbeds قبل تأكيد الحجز."
-    : isTboFlow
-      ? t("booking.tbo.rateDetailsDescription")
-      : "راجع تفاصيل السعر والسياسات الواردة من المزود قبل تأكيد الحجز.";
-  const tboDetailGroups = hotel
-    ? [
-        { title: t("booking.tbo.inclusions"), items: asCleanTextArray(hotel.inclusions) },
-        { title: t("booking.tbo.promotions"), items: asCleanTextArray(hotel.roomPromotions) },
-        { title: t("booking.tbo.supplements"), items: asCleanTextArray(hotel.supplements) },
-        { title: t("booking.tbo.cancellationPolicy"), items: asCleanTextArray(hotel.cancellationPolicies) },
-        { title: t("booking.tbo.rateConditions"), items: asCleanTextArray(hotel.rateConditions) },
-        { title: t("booking.tbo.amenities"), items: asCleanTextArray(hotel.amenities) },
-      ].filter((group) => group.items.length > 0)
-    : [];
-  const hasPolicyDetails = Boolean(
-    hotel?.rspPrice ||
-      tboDetailGroups.length > 0 ||
-      policies?.CancellationPolicy ||
-      (policies?.ImportantInformation && policies.ImportantInformation.length > 0),
-  );
   const areTravelersComplete =
     travelers.length > 0 &&
     travelers.every((traveler) => {
@@ -1178,78 +1173,6 @@ const DOCUMENT_TYPES = [
               </div>
             </CardContent>
           </Card>
-
-          {hasPolicyDetails ? (
-            <Card className="border-orange-100 shadow-sm">
-              <div className="border-b border-orange-100 bg-orange-50 px-6 py-4">
-                <h3 className="text-xl font-black text-[#0F172A]">{rateDetailsTitle}</h3>
-                <p className="mt-1 text-sm font-semibold text-slate-600">
-                  {rateDetailsDescription}
-                </p>
-              </div>
-              <CardContent className="space-y-5 p-6">
-                {hotel?.rspPrice ? (
-                  <div className="rounded-xl border border-orange-100 bg-white p-4">
-                    <p className="text-sm font-black text-[#0F172A]">{t("booking.tbo.rspPrice")}</p>
-                    <p className="mt-2 text-2xl font-black text-[#F97316]">
-                      {hotel.Currency} {hotel.rspPrice}
-                    </p>
-                  </div>
-                ) : null}
-
-                {tboDetailGroups.map((group) => (
-                  <div key={group.title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="mb-3 text-base font-black text-[#0F172A]">{group.title}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {group.items.map((item) => (
-                        <span
-                          key={`${group.title}-${item}`}
-                          className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {policies?.CancellationPolicy ? (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                    <p className="mb-2 text-base font-black text-amber-900">
-                      {t("booking.tbo.cancellationPolicy")}
-                    </p>
-                    <p className="text-sm font-semibold leading-6 text-amber-800">
-                      {policies.CancellationPolicy.Description}
-                    </p>
-                    {policies.CancellationPolicy.Deadline ? (
-                      <p className="mt-2 text-sm font-black text-amber-900">
-                        {t("booking.freeCancellationUntil")}: {policies.CancellationPolicy.Deadline}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                {policies?.ImportantInformation && policies.ImportantInformation.length > 0 ? (
-                  <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <p className="mb-3 text-base font-black text-[#0F172A]">
-                      {t("booking.importantInformation")}
-                    </p>
-                    <ul className="space-y-2">
-                      {policies.ImportantInformation.map((info: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-sm font-semibold text-slate-700">
-                          <HugeiconsIcon
-                            icon={LeftTriangleIcon}
-                            className="mt-0.5 h-4 w-4 shrink-0 text-[#F97316]"
-                          />
-                          <span>{info}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-          ) : null}
 
           <Card className="border-slate-200 shadow-sm">
             <CardContent className="p-6">

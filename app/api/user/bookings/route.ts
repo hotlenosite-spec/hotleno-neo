@@ -135,6 +135,10 @@ function validateBookingTravelers(travelers: unknown[]) {
   return "";
 }
 
+function normalizeSupplier(value: unknown) {
+  return String(value || "none").trim().toLowerCase();
+}
+
 function getRawSupplierObject(response: SupplierBookResponse) {
   return response.rawSupplierResponse &&
     typeof response.rawSupplierResponse === "object"
@@ -783,7 +787,52 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_ENABLE_STRIPE_CHECKOUT === "true";
     const tboBookingEnabled = isEnabled(process.env.TBO_BOOKING_ENABLED);
     const tboCertificationMode = isEnabled(process.env.TBO_CERTIFICATION_MODE);
-    const supplier = String(body.supplier || "none").toLowerCase();
+    const requestedSupplier = normalizeSupplier(body.supplier);
+    const userRole = String(user?.role || decoded.role || "");
+    const userSupplierScope = normalizeSupplier(user?.supplierScope || decoded.supplierScope);
+    const isHotelbedsSupplierTester =
+      userRole === "supplier_tester" && userSupplierScope === "hotelbeds";
+
+    if (
+      isHotelbedsSupplierTester &&
+      requestedSupplier !== "hotelbeds" &&
+      requestedSupplier !== "none"
+    ) {
+      console.info(
+        "[Hotelbeds Booking Flow]",
+        JSON.stringify({
+          supplier: requestedSupplier,
+          provider: requestedSupplier,
+          supplierTester: true,
+          blocked: true,
+        }),
+      );
+      return NextResponse.json(
+        { error: "Invalid supplier route for Hotelbeds tester." },
+        { status: 400 },
+      );
+    }
+
+    const supplier = isHotelbedsSupplierTester ? "hotelbeds" : requestedSupplier;
+    if (
+      supplier === "hotelbeds" &&
+      (typeof body.BookingCode === "string" || typeof body.bookingCode === "string")
+    ) {
+      return NextResponse.json(
+        { error: "Invalid supplier route for Hotelbeds tester." },
+        { status: 400 },
+      );
+    }
+    if (isHotelbedsSupplierTester) {
+      console.info(
+        "[Hotelbeds Booking Flow]",
+        JSON.stringify({
+          supplier: "hotelbeds",
+          provider: "hotelbeds",
+          supplierTester: true,
+        }),
+      );
+    }
     const shouldSubmitTboCertificationBooking =
       supplier === "tbo" && tboCertificationMode && tboBookingEnabled;
     const travelerValidationError = Array.isArray(body.travelers)

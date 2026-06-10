@@ -138,9 +138,29 @@ function getSelectedRoomSnapshot(
 
 function getBookingSupplier(hotel: HotelSearchResult, option: HotelOption) {
   if (shouldSkipTravellandaForTbo(hotel)) return "tbo";
+  if (isHotelbedsTesterToken()) return "hotelbeds";
 
-  const supplier = String(option.supplier || "").toLowerCase();
+  const hotelSupplier =
+    "supplier" in hotel ? String((hotel as { supplier?: unknown }).supplier || "") : "";
+  const supplier = String(option.supplier || hotelSupplier).toLowerCase();
   return supplier || "travellanda";
+}
+
+function isHotelbedsTesterToken() {
+  try {
+    const token = localStorage.getItem("token") || "";
+    const [, payload] = token.split(".");
+    if (!payload) return false;
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const parsed = JSON.parse(atob(normalizedPayload)) as {
+      role?: string;
+      supplierScope?: string | null;
+    };
+
+    return parsed.role === "supplier_tester" && parsed.supplierScope === "hotelbeds";
+  } catch {
+    return false;
+  }
 }
 
 function buildRoomsPayloadFromSearch(searchParams: SavedSearch) {
