@@ -174,6 +174,18 @@ function getHotelbedsStatus(payload: unknown) {
   );
 }
 
+function getHotelbedsErrorMessage(payload: unknown) {
+  const record = asRecord(payload);
+  const error = asRecord(record.error);
+  return (
+    asString(error.message) ||
+    asString(error.description) ||
+    asString(record.message) ||
+    asString(record.error) ||
+    ""
+  );
+}
+
 function extractHotelbedsRateKeys(payload: unknown) {
   const keys: string[] = [];
 
@@ -206,6 +218,73 @@ function extractHotelbedsBookingReference(payload: unknown) {
   );
 }
 
+function getHotelbedsFlowSafeResponse(payload: unknown) {
+  const rateKeys = extractHotelbedsRateKeys(payload);
+  const reference = extractHotelbedsBookingReference(payload);
+  return {
+    status: getHotelbedsStatus(payload),
+    errorMessage: getHotelbedsErrorMessage(payload),
+    hotelbedsReference: reference || undefined,
+    rateKeysReturned: rateKeys.length,
+    hasRateKey: rateKeys.length > 0,
+  };
+}
+
+function isHotelbedsCheckRateBookable(payload: unknown) {
+  const rateKeys = extractHotelbedsRateKeys(payload);
+  const status = getHotelbedsStatus(payload).toLowerCase();
+  const errorMessage = getHotelbedsErrorMessage(payload).toLowerCase();
+
+  if (!rateKeys.length) return false;
+  if (/error|failed|not[_\s-]?bookable|unavailable|invalid/.test(status)) return false;
+  if (/not[_\s-]?bookable|unavailable|invalid|expired/.test(errorMessage)) return false;
+
+  return true;
+}
+
+function getHotelbedsRequestSummarySafe(request: HotelbedsHotelBookingRequest) {
+  return {
+    clientReference: request.clientReference,
+    holderPresent: Boolean(request.holder.name && request.holder.surname),
+    rooms: request.rooms?.length || 0,
+    paxes: request.guests.length,
+    adults: request.guests.filter((guest) => guest.type !== "CH").length,
+    children: request.guests.filter((guest) => guest.type === "CH").length,
+    rateKeyPresent: Boolean(request.rateKey),
+    roomRateKeysPresent: (request.rooms || []).every((room) => Boolean(room.rateKey)),
+    childAgesPresent: request.guests
+      .filter((guest) => guest.type === "CH")
+      .every((guest) => Number.isFinite(Number(guest.age))),
+  };
+}
+
+function buildHotelbedsFlowMetadata(params: {
+  failedAt?: string;
+  errorMessage?: string;
+  validationErrors?: string[];
+  checkRateStatus?: string;
+  checkRateBookable?: boolean;
+  bookingStatus?: string;
+  hotelbedsReference?: string;
+  checkRateResponseSafe?: Record<string, unknown>;
+  bookingResponseSafe?: Record<string, unknown>;
+  requestSummarySafe?: Record<string, unknown>;
+}) {
+  return {
+    routeVersion: "hotelbeds-flow-v3",
+    failedAt: params.failedAt || "",
+    errorMessage: params.errorMessage || "",
+    validationErrors: params.validationErrors || [],
+    checkRateStatus: params.checkRateStatus || "",
+    checkRateBookable: params.checkRateBookable ?? null,
+    bookingStatus: params.bookingStatus || "",
+    hotelbedsReference: params.hotelbedsReference || "",
+    checkRateResponseSafe: params.checkRateResponseSafe || null,
+    bookingResponseSafe: params.bookingResponseSafe || null,
+    requestSummarySafe: params.requestSummarySafe || null,
+  };
+}
+
 function logHotelbedsBookingFlow(params: {
   internalBookingId: string;
   step: string;
@@ -215,18 +294,30 @@ function logHotelbedsBookingFlow(params: {
   status?: string;
   hotelbedsReference?: string;
   error?: string;
+  routeVersion?: string;
+  failedAt?: string;
+  rateKeyPresent?: boolean;
+  bookable?: boolean;
+  rooms?: number;
+  paxes?: number;
 }) {
   console.info(
     "[Hotelbeds Booking Flow]",
     JSON.stringify({
       internalBookingId: params.internalBookingId,
       step: params.step,
+      routeVersion: params.routeVersion || "hotelbeds-flow-v3",
       supplier: params.supplier || "hotelbeds",
       provider: params.provider || "hotelbeds",
       supplierTester: params.supplierTester ?? true,
       status: params.status,
       hotelbedsReference: params.hotelbedsReference,
       error: params.error,
+      failedAt: params.failedAt,
+      rateKeyPresent: params.rateKeyPresent,
+      bookable: params.bookable,
+      rooms: params.rooms,
+      paxes: params.paxes,
     }),
   );
 }
@@ -406,13 +497,14 @@ function buildHotelbedsBookingRequest(
 
   const guests: HotelbedsHotelGuest[] = travelers.map((traveler) => {
     const isChild = traveler.travelerType === "child";
+    const childAge = Number(traveler.age);
     return {
       roomId: Math.max(1, toNumber(traveler.roomIndex) + 1),
       type: isChild ? "CH" : "AD",
       title: isChild ? undefined : normalizeGuestTitle(traveler.title),
       name: String(traveler.firstName || "Guest").trim() || "Guest",
       surname: String(traveler.lastName || "Hotleno").trim() || "Hotleno",
-      age: isChild ? toNumber(traveler.age) : undefined,
+      age: isChild && Number.isFinite(childAge) ? childAge : undefined,
     };
   });
   const roomIds = [...new Set(guests.map((guest) => guest.roomId || 1))].sort(
@@ -442,6 +534,130 @@ function buildHotelbedsBookingRequest(
   };
 }
 
+function validateHotelbedsBookingRequest(
+  booking: BookingDocument,
+  request: HotelbedsHotelBookingRequest,
+) {
+  const errors: string[] = [];
+  const rooms = Array.isArray(booking.rooms)
+    ? (booking.rooms as Array<Record<string, unknown>>)
+    : [];
+
+  if (String(booking.supplier || "").toLowerCase() !== "hotelbeds") {
+    errors.push("supplier must be hotelbeds");
+  }
+  if (!request.rateKey) {
+    errors.push("rateKey is required");
+  }
+  if (!request.holder.name.trim()) {
+    errors.push("holder name is required");
+  }
+  if (!request.holder.surname.trim()) {
+    errors.push("holder surname is required");
+  }
+  if (!request.rooms?.length) {
+    errors.push("rooms are required");
+  }
+  if (rooms.length > 0 && request.rooms?.length !== rooms.length) {
+    errors.push("room count does not match selected occupancy");
+  }
+
+  request.rooms?.forEach((room, roomIndex) => {
+    if (!room.rateKey) {
+      errors.push(`room ${roomIndex + 1} rateKey is required`);
+    }
+    const expectedRoom = rooms[roomIndex];
+    const expectedAdults = expectedRoom ? toNumber(expectedRoom.adults, 1) : 0;
+    const expectedChildren = expectedRoom ? toNumber(expectedRoom.children) : 0;
+    const adults = room.guests.filter((guest) => guest.type !== "CH").length;
+    const children = room.guests.filter((guest) => guest.type === "CH").length;
+
+    if (expectedRoom && adults !== expectedAdults) {
+      errors.push(`room ${roomIndex + 1} adult count mismatch`);
+    }
+    if (expectedRoom && children !== expectedChildren) {
+      errors.push(`room ${roomIndex + 1} child count mismatch`);
+    }
+    room.guests.forEach((guest, guestIndex) => {
+      if (!guest.name.trim() || !guest.surname.trim()) {
+        errors.push(`room ${roomIndex + 1} pax ${guestIndex + 1} name is required`);
+      }
+      if (guest.type === "CH" && !Number.isFinite(Number(guest.age))) {
+        errors.push(`room ${roomIndex + 1} child ${guestIndex + 1} age is required`);
+      }
+      if (guest.type !== "CH" && guest.age !== undefined) {
+        errors.push(`room ${roomIndex + 1} adult ${guestIndex + 1} must not include age`);
+      }
+    });
+  });
+
+  return errors;
+}
+
+async function failHotelbedsBooking(params: {
+  bookingsCollection: Collection<BookingDocument>;
+  booking: BookingDocument;
+  now: Date;
+  message: string;
+  failedAt: string;
+  validationErrors?: string[];
+  checkRateStatus?: string;
+  checkRateBookable?: boolean;
+  bookingStatus?: string;
+  hotelbedsReference?: string;
+  checkRateResponseSafe?: Record<string, unknown>;
+  bookingResponseSafe?: Record<string, unknown>;
+  requestSummarySafe?: Record<string, unknown>;
+}) {
+  const {
+    bookingsCollection,
+    booking,
+    now,
+    message,
+    failedAt,
+    validationErrors = [],
+    checkRateStatus,
+    checkRateBookable,
+    bookingStatus,
+    hotelbedsReference,
+    checkRateResponseSafe,
+    bookingResponseSafe,
+    requestSummarySafe,
+  } = params;
+  const updates: Partial<BookingDocument> & Record<string, unknown> = {
+    bookingStatus: "supplier_booking_failed",
+    status: "supplier_booking_failed",
+    supplierStatus: "failed",
+    failureReason: message,
+    "metadata.supplierSubmission": "failed",
+    "metadata.supplierFailureStage": failedAt,
+    "metadata.supplierError": message,
+    "metadata.hotelbedsFlow": buildHotelbedsFlowMetadata({
+      failedAt,
+      errorMessage: message,
+      validationErrors,
+      checkRateStatus,
+      checkRateBookable,
+      bookingStatus,
+      hotelbedsReference,
+      checkRateResponseSafe,
+      bookingResponseSafe,
+      requestSummarySafe,
+    }),
+    updatedAt: now,
+  };
+
+  await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
+  logHotelbedsBookingFlow({
+    internalBookingId: booking._id,
+    step: "failed",
+    failedAt,
+    error: message,
+  });
+
+  return { ...booking, ...updates } as BookingDocument;
+}
+
 async function submitHotelbedsTesterBooking(params: {
   bookingsCollection: Collection<BookingDocument>;
   booking: BookingDocument;
@@ -459,52 +675,39 @@ async function submitHotelbedsTesterBooking(params: {
 
   if (!bookingBaseUrl.includes("api.test.hotelbeds.com")) {
     const message = "Hotelbeds tester booking requires Hotelbeds test environment.";
-    const updates: Partial<BookingDocument> & Record<string, unknown> = {
-      bookingStatus: "supplier_booking_failed",
-      status: "supplier_booking_failed",
-      supplierStatus: "failed",
-      failureReason: message,
-      "metadata.supplierSubmission": "failed",
-      "metadata.supplierFailureStage": "environment",
-      "metadata.supplierError": message,
-      updatedAt: now,
-    };
-    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
-    logHotelbedsBookingFlow({
-      internalBookingId: booking._id,
-      step: "failed",
-      error: message,
+    return failHotelbedsBooking({
+      bookingsCollection,
+      booking,
+      now,
+      message,
+      failedAt: "environment",
     });
-    return { ...booking, ...updates } as BookingDocument;
   }
 
   if (!rateKey) {
     const message = "Missing Hotelbeds rateKey; booking was not sent to supplier.";
-    const updates: Partial<BookingDocument> & Record<string, unknown> = {
-      bookingStatus: "supplier_booking_failed",
-      status: "supplier_booking_failed",
-      supplierStatus: "failed",
-      failureReason: message,
-      "metadata.supplierSubmission": "failed",
-      "metadata.supplierFailureStage": "checkrate",
-      "metadata.supplierError": message,
-      updatedAt: now,
-    };
-    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
-    logHotelbedsBookingFlow({
-      internalBookingId: booking._id,
-      step: "failed",
-      error: message,
+    return failHotelbedsBooking({
+      bookingsCollection,
+      booking,
+      now,
+      message,
+      failedAt: "checkrate",
+      validationErrors: ["rateKey is required"],
     });
-    return { ...booking, ...updates } as BookingDocument;
   }
 
   const client = createHotelbedsHotelsClient();
+  logHotelbedsBookingFlow({
+    internalBookingId: booking._id,
+    step: "validated",
+    status: "precheck_ok",
+  });
 
   try {
     logHotelbedsBookingFlow({
       internalBookingId: booking._id,
       step: "before_checkrate",
+      rateKeyPresent: Boolean(rateKey),
     });
     const checkRateResponse = await client.checkRate({
       rateKey,
@@ -512,23 +715,71 @@ async function submitHotelbedsTesterBooking(params: {
       language: "en",
     });
     const checkedRateKeys = extractHotelbedsRateKeys(checkRateResponse);
+    const checkRateResponseSafe = getHotelbedsFlowSafeResponse(checkRateResponse);
+    const checkRateBookable = isHotelbedsCheckRateBookable(checkRateResponse);
     logHotelbedsBookingFlow({
       internalBookingId: booking._id,
       step: "checkrate_response",
       status: getHotelbedsStatus(checkRateResponse),
+      bookable: checkRateBookable,
     });
+
+    if (!checkRateBookable) {
+      return failHotelbedsBooking({
+        bookingsCollection,
+        booking,
+        now,
+        message: "CheckRate returned not bookable.",
+        failedAt: "checkrate",
+        checkRateStatus: getHotelbedsStatus(checkRateResponse),
+        checkRateBookable,
+        checkRateResponseSafe,
+      });
+    }
 
     const bookingRequest = buildHotelbedsBookingRequest(
       booking,
       checkedRateKeys.length ? checkedRateKeys : [rateKey],
     );
+    const requestSummarySafe = getHotelbedsRequestSummarySafe(bookingRequest);
+    const validationErrors = validateHotelbedsBookingRequest(booking, bookingRequest);
+
+    if (validationErrors.length > 0) {
+      logHotelbedsBookingFlow({
+        internalBookingId: booking._id,
+        step: "failed",
+        failedAt: "validation",
+        error: validationErrors.join("; "),
+      });
+      return failHotelbedsBooking({
+        bookingsCollection,
+        booking,
+        now,
+        message: "Hotelbeds booking validation failed.",
+        failedAt: "validation",
+        validationErrors,
+        checkRateStatus: getHotelbedsStatus(checkRateResponse),
+        checkRateBookable,
+        checkRateResponseSafe,
+        requestSummarySafe,
+      });
+    }
+
+    logHotelbedsBookingFlow({
+      internalBookingId: booking._id,
+      step: "validated",
+      status: "booking_payload_ok",
+    });
     logHotelbedsBookingFlow({
       internalBookingId: booking._id,
       step: "before_booking",
+      rooms: requestSummarySafe.rooms,
+      paxes: requestSummarySafe.paxes,
     });
     const bookingResponse = await client.book(bookingRequest);
     const hotelbedsReference = extractHotelbedsBookingReference(bookingResponse);
     const status = getHotelbedsStatus(bookingResponse);
+    const bookingResponseSafe = getHotelbedsFlowSafeResponse(bookingResponse);
     const updates: Partial<BookingDocument> & Record<string, unknown> = {
       bookingStatus: "supplier_booking_confirmed",
       status: "supplier_booking_confirmed",
@@ -536,16 +787,22 @@ async function submitHotelbedsTesterBooking(params: {
       supplierBookingReference: hotelbedsReference,
       supplierReference: hotelbedsReference,
       supplierResponseStatus: status,
-      rawSupplierResponse: bookingResponse,
+      rawSupplierResponse: bookingResponseSafe,
       "metadata.supplierSubmission": "sent_to_supplier",
       "metadata.supplierSubmittedAt": now.toISOString(),
       "metadata.hotelbedsCheckRateStatus": getHotelbedsStatus(checkRateResponse),
       "metadata.hotelbedsBookingStatus": status,
       "metadata.hotelbedsBookingReference": hotelbedsReference,
-      "metadata.hotelbedsBookingResponse": {
-        status,
-        reference: hotelbedsReference,
-      },
+      "metadata.hotelbedsBookingResponseSafe": bookingResponseSafe,
+      "metadata.hotelbedsFlow": buildHotelbedsFlowMetadata({
+        checkRateStatus: getHotelbedsStatus(checkRateResponse),
+        checkRateBookable,
+        bookingStatus: status,
+        hotelbedsReference,
+        checkRateResponseSafe,
+        bookingResponseSafe,
+        requestSummarySafe,
+      }),
       updatedAt: now,
     };
 
@@ -578,22 +835,12 @@ async function submitHotelbedsTesterBooking(params: {
       error instanceof HotelbedsHotelsClientError
         ? `${error.code}: ${error.message}`
         : safeErrorMessage(error);
-    const updates: Partial<BookingDocument> & Record<string, unknown> = {
-      bookingStatus: "supplier_booking_failed",
-      status: "supplier_booking_failed",
-      supplierStatus: "failed",
-      failureReason: message,
-      "metadata.supplierSubmission": "failed",
-      "metadata.supplierFailureStage": "hotelbeds_booking",
-      "metadata.supplierError": message,
-      updatedAt: now,
-    };
-
-    await bookingsCollection.updateOne({ _id: booking._id }, { $set: updates });
-    logHotelbedsBookingFlow({
-      internalBookingId: booking._id,
-      step: "failed",
-      error: message,
+    const updatedBooking = await failHotelbedsBooking({
+      bookingsCollection,
+      booking,
+      now,
+      message,
+      failedAt: "hotelbeds_booking",
     });
     await createLog({
       type: "supplier_booking_failed",
@@ -611,7 +858,7 @@ async function submitHotelbedsTesterBooking(params: {
       error: message,
     });
 
-    return { ...booking, ...updates } as BookingDocument;
+    return updatedBooking;
   }
 }
 

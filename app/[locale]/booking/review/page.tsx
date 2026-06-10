@@ -711,9 +711,13 @@ const DOCUMENT_TYPES = [
       if (bookingStatus === "supplier_booking_confirmed") {
         setNotice(t("checkout.notices.confirmed", { bookingId: bookingReference }));
       } else if (bookingStatus === "supplier_booking_failed") {
+        const failureReason =
+          typeof result?.booking?.failureReason === "string"
+            ? result.booking.failureReason
+            : "";
         setNotice(
           bookingSupplier === "hotelbeds" && typeof result?.message === "string"
-            ? result.message
+            ? `${result.message} رقم الطلب: ${bookingReference}${failureReason ? ` السبب: ${failureReason}` : ""}`
             : t("checkout.notices.failed", { bookingId: bookingReference }),
         );
       } else {

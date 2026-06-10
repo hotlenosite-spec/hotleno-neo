@@ -897,6 +897,14 @@ export default function AdminBookingsPage() {
         ([key]) => key !== "adminNotes",
       )
     : [];
+  const hotelbedsFlow =
+    selectedBooking?.metadata?.hotelbedsFlow &&
+    typeof selectedBooking.metadata.hotelbedsFlow === "object"
+      ? (selectedBooking.metadata.hotelbedsFlow as Record<string, unknown>)
+      : null;
+  const hotelbedsValidationErrors = Array.isArray(hotelbedsFlow?.validationErrors)
+    ? hotelbedsFlow.validationErrors.map(String).filter(Boolean)
+    : [];
   const displayedBookings = displayStatusFilter === "all" || displayStatusFilter === "archive"
     ? bookings
     : bookings.filter((booking) => getAdminBookingDisplayStatus(booking).key === displayStatusFilter);
@@ -1562,6 +1570,52 @@ export default function AdminBookingsPage() {
                 {renderDetail("سبب الفشل", selectedBooking?.failureReason)}
               </div>
             </section>
+
+            {hotelbedsFlow && (
+              <section className="space-y-3">
+                <h3 className="text-lg font-black text-slate-950">Hotelbeds flow diagnostics</h3>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {renderDetail("Supplier", "Hotelbeds")}
+                  {renderDetail("Internal reference", selectedBooking?._id || selectedBooking?.bookingReference)}
+                  {renderDetail("Status", selectedBooking?.status || selectedBooking?.bookingStatus)}
+                  {renderDetail("Failed step", String(hotelbedsFlow.failedAt || ""))}
+                  {renderDetail("Error message", String(hotelbedsFlow.errorMessage || selectedBooking?.failureReason || ""))}
+                  {renderDetail("CheckRate status", String(hotelbedsFlow.checkRateStatus || ""))}
+                  {renderDetail("CheckRate bookable", String(hotelbedsFlow.checkRateBookable ?? ""))}
+                  {renderDetail("Booking status", String(hotelbedsFlow.bookingStatus || ""))}
+                  {renderDetail("Hotelbeds reference", String(hotelbedsFlow.hotelbedsReference || selectedBooking?.supplierReference || ""))}
+                </div>
+                {hotelbedsValidationErrors.length > 0 && (
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                    <div className="mb-2 text-sm font-black text-amber-900">Validation errors</div>
+                    <ul className="list-disc space-y-1 ps-5 text-sm font-semibold text-amber-800">
+                      {hotelbedsValidationErrors.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {hotelbedsFlow.checkRateResponseSafe ? (
+                    <pre className="max-h-48 overflow-auto rounded-2xl border border-slate-100 bg-slate-950 p-4 text-xs text-slate-100">
+                      {JSON.stringify(hotelbedsFlow.checkRateResponseSafe, null, 2)}
+                    </pre>
+                  ) : null}
+                  {hotelbedsFlow.bookingResponseSafe || hotelbedsFlow.requestSummarySafe ? (
+                    <pre className="max-h-48 overflow-auto rounded-2xl border border-slate-100 bg-slate-950 p-4 text-xs text-slate-100">
+                      {JSON.stringify(
+                        {
+                          bookingResponseSafe: hotelbedsFlow.bookingResponseSafe,
+                          requestSummarySafe: hotelbedsFlow.requestSummarySafe,
+                        },
+                        null,
+                        2,
+                      )}
+                    </pre>
+                  ) : null}
+                </div>
+              </section>
+            )}
 
             <section className="space-y-3">
               <h3 className="text-lg font-black text-slate-950">إجراءات التشغيل</h3>
