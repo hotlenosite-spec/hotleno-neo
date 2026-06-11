@@ -338,16 +338,22 @@ function mapHotelbedsRatesForRequest(
       visit(0, []);
 
       selections.forEach((selectedItems, packageIndex) => {
-        const selectedRooms = selectedItems.map((item, roomIndex) =>
-          buildHotelbedsSelectedRoom({
+        const firstRate = selectedItems[0]?.rate;
+        const packageCurrency = firstRate?.currency || hotel.currency || currency;
+        const selectedRooms = selectedItems.map((item, roomIndex) => {
+          const selectedRoom = buildHotelbedsSelectedRoom({
             roomIndex,
             request,
             room: item.room,
             rate: item.rate,
-            currency,
-          }),
-        );
-        const firstRate = selectedItems[0]?.rate;
+            currency: packageCurrency,
+          });
+
+          return {
+            ...selectedRoom,
+            currency: packageCurrency,
+          };
+        });
         const totalPrice = selectedRooms.reduce(
           (sum, room) => sum + (room.price || 0),
           0,
@@ -357,7 +363,6 @@ function mapHotelbedsRatesForRequest(
           .map((room) => getRateKeyPrefix(room.rateKey))
           .join("-")}`;
 
-        const packageCurrency = firstRate?.currency || hotel.currency || currency;
         const roomBreakdownCurrencies = selectedRooms.map((room) => room.currency).filter(Boolean);
         const currencyMismatch = roomBreakdownCurrencies.some(
           (roomCurrency) => roomCurrency !== packageCurrency,
@@ -407,6 +412,17 @@ function mapHotelbedsRatesForRequest(
             roomBreakdownCurrencies,
             currencyMismatch,
             currencyMismatchFixed: currencyMismatch,
+            hotelbedsCurrencyDiagnostics: {
+              supplierCurrency: hotel.currency || currency,
+              packageCurrency,
+              roomBreakdownCurrencies,
+              selectedRoomCurrencies: selectedRooms.map((room) => room.currency).filter(Boolean),
+              normalizedCurrency: packageCurrency,
+              currencyMismatch,
+              mismatchSource: currencyMismatch ? "hotelbeds-provider" : "",
+              fixedDisplayCurrency: packageCurrency,
+              currencyMismatchFixed: currencyMismatch,
+            },
           },
         });
       });
@@ -416,15 +432,17 @@ function mapHotelbedsRatesForRequest(
   }
 
   return rawRates.map(({ room, rate, index }) => {
-    const selectedRoom = buildHotelbedsSelectedRoom({
+    const packageCurrency = rate.currency || hotel.currency || currency;
+    const selectedRoom = {
+      ...buildHotelbedsSelectedRoom({
       roomIndex: 0,
       request,
       room,
       rate,
-      currency,
-    });
-
-    const packageCurrency = rate.currency || hotel.currency || currency;
+      currency: packageCurrency,
+    }),
+      currency: packageCurrency,
+    };
     const roomBreakdownCurrencies = [selectedRoom.currency].filter(Boolean);
     const currencyMismatch = roomBreakdownCurrencies.some(
       (roomCurrency) => roomCurrency !== packageCurrency,
@@ -471,6 +489,17 @@ function mapHotelbedsRatesForRequest(
         roomBreakdownCurrencies,
         currencyMismatch,
         currencyMismatchFixed: currencyMismatch,
+        hotelbedsCurrencyDiagnostics: {
+          supplierCurrency: hotel.currency || currency,
+          packageCurrency,
+          roomBreakdownCurrencies,
+          selectedRoomCurrencies: [selectedRoom.currency].filter(Boolean),
+          normalizedCurrency: packageCurrency,
+          currencyMismatch,
+          mismatchSource: currencyMismatch ? "hotelbeds-provider" : "",
+          fixedDisplayCurrency: packageCurrency,
+          currencyMismatchFixed: currencyMismatch,
+        },
       },
     };
   });
@@ -480,7 +509,7 @@ function mapHotelbedsAvailabilityResponse(
   data: HotelbedsAvailabilityResponse,
   request: SupplierSearchHotelsRequest,
 ): SupplierSearchHotelsResponse {
-  const currency = request.currency || "USD";
+  const currency = request.currency || data.hotels?.hotels?.find((hotel) => hotel.currency)?.currency || "";
   const hotels = data.hotels?.hotels ?? [];
 
   return {

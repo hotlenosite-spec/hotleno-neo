@@ -125,8 +125,10 @@ function RoomOptionCard({
   const taxes = typeof option.Taxes === 'number' && !isNaN(option.Taxes) 
     ? option.Taxes 
     : parseFloat(option.Taxes as unknown as string) || 0;
-  const safeCurrency = option.hotelbedsPackage?.currency || option.Currency || currency || 'USD';
   const isHotelbedsPackage = option.supplier === "hotelbeds";
+  const safeCurrency = isHotelbedsPackage
+    ? option.hotelbedsPackage?.currency || option.Currency || currency
+    : option.hotelbedsPackage?.currency || option.Currency || currency || "USD";
   const showHotelbedsDiagnostics = isHotelbedsPackage && isHotelbedsTesterToken();
   
   const totalPrice = isHotelbedsPackage ? price + taxes : (price + taxes) * nights;
@@ -245,7 +247,7 @@ function RoomOptionCard({
                 {option.rspPrice ? (
                   <p className="mb-2 text-xs text-slate-700">
                     <span className="font-bold">{t("booking.tbo.rspPrice")}:</span>{" "}
-                    {option.Currency || safeCurrency} {option.rspPrice}
+                    {safeCurrency} {option.rspPrice}
                   </p>
                 ) : null}
                 <div className="space-y-2">
@@ -378,7 +380,9 @@ export function CompactRoomSelector({ options, currency, onSelect, nights }: Com
   }, options[0]);
 
   const isHotelbedsPackage = bestOption.supplier === "hotelbeds";
-  const compactCurrency = bestOption.hotelbedsPackage?.currency || bestOption.Currency || currency;
+  const compactCurrency = bestOption.supplier === "hotelbeds"
+    ? bestOption.hotelbedsPackage?.currency || bestOption.Currency || currency
+    : bestOption.hotelbedsPackage?.currency || bestOption.Currency || currency || "USD";
   const totalPrice = isHotelbedsPackage
     ? bestOption.Price + (bestOption.Taxes || 0)
     : (bestOption.Price + (bestOption.Taxes || 0)) * nights;

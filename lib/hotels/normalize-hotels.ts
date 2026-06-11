@@ -53,15 +53,71 @@ function getBestRate(rates: SupplierHotelRate[]) {
   }, null);
 }
 
+function getRateCurrency(rate: SupplierHotelRate, fallbackCurrency: string) {
+  return rate.hotelbedsPackage?.currency || rate.currency || fallbackCurrency;
+}
+
+function normalizeHotelbedsRateCurrency(rate: SupplierHotelRate, fallbackCurrency: string) {
+  if (rate.hotelbedsPackage || rate.hotelbedsSelectedRooms?.length) {
+    const normalizedCurrency = getRateCurrency(rate, fallbackCurrency);
+    const selectedRoomCurrencies = (rate.hotelbedsSelectedRooms || [])
+      .map((room) => room.currency)
+      .filter(Boolean);
+    const roomBreakdownCurrencies = (rate.hotelbedsPackage?.roomPriceBreakdown || [])
+      .map((room) => room.currency)
+      .filter(Boolean);
+    const currencyMismatch =
+      Boolean(normalizedCurrency) &&
+      [...selectedRoomCurrencies, ...roomBreakdownCurrencies].some(
+        (currency) => currency !== normalizedCurrency,
+      );
+
+    return {
+      ...rate,
+      currency: normalizedCurrency,
+      hotelbedsSelectedRooms: rate.hotelbedsSelectedRooms?.map((room) => ({
+        ...room,
+        currency: normalizedCurrency,
+      })),
+      hotelbedsPackage: rate.hotelbedsPackage
+        ? {
+            ...rate.hotelbedsPackage,
+            currency: normalizedCurrency,
+            roomPriceBreakdown: rate.hotelbedsPackage.roomPriceBreakdown.map((room) => ({
+              ...room,
+              currency: normalizedCurrency,
+            })),
+          }
+        : rate.hotelbedsPackage,
+      metadata: {
+        ...(rate.metadata || {}),
+        hotelbedsCurrencyDiagnostics: {
+          supplierCurrency: rate.currency,
+          packageCurrency: rate.hotelbedsPackage?.currency,
+          roomBreakdownCurrencies,
+          selectedRoomCurrencies,
+          normalizedCurrency,
+          currencyMismatch,
+          mismatchSource: currencyMismatch ? "normalize-hotels" : "",
+          fixedDisplayCurrency: normalizedCurrency,
+          currencyMismatchFixed: currencyMismatch,
+        },
+      },
+    };
+  }
+
+  return {
+    ...rate,
+    currency: rate.currency || fallbackCurrency,
+  };
+}
+
 function normalizeRates(
   rates: SupplierHotelRate[],
   fallbackCurrency: string,
 ): SupplierHotelRate[] {
   return rates
-    .map((rate) => ({
-      ...rate,
-      currency: rate.currency || fallbackCurrency,
-    }))
+    .map((rate) => normalizeHotelbedsRateCurrency(rate, fallbackCurrency))
     .sort((a, b) => getRatePrice(a) - getRatePrice(b));
 }
 
@@ -77,15 +133,16 @@ function stableNumericId(value: string) {
 
 export function normalizeSupplierHotels(
   hotels: SupplierHotelResult[],
-  targetCurrency = "USD",
+  targetCurrency = "",
 ): UnifiedHotelResult[] {
   const hotelMap = new Map<string, UnifiedHotelResult>();
 
   for (const hotel of hotels) {
+    const supplierCurrency = (hotel as SupplierHotelResult & { currency?: string }).currency;
     const normalizedRates = normalizeRates(hotel.rates || [], targetCurrency);
     const bestRate = getBestRate(normalizedRates);
     const bestPrice = bestRate ? getRatePrice(bestRate) : Infinity;
-    const currency = bestRate?.currency || targetCurrency;
+    const currency = bestRate?.currency || supplierCurrency || targetCurrency;
     const offer: UnifiedSupplierOffer = {
       supplier: hotel.supplier,
       supplierHotelId: hotel.supplierHotelId,
@@ -155,6 +212,7 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
   const options: HotelOption[] = hotel.rates.map((rate, index) => {
     const displayRoomName = rate.hotelbedsPackage?.displayRoomName || rate.roomName;
     const totalPrice = rate.hotelbedsPackage?.totalPrice ?? rate.price;
+    const optionCurrency = rate.hotelbedsPackage?.currency || rate.currency || hotel.currency;
 
     return {
     OptionId: stableNumericId(`${hotel.supplier}:${rate.rateKey}:${index}`),
@@ -162,8 +220,20 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
     supplier: hotel.supplier,
     supplierHotelId: hotel.supplierHotelId,
     supplierRateKey: rate.rateKey,
-    hotelbedsSelectedRooms: rate.hotelbedsSelectedRooms,
-    hotelbedsPackage: rate.hotelbedsPackage,
+    hotelbedsSelectedRooms: rate.hotelbedsSelectedRooms?.map((room) => ({
+      ...room,
+      currency: optionCurrency,
+    })),
+    hotelbedsPackage: rate.hotelbedsPackage
+      ? {
+          ...rate.hotelbedsPackage,
+          currency: optionCurrency,
+          roomPriceBreakdown: rate.hotelbedsPackage.roomPriceBreakdown.map((room) => ({
+            ...room,
+            currency: optionCurrency,
+          })),
+        }
+      : rate.hotelbedsPackage,
     displayRoomName,
     roomsCount: rate.hotelbedsPackage?.roomsCount || rate.hotelbedsSelectedRooms?.length || 1,
     BookingCode: rate.rateKey,
@@ -181,6 +251,7 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
           NumAdults: room.adults,
           NumChildren: room.children,
           RoomPrice: room.price ?? 0,
+          Currency: optionCurrency,
         }))
       : [
           {
@@ -189,6 +260,7 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
             NumAdults: 2,
             NumChildren: 0,
             RoomPrice: rate.price,
+            Currency: optionCurrency,
           },
         ],
     Adults: rate.hotelbedsSelectedRooms?.length
@@ -200,7 +272,7 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
     Price: totalPrice,
     TotalPrice: totalPrice,
     Taxes: 0,
-    Currency: rate.currency || hotel.currency,
+    Currency: optionCurrency,
     IsNonRefundable: !rate.refundable,
     rspPrice: rate.rspPrice,
     roomPromotions: rate.roomPromotions,
@@ -209,6 +281,10 @@ export function toLegacyHotelResult(hotel: UnifiedHotelResult): HotelSearchResul
     cancellationPolicies: rate.cancellationPolicies,
     rateConditions: rate.rateConditions,
     amenities: rate.amenities,
+    metadata: {
+      ...(rate.metadata || {}),
+      hotelbedsCurrencyDiagnostics: rate.metadata?.hotelbedsCurrencyDiagnostics,
+    },
     };
   });
 

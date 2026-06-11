@@ -98,8 +98,10 @@ function getSelectedRoomSnapshot(
   const price = toNumber(option.Price || option.TotalPrice);
   const taxes = toNumber(option.Taxes);
   const nights = searchParams.guests.nights || 1;
-  const currency = option.Currency || searchParams.currency || "USD";
   const isHotelbedsPackage = supplier === "hotelbeds";
+  const currency = isHotelbedsPackage
+    ? option.hotelbedsPackage?.currency || option.Currency || searchParams.currency || ""
+    : option.Currency || searchParams.currency || "USD";
   const packageTotal = toNumber(option.hotelbedsPackage?.totalPrice) || price + taxes;
   const displayRoomName =
     option.hotelbedsPackage?.displayRoomName ||
@@ -370,12 +372,16 @@ interface HotelDetailsData {
 
   const handleRoomSelect = async (option: HotelOption, _fetchedPolicies: HotelPoliciesResponse) => {
     setBookingError("");
+    const isHotelbedsOption = option.supplier === "hotelbeds";
+    const optionCurrency = isHotelbedsOption
+      ? option.hotelbedsPackage?.currency || option.Currency || hotel?.Options?.[0]?.Currency || ""
+      : option.Currency || hotel?.Options?.[0]?.Currency || "USD";
     // Ensure option has valid numeric values
     const sanitizedOption = {
       ...option,
       Price: typeof option.Price === 'number' ? option.Price : parseFloat(option.Price as unknown as string) || 0,
       Taxes: typeof option.Taxes === 'number' ? option.Taxes : parseFloat(option.Taxes as unknown as string) || 0,
-      Currency: option.Currency || 'USD',
+      Currency: optionCurrency,
     };
     setSelectedOption(sanitizedOption);
     
@@ -384,7 +390,7 @@ interface HotelDetailsData {
       setPolicies(
         createSupplierFallbackPolicies(
           sanitizedOption,
-          hotel?.Options?.[0]?.Currency || 'USD',
+          optionCurrency,
           t("booking.supplierPolicy"),
         ),
       );
@@ -592,7 +598,7 @@ interface HotelDetailsData {
           {hotel.Options && hotel.Options.length > 0 && (
             <RoomSelector
               options={hotel.Options}
-              currency={hotel.Options[0]?.Currency || 'USD'}
+              currency={hotel.Options[0]?.hotelbedsPackage?.currency || hotel.Options[0]?.Currency || ""}
               onSelect={handleRoomSelect}
               nights={nights}
               selectedOptionId={selectedOption?.OptionId}
@@ -739,16 +745,19 @@ interface HotelDetailsData {
                       const taxes = typeof selectedOption.Taxes === 'number' && !isNaN(selectedOption.Taxes) 
                         ? selectedOption.Taxes 
                         : 0;
-                      const currency = selectedOption.Currency || 'USD';
+                      const isHotelbedsOption = selectedOption.supplier === "hotelbeds";
+                      const currency = isHotelbedsOption
+                        ? selectedOption.hotelbedsPackage?.currency || selectedOption.Currency || ""
+                        : selectedOption.Currency || "USD";
                       
                       return (
                         <>
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">
-                              {formatCurrency(price, currency)} × {nights}{" "}
+                              {formatCurrency(price, currency)} × {isHotelbedsOption ? 1 : nights}{" "}
                               {nights === 1 ? t("hotels.night") : t("hotels.nights")}
                             </span>
-                            <span>{formatCurrency(price * nights, currency)}</span>
+                            <span>{formatCurrency(isHotelbedsOption ? price : price * nights, currency)}</span>
                           </div>
                           {taxes > 0 && (
                             <div className="flex justify-between text-sm">
@@ -760,7 +769,7 @@ interface HotelDetailsData {
                             <div className="flex justify-between text-lg font-black text-[#0F172A]">
                               <span>{t('booking.total')}</span>
                               <span className="text-[#F97316]">
-                                {formatCurrency((price + taxes) * nights, currency)}
+                                {formatCurrency(isHotelbedsOption ? price + taxes : (price + taxes) * nights, currency)}
                               </span>
                             </div>
                           </div>

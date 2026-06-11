@@ -148,6 +148,12 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
   }, hotel.Options?.[0]);
 
   const totalPrice = getOptionTotal(bestOption);
+  const hotelCurrency = (hotel as HotelSearchResult & { Currency?: string }).Currency;
+  const displayCurrency =
+    bestOption?.hotelbedsPackage?.currency ||
+    bestOption?.Currency ||
+    hotelCurrency ||
+    currency;
   const hasExplicitTotal =
     bestOption?.supplierTotalFare !== undefined || bestOption?.TotalPrice !== undefined;
   const perNightPrice =
@@ -363,7 +369,7 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
                 {/* Price */}
                 <div className="mb-4">
                   <div className="text-3xl font-black text-[#F97316]">
-                    {formatCurrency(totalPrice, currency)}
+                    {formatCurrency(totalPrice, displayCurrency)}
                   </div>
                   <div className="mt-1 text-sm font-bold text-[#0F172A]">
                     {hasExplicitTotal
@@ -372,7 +378,7 @@ export function HotelCard({ hotel, currency, nights = 1 }: HotelCardProps) {
                   </div>
                   {perNightPrice !== undefined && nights > 1 && (
                     <div className="text-xs text-muted-foreground mt-1">
-                      {formatCurrency(perNightPrice, currency)} {t("hotels.perNight")} •{" "}
+                      {formatCurrency(perNightPrice, displayCurrency)} {t("hotels.perNight")} •{" "}
                       {t("hotels.for")} {nights} {t("hotels.nights")}
                     </div>
                   )}

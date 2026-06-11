@@ -576,6 +576,17 @@ function getHotelbedsSelectionSummarySafe(params: {
     roomBreakdownCurrencies,
     currencyMismatch,
     currencyMismatchFixed: currencyMismatch,
+    hotelbedsCurrencyDiagnostics: {
+      supplierCurrency: asString(params.booking.currency),
+      packageCurrency,
+      roomBreakdownCurrencies,
+      selectedRoomCurrencies: params.selectedRooms.map((room) => room.currency).filter(Boolean),
+      normalizedCurrency: packageCurrency,
+      currencyMismatch,
+      mismatchSource: currencyMismatch ? "booking-route" : "",
+      fixedDisplayCurrency: packageCurrency,
+      currencyMismatchFixed: currencyMismatch,
+    },
     expectedTotalPrice,
     actualReviewPrice,
     priceMismatch:
@@ -2135,6 +2146,11 @@ export async function POST(req: NextRequest) {
     const finalSellingPrice = toNumber(body.finalSellingPrice, totalPrice);
     const now = new Date();
     const bookingId = getBookingId(body.bookingReference);
+    const bodyHotelbedsPackage = asRecord(body.hotelbedsPackage);
+    const bookingCurrency =
+      supplier === "hotelbeds"
+        ? asString(bodyHotelbedsPackage.currency) || asString(body.currency)
+        : asString(body.currency) || "USD";
     const supplierMetadata =
       supplier === "hotelbeds"
         ? {}
@@ -2196,7 +2212,7 @@ export async function POST(req: NextRequest) {
       markupPercent: toNumber(body.markupPercent),
       commissionAmount: toNumber(body.commissionAmount),
       finalSellingPrice,
-      currency: body.currency || "USD",
+      currency: bookingCurrency,
       paymentMethodType: body.paymentMethodType || "card",
       agencyBalanceBefore: toNumber(body.agencyBalanceBefore),
       agencyBalanceAfter: toNumber(body.agencyBalanceAfter),
@@ -2277,7 +2293,7 @@ export async function POST(req: NextRequest) {
         checkInDate: body.checkInDate,
         checkOutDate: body.checkOutDate,
         totalPrice: body.totalPrice,
-        currency: body.currency,
+        currency: bookingCurrency,
         supplier: body.supplier || "none",
         channel,
       },

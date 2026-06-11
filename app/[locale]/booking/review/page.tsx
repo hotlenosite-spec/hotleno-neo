@@ -861,6 +861,28 @@ const DOCUMENT_TYPES = [
                 (room) => room.currency !== (hotel.hotelbedsPackage?.currency || hotel.Currency),
               ),
             currencyMismatchFixed: hotel.supplier === "hotelbeds",
+            hotelbedsCurrencyDiagnostics:
+              hotel.supplier === "hotelbeds"
+                ? {
+                    supplierCurrency: hotel.Currency,
+                    packageCurrency: hotel.hotelbedsPackage?.currency,
+                    roomBreakdownCurrencies: roomPriceBreakdown
+                      .map((room) => room.currency)
+                      .filter(Boolean),
+                    selectedRoomCurrencies: (hotel.hotelbedsSelectedRooms || [])
+                      .map((room) => room.currency)
+                      .filter(Boolean),
+                    normalizedCurrency: hotel.hotelbedsPackage?.currency || hotel.Currency,
+                    currencyMismatch:
+                      Boolean(hotel.hotelbedsPackage?.currency || hotel.Currency) &&
+                      roomPriceBreakdown.some(
+                        (room) => room.currency !== (hotel.hotelbedsPackage?.currency || hotel.Currency),
+                      ),
+                    mismatchSource: "review",
+                    fixedDisplayCurrency: hotel.hotelbedsPackage?.currency || hotel.Currency,
+                    currencyMismatchFixed: true,
+                  }
+                : undefined,
             expectedTotalPrice: isHotelbedsPackage ? packageTotal : totalPrice,
             actualReviewPrice: totalPrice,
             priceMismatch: isHotelbedsPackage
