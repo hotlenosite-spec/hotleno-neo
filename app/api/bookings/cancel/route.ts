@@ -5,6 +5,11 @@ import { CANCELLABLE_BOOKING_STATUSES } from "@/lib/booking-status";
 import { getFirestoreMongoDb } from "@/lib/firestore-mongo";
 import { verifyToken } from "@/lib/jwt";
 import { TboSupplierProvider } from "@/lib/suppliers/tbo-provider";
+import {
+  createHotelbedsHotelsClient,
+  HotelbedsHotelsClientError,
+} from "@/lib/suppliers/hotelbeds-hotels-client";
+import { getHotelbedsBaseUrls, hasHotelbedsCredentials } from "@/lib/suppliers/hotelbeds-auth";
 import type { AccountBooking } from "@/lib/account-store";
 
 function safeErrorMessage(error: unknown) {
@@ -25,6 +30,61 @@ function getMetadata(booking: { metadata?: unknown }) {
   return booking.metadata && typeof booking.metadata === "object"
     ? (booking.metadata as Record<string, unknown>)
     : {};
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function asString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function safeHotelbedsResponse(payload: unknown) {
+  const record = asRecord(payload);
+  const booking = asRecord(record.booking);
+  const error = asRecord(record.error);
+
+  return {
+    status:
+      asString(record.status) ||
+      asString(booking.status) ||
+      asString(error.code) ||
+      asString(record.code),
+    reference:
+      asString(record.reference) ||
+      asString(record.bookingReference) ||
+      asString(booking.reference) ||
+      asString(booking.bookingReference),
+    cancellationReference:
+      asString(record.cancellationReference) ||
+      asString(booking.cancellationReference),
+    errorMessage:
+      asString(error.message) ||
+      asString(error.description) ||
+      asString(record.message) ||
+      asString(record.error),
+  };
+}
+
+function getHotelbedsReference(booking: AccountBooking) {
+  const metadata = getMetadata(booking);
+  const hotelbedsFlow = asRecord(metadata.hotelbedsFlow);
+
+  return (
+    asString(booking.supplierReference) ||
+    asString(metadata.hotelbedsBookingReference) ||
+    asString(hotelbedsFlow.hotelbedsReference) ||
+    asString(booking.supplierBookingReference) ||
+    asString(booking.supplierBookingId) ||
+    asString(booking.supplierConfirmationNo)
+  );
+}
+
+function isHotelbedsTestBookingBaseUrl() {
+  return getHotelbedsBaseUrls().bookingBaseUrl.includes("api.test.hotelbeds.com");
 }
 
 async function getBookingForCancellation(
@@ -86,9 +146,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
+    const supplier = String(booking.supplier || "").toLowerCase();
+    const supplierStatus = String(booking.supplierStatus || "").toLowerCase();
+    const metadata = getMetadata(booking);
     const canRetryFailedSupplierCancellation =
       booking.supplierStatus === "confirmed" && booking.cancellationStatus === "failed";
-    if (!canRetryFailedSupplierCancellation && !CANCELLABLE_BOOKING_STATUSES.includes(booking.status as never)) {
+    const canRetryHotelbedsLocalOnlyCancellation =
+      supplier === "hotelbeds" &&
+      booking.status === "cancellation_requested" &&
+      supplierStatus === "confirmed" &&
+      metadata.cancellationMode === "local_only";
+    if (
+      !canRetryFailedSupplierCancellation &&
+      !canRetryHotelbedsLocalOnlyCancellation &&
+      !CANCELLABLE_BOOKING_STATUSES.includes(booking.status as never)
+    ) {
       return NextResponse.json(
         { error: "Booking cannot be cancelled from its current status" },
         { status: 400 },
@@ -96,8 +168,6 @@ export async function POST(req: NextRequest) {
     }
 
     const tboCancelEnabled = process.env.TBO_CANCEL_ENABLED === "true";
-    const supplier = String(booking.supplier || "").toLowerCase();
-    const supplierStatus = String(booking.supplierStatus || "").toLowerCase();
     const supplierBookingId = String(booking.supplierBookingId || "").trim();
     const supplierConfirmationNo = String(booking.supplierConfirmationNo || "").trim();
     const supplierReference = String(
@@ -111,6 +181,187 @@ export async function POST(req: NextRequest) {
       tboCancelEnabled &&
       supplierStatus === "confirmed" &&
       Boolean(supplierBookingId || supplierConfirmationNo || supplierReference);
+    const hotelbedsReference = getHotelbedsReference(booking);
+    const hasHotelbedsCancelAccess =
+      (decoded.role === "supplier_tester" && decoded.supplierScope === "hotelbeds") ||
+      decoded.role === "admin";
+    const shouldCancelHotelbeds =
+      supplier === "hotelbeds" &&
+      hasHotelbedsCancelAccess &&
+      Boolean(hotelbedsReference);
+
+    if (shouldCancelHotelbeds) {
+      const now = new Date();
+      const endpointType = "DELETE /hotel-api/1.0/bookings/{reference}?cancellationFlag=CANCELLATION";
+      const baseFlow = {
+        requestedAt: now.toISOString(),
+        referenceUsed: hotelbedsReference,
+        endpointType,
+      };
+
+      if (!isHotelbedsTestBookingBaseUrl() || !hasHotelbedsCredentials()) {
+        const message = !isHotelbedsTestBookingBaseUrl()
+          ? "Hotelbeds supplier cancel is disabled outside the test environment."
+          : "Hotelbeds supplier cancel is disabled in this environment.";
+        const updatedBooking = await updateBookingForCancellation(decoded, bookingId, {
+          status: "cancellation_requested",
+          bookingStatus: "cancellation_requested",
+          supplierStatus: booking.supplierStatus || "CONFIRMED",
+          cancellationStatus: "failed",
+          supplierCancellationStatus: "failed",
+          supplierCancellationError: message,
+          cancellationRequestedAt: now,
+          cancellationReason: typeof body.reason === "string" ? body.reason : "",
+          metadata: {
+            ...getMetadata(booking),
+            supplierCancellation: "failed",
+            supplierCancelError: message,
+            supplierCancelFailedAt: now.toISOString(),
+            cancellationMode: "hotelbeds_supplier_cancel",
+            hotelbedsCancellationFlow: {
+              ...baseFlow,
+              status: "failed",
+              supplierStatus: booking.supplierStatus || "",
+              errorMessage: message,
+            },
+          },
+        }, source);
+
+        await createLog({
+          supplier: "hotelbeds",
+          type: "supplier_cancellation_failed",
+          status: "failed",
+          message,
+          request: { bookingId, referenceUsed: hotelbedsReference, endpointType },
+          response: { status: updatedBooking?.status, supplierStatus: updatedBooking?.supplierStatus },
+          error: message,
+        });
+
+        return NextResponse.json({
+          success: false,
+          message,
+          supplierCancelExecuted: false,
+          booking: updatedBooking,
+        }, { status: 409 });
+      }
+
+      try {
+        console.info("[Hotelbeds Cancellation Flow]", {
+          bookingId,
+          referencePresent: Boolean(hotelbedsReference),
+          endpointType,
+          supplierTester: decoded.role === "supplier_tester",
+        });
+
+        const client = createHotelbedsHotelsClient({ allowTesterBookingOverride: true });
+        const supplierResponse = await client.cancel({
+          bookingReference: hotelbedsReference,
+          cancellationFlag: "CANCELLATION",
+        });
+        const safeResponse = safeHotelbedsResponse(supplierResponse);
+        const supplierCancellationStatus =
+          safeResponse.status || "CANCELLED";
+        const updatedBooking = await updateBookingForCancellation(decoded, bookingId, {
+          status: "cancelled",
+          bookingStatus: "cancelled",
+          supplierStatus: "CANCELLED",
+          cancellationStatus: "cancelled",
+          supplierCancellationStatus: "CANCELLED",
+          cancelledAt: now,
+          cancellationRequestedAt: now,
+          cancellationReason: typeof body.reason === "string" ? body.reason : "",
+          rawSupplierCancelResponse: safeResponse,
+          metadata: {
+            ...getMetadata(booking),
+            supplierSubmission: "supplier_cancelled",
+            supplierCancellation: "sent_to_supplier",
+            supplierCancelledAt: now.toISOString(),
+            cancellationMode: "hotelbeds_supplier_cancel",
+            hotelbedsCancellationStatus: "CANCELLED",
+            hotelbedsCancellationResponseSafe: safeResponse,
+            hotelbedsCancellationFlow: {
+              ...baseFlow,
+              status: "success",
+              supplierStatus: supplierCancellationStatus,
+              cancellationReference: safeResponse.cancellationReference || safeResponse.reference || "",
+              safeResponse,
+            },
+          },
+        }, source);
+
+        await createLog({
+          supplier: "hotelbeds",
+          type: "supplier_cancellation_confirmed",
+          status: "success",
+          message: "Hotelbeds Accommodation booking was cancelled at supplier",
+          request: { bookingId, referenceUsed: hotelbedsReference, endpointType },
+          response: {
+            status: updatedBooking?.status,
+            supplierStatus: updatedBooking?.supplierStatus,
+            safeResponse,
+          },
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: "Hotelbeds Accommodation booking was cancelled at supplier.",
+          supplierCancelExecuted: true,
+          booking: updatedBooking,
+          hotelbedsCancellationResponseSafe: safeResponse,
+        });
+      } catch (error) {
+        const message = safeErrorMessage(error);
+        const rawStatusCode =
+          error instanceof HotelbedsHotelsClientError ? error.status : undefined;
+        const updatedBooking = await updateBookingForCancellation(decoded, bookingId, {
+          status: "cancellation_requested",
+          bookingStatus: "cancellation_requested",
+          supplierStatus: booking.supplierStatus || "CONFIRMED",
+          cancellationStatus: "failed",
+          supplierCancellationStatus: "failed",
+          supplierCancellationError: message,
+          cancellationRequestedAt: now,
+          cancellationReason: typeof body.reason === "string" ? body.reason : "",
+          metadata: {
+            ...getMetadata(booking),
+            supplierCancellation: "failed",
+            supplierCancelError: message,
+            supplierCancelFailedAt: now.toISOString(),
+            cancellationMode: "hotelbeds_supplier_cancel",
+            hotelbedsCancellationFlow: {
+              ...baseFlow,
+              status: "failed",
+              supplierStatus: booking.supplierStatus || "",
+              errorMessage: message,
+              rawStatusCode,
+            },
+          },
+        }, source);
+
+        await createLog({
+          supplier: "hotelbeds",
+          type: "supplier_cancellation_failed",
+          status: "failed",
+          message: "Hotelbeds Accommodation cancellation failed.",
+          request: { bookingId, referenceUsed: hotelbedsReference, endpointType },
+          response: {
+            status: updatedBooking?.status,
+            supplierStatus: updatedBooking?.supplierStatus,
+            rawStatusCode,
+          },
+          error: message,
+        });
+
+        return NextResponse.json({
+          success: false,
+          message,
+          supplierCancelExecuted: true,
+          referenceUsed: hotelbedsReference,
+          rawStatusCode,
+          booking: updatedBooking,
+        }, { status: rawStatusCode || 502 });
+      }
+    }
 
     if (shouldCancelTbo) {
       const now = new Date();

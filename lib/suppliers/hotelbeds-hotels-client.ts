@@ -388,7 +388,7 @@ export class HotelbedsHotelsClient {
   }
 
   async bookingDetails(request: HotelbedsHotelBookingDetailsRequest) {
-    if (!isHotelbedsHotelsBookingEnabled()) {
+    if (!isHotelbedsHotelsBookingEnabled() && !this.allowTesterBookingOverride) {
       throw new HotelbedsHotelsClientError(
         "Hotelbeds Accommodation booking details are disabled in this environment.",
         "HOTELBEDS_HOTELS_BOOKING_DISABLED",
@@ -402,7 +402,7 @@ export class HotelbedsHotelsClient {
   }
 
   async cancel(request: HotelbedsHotelCancelRequest) {
-    if (!isHotelbedsHotelsBookingEnabled()) {
+    if (!isHotelbedsHotelsBookingEnabled() && !this.allowTesterBookingOverride) {
       throw new HotelbedsHotelsClientError(
         "Hotelbeds Accommodation cancellation is disabled in this environment.",
         "HOTELBEDS_HOTELS_BOOKING_DISABLED",
