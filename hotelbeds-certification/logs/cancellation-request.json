@@ -1,0 +1,10 @@
+{
+  "bookingReference": "HOTLENO-1781162497741",
+  "source": "booking.metadata.hotelbedsCancellationFlow",
+  "extractedAt": "2026-06-11T07:36:16.182Z",
+  "payload": {
+    "referenceUsed": "102-20738091",
+    "endpointType": "DELETE /hotel-api/1.0/bookings/{reference}?cancellationFlag=CANCELLATION",
+    "requestedAt": "2026-06-11T07:24:07.824Z"
+  }
+}

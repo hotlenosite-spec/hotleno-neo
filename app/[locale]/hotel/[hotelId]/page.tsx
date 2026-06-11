@@ -117,6 +117,11 @@ function getSelectedRoomSnapshot(
     roomsCount: option.roomsCount || option.hotelbedsSelectedRooms?.length || 1,
     hotelbedsPackage: option.hotelbedsPackage,
     hotelbedsSelectedRooms: option.hotelbedsSelectedRooms || [],
+    hotelbedsEvidenceId:
+      option.metadata?.hotelbedsEvidenceId ||
+      option.hotelbedsEvidenceId ||
+      option.hotelbedsPackage?.hotelbedsEvidenceId ||
+      "",
     rateKey: option.rateKey || option.supplierRateKey || option.BookingCode || String(option.OptionId),
     supplierRateKey: option.supplierRateKey || option.rateKey || option.BookingCode || String(option.OptionId),
     BookingCode: option.BookingCode || option.supplierRateKey || option.rateKey,

@@ -11,10 +11,18 @@ import {
 } from "@/lib/suppliers/tbo-provider";
 import {
   buildHotelbedsBookingBody,
+  buildHotelbedsCheckRateBody,
   createHotelbedsHotelsClient,
   HotelbedsHotelsClientError,
 } from "@/lib/suppliers/hotelbeds-hotels-client";
 import { getHotelbedsBaseUrls } from "@/lib/suppliers/hotelbeds-auth";
+import {
+  attachHotelbedsSearchEvidenceToBooking,
+  getHotelbedsEvidenceIdFrom,
+  writeHotelbedsCertificationDocuments,
+  writeHotelbedsEvidenceLog,
+  writeHotelbedsEvidenceSafely,
+} from "@/lib/certification/hotelbeds-accommodation-evidence";
 import type {
   SupplierBookingDetailsResponse,
   SupplierBookRequest,
@@ -1134,6 +1142,10 @@ async function submitHotelbedsTesterBooking(params: {
 }) {
   const { bookingsCollection, booking } = params;
   const now = new Date();
+  const certificationBookingReference = String(
+    booking.bookingReference || booking._id || booking.yourReference || "",
+  );
+  const hotelbedsEvidenceId = getHotelbedsEvidenceIdFrom(booking);
   const rateKey = String(booking.supplierRateKey || "");
   const selectedRooms = getHotelbedsSelectedRooms(booking);
   const selectedRateKeys = selectedRooms.map((room) => room.rateKey).filter(Boolean);
@@ -1212,6 +1224,19 @@ async function submitHotelbedsTesterBooking(params: {
   }
 
   const client = createHotelbedsHotelsClient({ allowTesterBookingOverride: true });
+  await writeHotelbedsEvidenceSafely(
+    async () => {
+      await attachHotelbedsSearchEvidenceToBooking({
+        evidenceId: hotelbedsEvidenceId,
+        bookingReference: certificationBookingReference,
+      });
+      await writeHotelbedsCertificationDocuments({
+        bookingReference: certificationBookingReference,
+        booking,
+      });
+    },
+    "booking-start",
+  );
   let checkRateStatus = "";
   let checkRateBookable: boolean | undefined;
   let checkRateResponseSafe: Record<string, unknown> | undefined;
@@ -1246,6 +1271,35 @@ async function submitHotelbedsTesterBooking(params: {
       rateKeysReturned: rateKeys.length,
       hasRateKey: rateKeys.length > 0,
     };
+    await writeHotelbedsEvidenceSafely(
+      async () => {
+        await writeHotelbedsEvidenceLog({
+          bookingReference: certificationBookingReference,
+          fileName: "checkrate-request.json",
+          payload: {
+            supplier: "hotelbeds",
+            notSent: true,
+            reason: "BOOKABLE_DIRECT",
+            strategy: checkRateStrategy,
+            rateKeyPrefixes: rateKeys.map(getHotelbedsRateKeyPrefix),
+            capturedAt: new Date().toISOString(),
+          },
+        });
+        await writeHotelbedsEvidenceLog({
+          bookingReference: certificationBookingReference,
+          fileName: "checkrate-response.json",
+          payload: {
+            supplier: "hotelbeds",
+            notReceived: true,
+            reason: "BOOKABLE_DIRECT",
+            status: checkRateStatus,
+            bookable: true,
+            capturedAt: new Date().toISOString(),
+          },
+        });
+      },
+      "checkrate-bookable-direct",
+    );
     requestSummarySafe = {
       ...selectionSummarySafe,
       checkRateSkipped: true,
@@ -1264,6 +1318,31 @@ async function submitHotelbedsTesterBooking(params: {
     try {
       const checkedRateKeyList: string[] = [];
       const checkRateResponsesSafe: Array<Record<string, unknown>> = [];
+      if (rateKeys.length > 1) {
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsEvidenceLog({
+              bookingReference: certificationBookingReference,
+              fileName: "checkrate-request.json",
+              payload: {
+                supplier: "hotelbeds",
+                endpoint: `${bookingBaseUrl}/checkrates`,
+                method: "POST",
+                requests: rateKeys.map((currentRateKey, index) => ({
+                  roomIndex: selectedRooms[index]?.roomIndex ?? index,
+                  request: buildHotelbedsCheckRateBody({
+                    rateKey: currentRateKey,
+                    rateKeys: [currentRateKey],
+                    language: "en",
+                  }),
+                })),
+                strategy: checkRateStrategy,
+                capturedAt: new Date().toISOString(),
+              },
+            }),
+          "checkrate-aggregate-request",
+        );
+      }
 
       for (const [index, currentRateKey] of rateKeys.entries()) {
         const selectedRoom = selectedRooms[index];
@@ -1289,11 +1368,54 @@ async function submitHotelbedsTesterBooking(params: {
           },
         });
 
+        const checkRatePayload = buildHotelbedsCheckRateBody({
+          rateKey: currentRateKey,
+          rateKeys: [currentRateKey],
+          language: "en",
+        });
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsEvidenceLog({
+              bookingReference: certificationBookingReference,
+              fileName:
+                rateKeys.length > 1
+                  ? `checkrate-request-room-${selectedRoom?.roomIndex ?? index}.json`
+                  : "checkrate-request.json",
+              payload: {
+                supplier: "hotelbeds",
+                endpoint: `${bookingBaseUrl}/checkrates`,
+                method: "POST",
+                request: checkRatePayload,
+                roomIndex: selectedRoom?.roomIndex ?? index,
+                capturedAt: new Date().toISOString(),
+              },
+            }),
+          "checkrate-request",
+        );
         const checkRateResponse = await client.checkRate({
           rateKey: currentRateKey,
           rateKeys: [currentRateKey],
           language: "en",
         });
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsEvidenceLog({
+              bookingReference: certificationBookingReference,
+              fileName:
+                rateKeys.length > 1
+                  ? `checkrate-response-room-${selectedRoom?.roomIndex ?? index}.json`
+                  : "checkrate-response.json",
+              payload: {
+                supplier: "hotelbeds",
+                endpoint: `${bookingBaseUrl}/checkrates`,
+                method: "POST",
+                response: checkRateResponse,
+                roomIndex: selectedRoom?.roomIndex ?? index,
+                capturedAt: new Date().toISOString(),
+              },
+            }),
+          "checkrate-response",
+        );
         const returnedRateKeys = extractHotelbedsRateKeys(checkRateResponse);
         const finalRateKey = returnedRateKeys[0] || currentRateKey;
         const roomCheckRateStatus = getHotelbedsStatus(checkRateResponse);
@@ -1352,6 +1474,25 @@ async function submitHotelbedsTesterBooking(params: {
         roomsChecked: checkRateResponsesSafe.length,
         responses: checkRateResponsesSafe,
       };
+      if (rateKeys.length > 1) {
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsEvidenceLog({
+              bookingReference: certificationBookingReference,
+              fileName: "checkrate-response.json",
+              payload: {
+                supplier: "hotelbeds",
+                endpoint: `${bookingBaseUrl}/checkrates`,
+                method: "POST",
+                status: checkRateStatus,
+                bookable: checkRateBookable,
+                responses: checkRateResponsesSafe,
+                capturedAt: new Date().toISOString(),
+              },
+            }),
+          "checkrate-aggregate-response",
+        );
+      }
       requestSummarySafe = {
         ...selectionSummarySafe,
         checkRateStrategy,
@@ -1364,6 +1505,23 @@ async function submitHotelbedsTesterBooking(params: {
           ? `${error.code}: ${error.message}`
           : safeErrorMessage(error);
       checkRateResponseSafe = getHotelbedsClientErrorSafeResponse(error);
+      await writeHotelbedsEvidenceSafely(
+        () =>
+          writeHotelbedsEvidenceLog({
+            bookingReference: certificationBookingReference,
+            fileName: "checkrate-response.json",
+            payload: {
+              supplier: "hotelbeds",
+              endpoint: `${bookingBaseUrl}/checkrates`,
+              method: "POST",
+              failed: true,
+              error: checkRateResponseSafe,
+              message,
+              capturedAt: new Date().toISOString(),
+            },
+          }),
+        "checkrate-error-response",
+      );
       logHotelbedsBookingFlow({
         internalBookingId: booking._id,
         step: "failed",
@@ -1387,6 +1545,14 @@ async function submitHotelbedsTesterBooking(params: {
           checkRateStrategy,
         },
       });
+      await writeHotelbedsEvidenceSafely(
+        () =>
+          writeHotelbedsCertificationDocuments({
+            bookingReference: certificationBookingReference,
+            booking: updatedBooking,
+          }),
+        "booking-documents-checkrate-failed",
+      );
       await createLog({
         type: "supplier_booking_failed",
         status: "failed",
@@ -1491,7 +1657,37 @@ async function submitHotelbedsTesterBooking(params: {
         hotelbedsFinalBookingPayloadSafe,
       },
     });
+    await writeHotelbedsEvidenceSafely(
+      () =>
+        writeHotelbedsEvidenceLog({
+          bookingReference: certificationBookingReference,
+          fileName: "booking-request.json",
+          payload: {
+            supplier: "hotelbeds",
+            endpoint: `${bookingBaseUrl}/bookings`,
+            method: "POST",
+            request: finalBookingPayload,
+            capturedAt: new Date().toISOString(),
+          },
+        }),
+      "booking-request",
+    );
     const bookingResponse = await client.book(bookingRequest);
+    await writeHotelbedsEvidenceSafely(
+      () =>
+        writeHotelbedsEvidenceLog({
+          bookingReference: certificationBookingReference,
+          fileName: "booking-response.json",
+          payload: {
+            supplier: "hotelbeds",
+            endpoint: `${bookingBaseUrl}/bookings`,
+            method: "POST",
+            response: bookingResponse,
+            capturedAt: new Date().toISOString(),
+          },
+        }),
+      "booking-response",
+    );
     const hotelbedsReference = extractHotelbedsBookingReference(bookingResponse);
     const status = getHotelbedsStatus(bookingResponse);
     const bookingResponseSafe = getHotelbedsFlowSafeResponse(bookingResponse);
@@ -1544,12 +1740,39 @@ async function submitHotelbedsTesterBooking(params: {
       },
     });
 
+    await writeHotelbedsEvidenceSafely(
+      () =>
+        writeHotelbedsCertificationDocuments({
+          bookingReference: certificationBookingReference,
+          booking: { ...booking, ...updates } as BookingDocument,
+        }),
+      "booking-documents-confirmed",
+    );
+
     return { ...booking, ...updates } as BookingDocument;
   } catch (error) {
     const message =
       error instanceof HotelbedsHotelsClientError
         ? `${error.code}: ${error.message}`
         : safeErrorMessage(error);
+    const bookingErrorSafe = getHotelbedsClientErrorSafeResponse(error);
+    await writeHotelbedsEvidenceSafely(
+      () =>
+        writeHotelbedsEvidenceLog({
+          bookingReference: certificationBookingReference,
+          fileName: "booking-response.json",
+          payload: {
+            supplier: "hotelbeds",
+            endpoint: `${bookingBaseUrl}/bookings`,
+            method: "POST",
+            failed: true,
+            error: bookingErrorSafe,
+            message,
+            capturedAt: new Date().toISOString(),
+          },
+        }),
+      "booking-error-response",
+    );
     const updatedBooking = await failHotelbedsBooking({
       bookingsCollection,
       booking,
@@ -1559,9 +1782,17 @@ async function submitHotelbedsTesterBooking(params: {
       checkRateStatus,
       checkRateBookable,
       checkRateResponseSafe,
-      bookingResponseSafe: getHotelbedsClientErrorSafeResponse(error),
+      bookingResponseSafe: bookingErrorSafe,
       requestSummarySafe,
     });
+    await writeHotelbedsEvidenceSafely(
+      () =>
+        writeHotelbedsCertificationDocuments({
+          bookingReference: certificationBookingReference,
+          booking: updatedBooking,
+        }),
+      "booking-documents-booking-failed",
+    );
     await createLog({
       type: "supplier_booking_failed",
       status: "failed",
@@ -2178,6 +2409,10 @@ export async function POST(req: NextRequest) {
       supplier,
       supplierHotelId: body.supplierHotelId || "",
       supplierRateKey: body.supplierRateKey || "",
+      hotelbedsEvidenceId:
+        supplier === "hotelbeds"
+          ? asString(body.hotelbedsEvidenceId) || asString(asRecord(body.metadata).hotelbedsEvidenceId)
+          : "",
       hotelbedsSelectedRooms: Array.isArray(body.hotelbedsSelectedRooms)
         ? body.hotelbedsSelectedRooms
         : [],
@@ -2244,6 +2479,10 @@ export async function POST(req: NextRequest) {
       maxRetryCount: 3,
       metadata: {
         ...(body.metadata || {}),
+        hotelbedsEvidenceId:
+          supplier === "hotelbeds"
+            ? asString(body.hotelbedsEvidenceId) || asString(asRecord(body.metadata).hotelbedsEvidenceId)
+            : undefined,
         bookingMode: internalOnlyBooking ? "internal_only" : "payment_or_supplier_flow",
         ...supplierMetadata,
         stripeCheckoutEnabled,

@@ -1,0 +1,11 @@
+{
+  "bookingReference": "HOTLENO-1781162497741",
+  "source": "booking.metadata.hotelbedsCancellationResponseSafe/rawSupplierCancelResponse",
+  "extractedAt": "2026-06-11T07:36:16.182Z",
+  "payload": {
+    "status": "CANCELLED",
+    "reference": "102-20738091",
+    "cancellationReference": "cc9a8903cd1b8686307d",
+    "errorMessage": ""
+  }
+}

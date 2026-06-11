@@ -81,6 +81,7 @@ interface HotelData {
     roomsCount: number;
     totalPrice: number;
     currency: string;
+    hotelbedsEvidenceId?: string;
     boardName?: string;
     boardCode?: string;
     roomPriceBreakdown: Array<{
@@ -93,6 +94,8 @@ interface HotelData {
     allRateKeyPrefixes: string[];
   };
   displayRoomName?: string;
+  hotelbedsEvidenceId?: string;
+  metadata?: Record<string, unknown>;
   roomsCount?: number;
   roomName?: string;
   price?: number;
@@ -819,6 +822,11 @@ const DOCUMENT_TYPES = [
             hotel.supplierRateKey || hotel.rateKey || hotel.BookingCode || "",
           hotelbedsSelectedRooms: hotel.hotelbedsSelectedRooms || [],
           hotelbedsPackage: hotel.hotelbedsPackage || null,
+          hotelbedsEvidenceId:
+            hotel.hotelbedsEvidenceId ||
+            hotel.metadata?.hotelbedsEvidenceId ||
+            hotel.hotelbedsPackage?.hotelbedsEvidenceId ||
+            "",
           supplierBookingReference: "",
           hotelId: hotel.hotelId || 0,
           hotelName: hotel.HotelName,
@@ -847,6 +855,11 @@ const DOCUMENT_TYPES = [
           metadata: {
             checkoutFlow: "review_traveler_details_before_booking",
             supplierTotalFare: hotel.supplierTotalFare || totalPrice,
+            hotelbedsEvidenceId:
+              hotel.hotelbedsEvidenceId ||
+              hotel.metadata?.hotelbedsEvidenceId ||
+              hotel.hotelbedsPackage?.hotelbedsEvidenceId ||
+              "",
             hotelbedsSelectedRooms: hotel.hotelbedsSelectedRooms || [],
             hotelbedsPackage: hotel.hotelbedsPackage || null,
             roomPriceBreakdown,

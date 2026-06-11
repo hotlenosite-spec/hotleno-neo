@@ -1,0 +1,71 @@
+{
+  "bookingReference": "HOTLENO-1781162497741",
+  "source": "booking.metadata.hotelbedsFlow.requestSummarySafe",
+  "extractedAt": "2026-06-11T07:36:16.181Z",
+  "payload": {
+    "roomsLength": 2,
+    "expectedRoomOccupancies": [
+      {
+        "roomIndex": 0,
+        "adults": 1,
+        "children": 0,
+        "childAges": []
+      },
+      {
+        "roomIndex": 1,
+        "adults": 1,
+        "children": 1,
+        "childAges": [
+          7
+        ]
+      }
+    ],
+    "finalPayloadRoomOccupancies": [
+      {
+        "roomIndex": 0,
+        "rateKeyPrefix": "20260817|20260818|W|102|13801|DBT.ST|NRF-A",
+        "occupancyMarker": "1~1~0",
+        "fullRateKeyPresent": true,
+        "paxesCount": 1,
+        "adultsCount": 1,
+        "childrenCount": 0,
+        "childAges": [],
+        "paxRoomIds": [
+          1
+        ],
+        "paxTypes": [
+          "AD"
+        ],
+        "paxNamesPresent": [
+          true
+        ]
+      },
+      {
+        "roomIndex": 1,
+        "rateKeyPrefix": "20260817|20260818|W|102|13801|DBT.ST|NRF-A",
+        "occupancyMarker": "1~1~1",
+        "fullRateKeyPresent": true,
+        "paxesCount": 2,
+        "adultsCount": 1,
+        "childrenCount": 1,
+        "childAges": [
+          7
+        ],
+        "paxRoomIds": [
+          1,
+          1
+        ],
+        "paxTypes": [
+          "AD",
+          "CH"
+        ],
+        "paxNamesPresent": [
+          true,
+          true
+        ]
+      }
+    ],
+    "payloadMismatch": false,
+    "mismatchReasons": []
+  }
+}

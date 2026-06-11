@@ -8,6 +8,10 @@ import {
   getHotelbedsBaseUrls,
   hasHotelbedsCredentials,
 } from "./hotelbeds-auth";
+import {
+  writeHotelbedsEvidenceLog,
+  writeHotelbedsEvidenceSafely,
+} from "@/lib/certification/hotelbeds-accommodation-evidence";
 import type {
   SupplierBookRequest,
   SupplierBookResponse,
@@ -511,12 +515,22 @@ function mapHotelbedsAvailabilityResponse(
 ): SupplierSearchHotelsResponse {
   const currency = request.currency || data.hotels?.hotels?.find((hotel) => hotel.currency)?.currency || "";
   const hotels = data.hotels?.hotels ?? [];
+  const hotelbedsEvidenceId =
+    request.metadata && typeof request.metadata === "object"
+      ? String((request.metadata as Record<string, unknown>).hotelbedsEvidenceId || "")
+      : "";
 
   return {
     supplier: "hotelbeds",
     hotels: hotels
       .map((hotel) => {
-        const rates = mapHotelbedsRatesForRequest(hotel, request, currency);
+        const rates = mapHotelbedsRatesForRequest(hotel, request, currency).map((rate) => ({
+          ...rate,
+          metadata: {
+            ...(rate.metadata || {}),
+            hotelbedsEvidenceId,
+          },
+        }));
 
         return {
           supplier: "hotelbeds" as const,
@@ -532,6 +546,7 @@ function mapHotelbedsAvailabilityResponse(
             hotelbedsCode: hotel.code,
             hotelbedsDestinationCode: hotel.destinationCode,
             hotelbedsCategoryCode: hotel.categoryCode,
+            hotelbedsEvidenceId,
             source: "hotelbeds_booking_availability",
           },
         };
@@ -563,18 +578,55 @@ export class HotelbedsSupplierProvider implements SupplierProvider {
     }
 
     const { bookingBaseUrl } = getHotelbedsBaseUrls();
+    const availabilityRequestBody = buildHotelbedsAvailabilityRequest(request);
+    const hotelbedsEvidenceId =
+      request.metadata && typeof request.metadata === "object"
+        ? String((request.metadata as Record<string, unknown>).hotelbedsEvidenceId || "")
+        : "";
+    await writeHotelbedsEvidenceSafely(
+      () =>
+        writeHotelbedsEvidenceLog({
+          evidenceId: hotelbedsEvidenceId,
+          fileName: "availability-request.json",
+          payload: {
+            supplier: "hotelbeds",
+            endpoint: `${bookingBaseUrl}/hotels`,
+            method: "POST",
+            request: availabilityRequestBody,
+            capturedAt: new Date().toISOString(),
+          },
+        }),
+      "availability-request",
+    );
     const response = await fetch(`${bookingBaseUrl}/hotels`, {
       method: "POST",
       headers: {
         ...createHotelbedsHeaders(),
         "Accept-Encoding": "gzip",
       },
-      body: JSON.stringify(buildHotelbedsAvailabilityRequest(request)),
+      body: JSON.stringify(availabilityRequestBody),
     });
 
     const data = (await response.json().catch(() => ({}))) as
       | HotelbedsAvailabilityResponse
       | HotelbedsApiError;
+    await writeHotelbedsEvidenceSafely(
+      () =>
+        writeHotelbedsEvidenceLog({
+          evidenceId: hotelbedsEvidenceId,
+          fileName: "availability-response.json",
+          payload: {
+            supplier: "hotelbeds",
+            endpoint: `${bookingBaseUrl}/hotels`,
+            method: "POST",
+            status: response.status,
+            ok: response.ok,
+            response: data,
+            capturedAt: new Date().toISOString(),
+          },
+        }),
+      "availability-response",
+    );
 
     if (!response.ok) {
       throw new Error(getHotelbedsErrorMessage(data as HotelbedsApiError));

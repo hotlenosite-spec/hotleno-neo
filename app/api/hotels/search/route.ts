@@ -25,6 +25,7 @@ import {
   getStoredHotelCodesForZone,
 } from "@/lib/suppliers/hotelbeds-content-store";
 import { createLog } from "@/lib/firebase-store";
+import { createHotelbedsEvidenceId } from "@/lib/certification/hotelbeds-accommodation-evidence";
 import type { HotelSearchResponse } from "@/types/travellanda";
 
 export const runtime = "nodejs";
@@ -346,6 +347,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const hotelbedsEvidenceId = providers.some((provider) => provider.name === "hotelbeds")
+      ? createHotelbedsEvidenceId()
+      : undefined;
     const supplierRequest: SupplierSearchHotelsRequest = {
       destinationCode:
         body.destinationCode ??
@@ -369,6 +373,7 @@ export async function POST(req: NextRequest) {
         userEmail: authUser?.email,
         role: authUser?.role,
         supplierScope: authUser?.supplierScope,
+        hotelbedsEvidenceId,
         tboNormalSearch: tboNormalHotelIds.length > 0,
         disableEnvHotelCodes:
           hotelbedsSupplierTester ||

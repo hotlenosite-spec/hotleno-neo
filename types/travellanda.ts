@@ -126,6 +126,7 @@ export interface HotelOption {
     roomsCount: number;
     totalPrice: number;
     currency: string;
+    hotelbedsEvidenceId?: string;
     boardName?: string;
     boardCode?: string;
     roomPriceBreakdown: Array<{
@@ -138,6 +139,8 @@ export interface HotelOption {
     allRateKeyPrefixes: string[];
   };
   displayRoomName?: string;
+  hotelbedsEvidenceId?: string;
+  metadata?: Record<string, unknown>;
   roomsCount?: number;
   BookingCode?: string;
   HotelCode?: string;

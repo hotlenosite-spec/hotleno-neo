@@ -1,0 +1,12 @@
+{
+  "bookingReference": "HOTLENO-1781162497741",
+  "source": "booking.metadata.hotelbedsFlow.bookingResponseSafe",
+  "extractedAt": "2026-06-11T07:36:16.182Z",
+  "payload": {
+    "status": "CONFIRMED",
+    "errorMessage": "",
+    "hotelbedsReference": "102-20738091",
+    "rateKeysReturned": 0,
+    "hasRateKey": false
+  }
+}

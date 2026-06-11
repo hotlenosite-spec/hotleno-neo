@@ -1,0 +1,20 @@
+{
+  "bookingId": "HOTLENO-1781162497741",
+  "databaseId": "default",
+  "bookingFound": true,
+  "databaseLogsFound": 3,
+  "supplierLogsFound": 0,
+  "localEvidenceMatches": [],
+  "generatedFiles": [
+    "logs/booking-request.json",
+    "logs/booking-response.json",
+    "logs/cancellation-request.json",
+    "logs/cancellation-response.json"
+  ],
+  "missingFiles": [
+    "logs/availability-request.json",
+    "logs/availability-response.json",
+    "logs/checkrate-request.json",
+    "logs/checkrate-response.json"
+  ]
+}

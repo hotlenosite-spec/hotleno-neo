@@ -10,6 +10,11 @@ import {
   HotelbedsHotelsClientError,
 } from "@/lib/suppliers/hotelbeds-hotels-client";
 import { getHotelbedsBaseUrls, hasHotelbedsCredentials } from "@/lib/suppliers/hotelbeds-auth";
+import {
+  writeHotelbedsCertificationDocuments,
+  writeHotelbedsEvidenceLog,
+  writeHotelbedsEvidenceSafely,
+} from "@/lib/certification/hotelbeds-accommodation-evidence";
 import type { AccountBooking } from "@/lib/account-store";
 
 function safeErrorMessage(error: unknown) {
@@ -198,6 +203,12 @@ export async function POST(req: NextRequest) {
         referenceUsed: hotelbedsReference,
         endpointType,
       };
+      const certificationBookingReference = String(
+        booking.bookingReference || booking._id || bookingId,
+      );
+      const cancelEndpoint = `${getHotelbedsBaseUrls().bookingBaseUrl}/bookings/${encodeURIComponent(
+        hotelbedsReference,
+      )}?cancellationFlag=CANCELLATION`;
 
       if (!isHotelbedsTestBookingBaseUrl() || !hasHotelbedsCredentials()) {
         const message = !isHotelbedsTestBookingBaseUrl()
@@ -254,10 +265,43 @@ export async function POST(req: NextRequest) {
         });
 
         const client = createHotelbedsHotelsClient({ allowTesterBookingOverride: true });
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsEvidenceLog({
+              bookingReference: certificationBookingReference,
+              fileName: "cancellation-request.json",
+              payload: {
+                supplier: "hotelbeds",
+                endpoint: cancelEndpoint,
+                method: "DELETE",
+                request: {
+                  bookingReference: hotelbedsReference,
+                  cancellationFlag: "CANCELLATION",
+                },
+                capturedAt: now.toISOString(),
+              },
+            }),
+          "cancellation-request",
+        );
         const supplierResponse = await client.cancel({
           bookingReference: hotelbedsReference,
           cancellationFlag: "CANCELLATION",
         });
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsEvidenceLog({
+              bookingReference: certificationBookingReference,
+              fileName: "cancellation-response.json",
+              payload: {
+                supplier: "hotelbeds",
+                endpoint: cancelEndpoint,
+                method: "DELETE",
+                response: supplierResponse,
+                capturedAt: new Date().toISOString(),
+              },
+            }),
+          "cancellation-response",
+        );
         const safeResponse = safeHotelbedsResponse(supplierResponse);
         const supplierCancellationStatus =
           safeResponse.status || "CANCELLED";
@@ -302,6 +346,15 @@ export async function POST(req: NextRequest) {
           },
         });
 
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsCertificationDocuments({
+              bookingReference: certificationBookingReference,
+              booking: updatedBooking,
+            }),
+          "cancellation-documents-confirmed",
+        );
+
         return NextResponse.json({
           success: true,
           message: "Hotelbeds Accommodation booking was cancelled at supplier.",
@@ -313,6 +366,23 @@ export async function POST(req: NextRequest) {
         const message = safeErrorMessage(error);
         const rawStatusCode =
           error instanceof HotelbedsHotelsClientError ? error.status : undefined;
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsEvidenceLog({
+              bookingReference: certificationBookingReference,
+              fileName: "cancellation-response.json",
+              payload: {
+                supplier: "hotelbeds",
+                endpoint: cancelEndpoint,
+                method: "DELETE",
+                failed: true,
+                rawStatusCode,
+                errorMessage: message,
+                capturedAt: new Date().toISOString(),
+              },
+            }),
+          "cancellation-error-response",
+        );
         const updatedBooking = await updateBookingForCancellation(decoded, bookingId, {
           status: "cancellation_requested",
           bookingStatus: "cancellation_requested",
@@ -351,6 +421,15 @@ export async function POST(req: NextRequest) {
           },
           error: message,
         });
+
+        await writeHotelbedsEvidenceSafely(
+          () =>
+            writeHotelbedsCertificationDocuments({
+              bookingReference: certificationBookingReference,
+              booking: updatedBooking,
+            }),
+          "cancellation-documents-failed",
+        );
 
         return NextResponse.json({
           success: false,
